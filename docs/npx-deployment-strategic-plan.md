@@ -3,7 +3,7 @@ metadata:
   type: strategic-plan
   topic: npx-deployment
   created: 2025-08-13
-  updated: 2025-08-13T10:30:00Z
+  updated: 2025-08-13T10:45:00Z
   status: active
 
 permissions:

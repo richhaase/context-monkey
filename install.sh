@@ -78,7 +78,7 @@ download_file "$REPO_URL/context/context.md" "CLAUDE.md"
 
 # Download command files
 echo "🔧 Installing commands..."
-commands=("add-rule" "edit-rule" "plan-change" "review-code" "stack-scan" "uninstall")
+commands=("add-rule" "deep-dive" "edit-rule" "explain-repo" "plan-change" "review-code" "stack-scan" "uninstall" "upgrade")
 for cmd in "${commands[@]}"; do
     download_file "$REPO_URL/commands/${cmd}.md" ".claude/commands/cxm/${cmd}.md"
 done
@@ -100,4 +100,4 @@ echo "3. Use '/plan-change' for deep planning of complex changes"
 echo ""
 echo "Files installed:"
 echo "  CLAUDE.md              - Main context file"
-echo "  .claude/commands/cxm/  - Slash commands (6 files)"
+echo "  .claude/commands/cxm/  - Slash commands (9 files)"

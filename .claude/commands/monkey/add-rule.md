@@ -1,12 +1,12 @@
 ---
-description: Add a project rule to .cxm/rules.md using RFC 2119 language (MUST/SHOULD/MAY). Creates the file if missing.
+description: Add a project rule to .monkey/rules.md using RFC 2119 language (MUST/SHOULD/MAY). Creates the file if missing.
 argument-hint: "[level] [short title] — optionally pass a draft directive"
 allowed-tools: Read, Grep, Glob, Edit, Write
 ---
 
 # Intent
 
-Help the user add a **single rule** to `.cxm/rules.md`, formatted with **RFC 2119** keywords and delimited so rules are easy to manage. If `.cxm/rules.md` does not exist, create it with a minimal header.
+Help the user add a **single rule** to `.monkey/rules.md`, formatted with **RFC 2119** keywords and delimited so rules are easy to manage. If `.monkey/rules.md` does not exist, create it with a minimal header.
 
 # RFC 2119 reference (for the user)
 
@@ -32,11 +32,11 @@ Use one of: **MUST**, **MUST NOT**, **SHOULD**, **SHOULD NOT**, **MAY**.
    - Compose a delimited block (see format below) with an ISO 8601 timestamp.
 
 4. **Write rule**:
-   - If `.cxm/rules.md` is missing → create it with a brief header, then append the new block.
+   - If `.monkey/rules.md` is missing → create it with a brief header, then append the new block.
    - If present → append the new block at the end.
    - **Ask once** for confirmation before writing. If declined, show the block and do not write.
 
-# File header (only when creating .cxm/rules.md)
+# File header (only when creating .monkey/rules.md)
 
 If the file doesn’t exist, write this at the top before appending the first rule:
 
@@ -66,5 +66,5 @@ Edit or remove rules with care; each rule is delimited for easy maintenance.
 # Notes
 
 - Keep **one rule per block**. The `<!-- RULE-BEGIN/END -->` comments and trailing `---` delimiter separate rules cleanly.
-- Do not perform code edits or run shell commands. This command only reads/writes `.cxm/rules.md`.
+- Do not perform code edits or run shell commands. This command only reads/writes `.monkey/rules.md`.
 - If the user provides all fields in one go, skip questions and go straight to validation → confirm write.

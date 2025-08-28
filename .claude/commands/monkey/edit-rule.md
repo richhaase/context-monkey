@@ -1,12 +1,12 @@
 ---
-description: Edit an existing rule in .cxm/rules.md by slug or title. Preserves delimiters. Creates file if missing.
+description: Edit an existing rule in .monkey/rules.md by slug or title. Preserves delimiters. Creates file if missing.
 argument-hint: "<slug-or-title>"
 allowed-tools: Read, Grep, Glob, Edit, Write
 ---
 
 # Intent
 
-Help the user update a rule in `.cxm/rules.md` while preserving its delimiter block. If the file is missing, create it with a minimal header and then add the rule as if using `/add-rule`.
+Help the user update a rule in `.monkey/rules.md` while preserving its delimiter block. If the file is missing, create it with a minimal header and then add the rule as if using `/add-rule`.
 
 # Interaction flow
 
@@ -26,12 +26,12 @@ Help the user update a rule in `.cxm/rules.md` while preserving its delimiter bl
    - Preserve <!-- RULE-BEGIN/END --> delimiters.
 
 4. **Write changes**:
-   - Ask once for confirmation before writing back to `.cxm/rules.md`.
+   - Ask once for confirmation before writing back to `.monkey/rules.md`.
    - If declined, show the updated block without writing.
 
-# File header (if creating .cxm/rules.md)
+# File header (if creating .monkey/rules.md)
 
-If `.cxm/rules.md` does not exist, create with:
+If `.monkey/rules.md` does not exist, create with:
 
 ```md
 # Project Development Rules

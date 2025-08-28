@@ -9,8 +9,8 @@ allowed-tools: Read, Grep, Glob
 Perform a rigorous code review of the provided scope, applying:
 
 - Workflow & safety directives from CLAUDE.md
-- Stack-specific norms from .cxm/stack.md (if present)
-- Project development rules from .cxm/rules.md (if present)
+- Stack-specific norms from .monkey/stack.md (if present)
+- Project development rules from .monkey/rules.md (if present)
 
 # Scope rules
 

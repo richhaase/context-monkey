@@ -11,6 +11,6 @@ Remove Context Monkey files from the current repository.
 # Implementation
 
 ```bash
-rm -rf .cxm/ .claude/commands/cxm/ CLAUDE.md
+rm -rf .monkey/ .claude/commands/monkey/ CLAUDE.md
 rmdir .claude/commands/ .claude/ 2>/dev/null || true
 ```

@@ -11,9 +11,8 @@ curl -fsSL https://raw.githubusercontent.com/richhaase/context-monkey/main/insta
 ```
 
 This installs:
-- `claude/CLAUDE.md` - Core context with workflow rules
-- `commands/` - 5 slash commands for project management
-- `.cxm/` - Directory for project-specific rules and stack info
+- `CLAUDE.md` - Core context with workflow rules
+- `.claude/commands/cxm/` - 5 slash commands for project management
 
 ## What You Get
 

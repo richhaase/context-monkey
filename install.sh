@@ -44,7 +44,7 @@ if ! git rev-parse --git-dir >/dev/null 2>&1; then
 fi
 
 # Check for existing installation
-if [[ -d ".claude/commands/cxm" ]] && [[ "$FORCE" != "true" ]]; then
+if [[ -d ".claude/commands/monkey" ]] && [[ "$FORCE" != "true" ]]; then
     echo "Context Monkey is already installed in this repository."
     echo ""
     read -p "Would you like to update to the latest version? [y/N] " -n 1 -r
@@ -59,7 +59,7 @@ fi
 echo "Installing Context Monkey..."
 
 # Create directories  
-mkdir -p .claude/commands/cxm
+mkdir -p .claude/commands/monkey
 
 # Download files with error checking
 download_file() {
@@ -80,14 +80,14 @@ download_file "$REPO_URL/context/context.md" "CLAUDE.md"
 echo "🔧 Installing commands..."
 commands=("add-rule" "deep-dive" "edit-rule" "explain-repo" "plan-change" "review-code" "stack-scan" "uninstall" "upgrade")
 for cmd in "${commands[@]}"; do
-    download_file "$REPO_URL/commands/${cmd}.md" ".claude/commands/cxm/${cmd}.md"
+    download_file "$REPO_URL/commands/${cmd}.md" ".claude/commands/monkey/${cmd}.md"
 done
 
 # Add to .gitignore if it exists
-if [[ -f ".gitignore" ]] && ! grep -q "^\.cxm/\*\.md$" .gitignore; then
+if [[ -f ".gitignore" ]] && ! grep -q "^\.monkey/\*\.md$" .gitignore; then
     echo "" >> .gitignore
     echo "# Context Monkey generated files" >> .gitignore
-    echo ".cxm/*.md" >> .gitignore
+    echo ".monkey/*.md" >> .gitignore
 fi
 
 echo ""
@@ -100,4 +100,4 @@ echo "3. Use '/plan-change' for deep planning of complex changes"
 echo ""
 echo "Files installed:"
 echo "  CLAUDE.md              - Main context file"
-echo "  .claude/commands/cxm/  - Slash commands (9 files)"
+echo "  .claude/commands/monkey/  - Slash commands (9 files)"

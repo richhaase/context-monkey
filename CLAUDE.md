@@ -15,7 +15,7 @@
 
 ## Project stack details
 
-@.monkey/stack.md
+@.cxm/stack.md
 
 _(If this file does not exist yet, say so on start and suggest to generate
 it with `/stack-scan` to auto-detect languages, commands, entrypoints,
@@ -23,7 +23,7 @@ and services.)_
 
 ## Project development rules
 
-@.monkey/rules.md
+@.cxm/rules.md
 
 _(If this file does not exist yet, say so on start.
 Offer to help create it manually to capture project-specific rules, boundaries, and conventions.)_

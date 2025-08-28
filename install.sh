@@ -44,9 +44,16 @@ if ! git rev-parse --git-dir >/dev/null 2>&1; then
 fi
 
 # Check for existing installation
-if [[ -f "CLAUDE.md" ]] && [[ "$FORCE" != "true" ]]; then
-    echo "Context Monkey already installed. Use --force to overwrite."
-    exit 1
+if [[ -d ".claude/commands/cxm" ]] && [[ "$FORCE" != "true" ]]; then
+    echo "Context Monkey is already installed in this repository."
+    echo ""
+    read -p "Would you like to update to the latest version? [y/N] " -n 1 -r
+    echo ""
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo "Installation cancelled."
+        exit 0
+    fi
+    echo ""
 fi
 
 echo "Installing Context Monkey..."
@@ -71,7 +78,7 @@ download_file "$REPO_URL/context/context.md" "CLAUDE.md"
 
 # Download command files
 echo "🔧 Installing commands..."
-commands=("add-rule" "edit-rule" "plan-change" "review-code" "stack-scan")
+commands=("add-rule" "edit-rule" "plan-change" "review-code" "stack-scan" "uninstall")
 for cmd in "${commands[@]}"; do
     download_file "$REPO_URL/commands/${cmd}.md" ".claude/commands/cxm/${cmd}.md"
 done
@@ -93,4 +100,4 @@ echo "3. Use '/plan-change' for deep planning of complex changes"
 echo ""
 echo "Files installed:"
 echo "  CLAUDE.md              - Main context file"
-echo "  .claude/commands/cxm/  - Slash commands (5 files)"
+echo "  .claude/commands/cxm/  - Slash commands (6 files)"

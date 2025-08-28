@@ -44,15 +44,15 @@ if ! git rev-parse --git-dir >/dev/null 2>&1; then
 fi
 
 # Check for existing installation
-if [[ -f "claude/CLAUDE.md" ]] && [[ "$FORCE" != "true" ]]; then
+if [[ -f "CLAUDE.md" ]] && [[ "$FORCE" != "true" ]]; then
     echo "Context Monkey already installed. Use --force to overwrite."
     exit 1
 fi
 
 echo "Installing Context Monkey..."
 
-# Create directories
-mkdir -p claude commands .cxm
+# Create directories  
+mkdir -p .claude/commands/cxm
 
 # Download files with error checking
 download_file() {
@@ -67,18 +67,14 @@ download_file() {
 
 # Download main context file
 echo "📋 Installing main context file..."
-download_file "$REPO_URL/context.md" "claude/CLAUDE.md"
+download_file "$REPO_URL/context/context.md" "CLAUDE.md"
 
 # Download command files
 echo "🔧 Installing commands..."
 commands=("add-rule" "edit-rule" "plan-change" "review-code" "stack-scan")
 for cmd in "${commands[@]}"; do
-    download_file "$REPO_URL/commands/${cmd}.md" "commands/${cmd}.md"
+    download_file "$REPO_URL/commands/${cmd}.md" ".claude/commands/cxm/${cmd}.md"
 done
-
-# Create .cxm directory structure
-echo "📁 Setting up project structure..."
-touch .cxm/.gitkeep
 
 # Add to .gitignore if it exists
 if [[ -f ".gitignore" ]] && ! grep -q "^\.cxm/\*\.md$" .gitignore; then
@@ -96,6 +92,5 @@ echo "2. Use '/add-rule' to create project-specific development rules"
 echo "3. Use '/plan-change' for deep planning of complex changes"
 echo ""
 echo "Files installed:"
-echo "  claude/CLAUDE.md       - Main context file"
-echo "  commands/              - Slash commands (5 files)"
-echo "  .cxm/                  - Project-specific context storage"
+echo "  CLAUDE.md              - Main context file"
+echo "  .claude/commands/cxm/  - Slash commands (5 files)"

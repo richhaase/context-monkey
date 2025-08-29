@@ -1,6 +1,6 @@
 {
   "name": "context-monkey",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Smart context rules and commands for Claude Code",
   "main": "bin/context-monkey.js",
   "bin": {

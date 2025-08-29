@@ -5,7 +5,19 @@ Smart context rules and commands for Claude Code.
 ## Install
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/richhaase/context-monkey/main/install.sh | bash
+npx context-monkey install
+```
+
+## Update
+
+```bash
+npx context-monkey upgrade
+```
+
+## Uninstall
+
+```bash
+npx context-monkey uninstall
 ```
 
 ## Commands

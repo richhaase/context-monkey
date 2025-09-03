@@ -1,6 +1,6 @@
 # Required Context
 
-<!-- Context Monkey v0.0.4 -->
+<!-- Context Monkey v0.0.5 -->
 
 ## Workflow directives (universal)
 

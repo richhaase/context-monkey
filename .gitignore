@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Test directories
+test-install/
+
+# Package files
+*.tgz
+
+# Environment files
+.env*
+
+# AI Coding
+.claude
+.monkey

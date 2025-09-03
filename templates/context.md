@@ -1,5 +1,7 @@
 # Required Context
 
+<!-- Context Monkey {{VERSION}} -->
+
 ## Workflow directives (universal)
 
 - Plan before coding; confirm scope.

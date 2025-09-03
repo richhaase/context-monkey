@@ -29,7 +29,7 @@ Once installed, these slash commands will be available in Claude Code:
 - `/edit-rule` - Edit existing rules
 - `/explain-repo` - Explain repository structure
 - `/deep-dive [topic]` - Deep research on any topic
-- `/plan-change` - Plan complex changes
+- `/plan` - Plan complex changes
 - `/review-code` - Code review
 
 ## What it does

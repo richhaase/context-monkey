@@ -1,15 +1,17 @@
 {
   "name": "context-monkey",
-  "version": "0.0.5",
-  "description": "Smart context rules and commands for Claude Code",
+  "version": "0.1.0",
+  "description": "Prompt engineering framework for Claude Code using specialized subagents",
   "main": "bin/context-monkey.js",
   "bin": {
     "context-monkey": "bin/context-monkey.js"
   },
   "keywords": [
     "claude-code",
-    "ai",
-    "context",
+    "subagents",
+    "prompt-engineering",
+    "ai-workflows",
+    "code-review",
     "development",
     "cli",
     "productivity"

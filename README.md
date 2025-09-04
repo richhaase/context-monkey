@@ -74,6 +74,28 @@ Context Monkey uses two optional files in your `.monkey/` directory:
 
 If these files don't exist, subagents will suggest creating them for better project awareness.
 
+## How Context Monkey Compares
+
+Context Monkey occupies a unique position among AI development frameworks:
+
+### vs. BMAD METHOD
+- **Context Monkey**: Non-invasive specialized expertise with zero setup friction
+- **BMAD METHOD**: Comprehensive methodology requiring full workflow adoption
+- **Best for**: Context Monkey for immediate specialized help, BMAD for systematic development transformation
+
+### vs. Task Master AI  
+- **Context Monkey**: Domain-specific consultative subagents with project awareness
+- **Task Master AI**: Task orchestration and parallel execution management
+- **Best for**: Context Monkey for expert advice, Task Master for complex workflow coordination
+
+### Context Monkey's Sweet Spot
+- ✅ **Lower barrier to entry** than methodology frameworks
+- ✅ **More specialized expertise** than orchestration engines  
+- ✅ **Automatic project awareness** (competitors require manual setup)
+- ✅ **Non-invasive by design** - enhances existing workflows without disruption
+
+**In 30 seconds**: Get specialized AI expertise with full project knowledge, without changing anything about how you work.
+
 ## Requirements
 
 - Node.js 16+

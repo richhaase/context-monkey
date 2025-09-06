@@ -38,18 +38,19 @@ Once installed, these enhanced slash commands delegate to specialized subagents:
 
 - `/review-code [range]` → **Code Reviewer** subagent
 - `/plan <goal>` → **Project Planner** subagent
-- `/explain-repo [focus]` → **Repository Analyst** subagent  
+- `/explain-repo [focus]` → **Repository Analyst** subagent
 - `/stack-scan [action]` → **Stack Detective** subagent
 - `/deep-dive <topic>` → **Deep Researcher** subagent
 - `/add-rule` - Add project rules
 - `/edit-rule` - Edit existing rules
+- `/list-rules` - Lists contents of `.monkey/rules.md`, if it exists.
 
 ## How It Works
 
 1. **Project Detection**: Context Monkey reads your `.monkey/stack.md` and `.monkey/rules.md` files
 2. **Context Injection**: Project context is embedded directly into each subagent's prompt
 3. **Specialized Execution**: Subagents operate with full project knowledge in isolated contexts
-4. **Non-Invasive**: Your existing Claude Code setup (CLAUDE.md) remains untouched
+4. **Non-Invasive**: Your existing Claude Code settings and memory (CLAUDE.md) remain untouched
 
 ## Architecture Benefits
 
@@ -78,23 +79,23 @@ If these files don't exist, subagents will suggest creating them for better proj
 
 Context Monkey occupies a unique position among AI development frameworks:
 
-### vs. BMAD METHOD
+### vs. [BMAD METHOD](https://github.com/bmad-code-org/BMAD-METHOD)
+
 - **Context Monkey**: Non-invasive specialized expertise with zero setup friction
 - **BMAD METHOD**: Comprehensive methodology requiring full workflow adoption
 - **Best for**: Context Monkey for immediate specialized help, BMAD for systematic development transformation
 
-### vs. Task Master AI  
+### vs. [Task Master AI](https://www.task-master.dev/)
+
 - **Context Monkey**: Domain-specific consultative subagents with project awareness
 - **Task Master AI**: Task orchestration and parallel execution management
 - **Best for**: Context Monkey for expert advice, Task Master for complex workflow coordination
 
 ### Context Monkey's Sweet Spot
-- ✅ **Lower barrier to entry** than methodology frameworks
-- ✅ **More specialized expertise** than orchestration engines  
-- ✅ **Automatic project awareness** (competitors require manual setup)
-- ✅ **Non-invasive by design** - enhances existing workflows without disruption
 
-**In 30 seconds**: Get specialized AI expertise with full project knowledge, without changing anything about how you work.
+- ✅ **Lower barrier to entry** than methodology frameworks
+- ✅ **More specialized expertise** than orchestration engines
+- ✅ **Non-invasive by design** - enhances existing workflows without disruption
 
 ## Requirements
 

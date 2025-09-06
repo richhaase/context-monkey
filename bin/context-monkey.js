@@ -17,7 +17,7 @@ program
 
 program
   .command('install')
-  .description('Install Context Monkey to current git repository')
+  .description('Install Context Monkey (local: .claude/ or global: ~/.claude/)')
   .option('-f, --force', 'Overwrite existing files')
   .option('-g, --global', 'Install to ~/.claude instead of ./.claude')
   .action(async (options) => {
@@ -44,7 +44,7 @@ program
 
 program
   .command('uninstall')
-  .description('Remove Context Monkey from current repository')
+  .description('Remove Context Monkey (local: .claude/ or global: ~/.claude/)')
   .option('-g, --global', 'Uninstall from ~/.claude instead of ./.claude')
   .action(async (options) => {
     try {

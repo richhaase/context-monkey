@@ -4,20 +4,43 @@ Non-invasive prompt engineering framework for Claude Code using project-aware sp
 
 ## Install
 
+**Local Installation** (project-specific):
 ```bash
 npx context-monkey install
 ```
 
+**Global Installation** (available in all projects):
+```bash
+npx context-monkey install --global
+```
+
+### Local vs Global Installation
+
+- **Local Installation**: Installs to `.claude/` in your current project directory. Commands only available in that specific project.
+- **Global Installation**: Installs to `~/.claude/` in your home directory. Commands available in all Claude Code sessions across all projects.
+
 ## Update
 
+**Local Installation**:
 ```bash
 npx context-monkey upgrade
 ```
 
+**Global Installation**:
+```bash
+npx context-monkey upgrade --global
+```
+
 ## Uninstall
 
+**Local Installation**:
 ```bash
 npx context-monkey uninstall
+```
+
+**Global Installation**:
+```bash
+npx context-monkey uninstall --global
 ```
 
 ## What is Context Monkey?

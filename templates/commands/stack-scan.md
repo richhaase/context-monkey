@@ -12,26 +12,32 @@ Delegate stack analysis to the specialized stack-detective subagent for comprehe
 
 # Procedure
 
-1. **Invoke detective**: Pass action argument for .monkey/stack.md handling
-2. **Detective analyzes**: Scans languages, frameworks, tools, dependencies
-3. **Structured output**: Detective provides:
-   - Complete technology stack inventory
+1. **Check for existing stack.md**: Look for .monkey/stack.md file first
+2. **If stack.md exists**: Read and summarize the existing stack information
+3. **If no stack.md**: Invoke detective to scan and analyze stack
+4. **Detective analyzes**: Scans languages, frameworks, tools, dependencies (only when needed)
+5. **Structured output**: Provides:
+   - Stack summary from existing file OR complete technology stack inventory
    - Build/test/run commands
    - Entry points and hot paths
    - External service dependencies
    - Development setup instructions
-   - Optimization recommendations
+   - Optimization recommendations (when rescanning)
 
 # Execution
 
 When this command runs, Claude Code will:
 
-1. Use Task tool to invoke the stack-detective subagent with:
+1. Check if .monkey/stack.md exists:
+   - **If exists**: Read and provide a concise summary of the current stack
+   - **If missing**: Use Task tool to invoke the stack-detective subagent
+
+2. For new stack analysis, use Task tool to invoke the stack-detective subagent with:
    - subagent_type: "general-purpose"
    - prompt: Request stack analysis with action from $ARGUMENTS
    - description: "Analyze technology stack"
 
-2. Handle .monkey/stack.md file:
+3. Handle .monkey/stack.md file (only when rescanning):
    - No file exists: Create with detected stack profile
    - `overwrite`: Replace existing file
    - `append`: Add new dated section

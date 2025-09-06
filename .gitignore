@@ -13,7 +13,3 @@ test-install/
 
 # Environment files
 .env*
-
-# AI Coding
-.claude
-.monkey

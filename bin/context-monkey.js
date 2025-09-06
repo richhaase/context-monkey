@@ -17,8 +17,9 @@ program
 
 program
   .command('install')
-  .description('Install Context Monkey to current git repository')
+  .description('Install Context Monkey (local: .claude/ or global: ~/.claude/)')
   .option('-f, --force', 'Overwrite existing files')
+  .option('-g, --global', 'Install to ~/.claude instead of ./.claude')
   .action(async (options) => {
     try {
       await install(options);
@@ -31,9 +32,10 @@ program
 program
   .command('upgrade')
   .description('Upgrade Context Monkey to latest version')
-  .action(async () => {
+  .option('-g, --global', 'Upgrade global installation in ~/.claude')
+  .action(async (options) => {
     try {
-      await upgrade();
+      await upgrade(options);
     } catch (error) {
       console.error('Error:', error.message);
       process.exit(1);
@@ -42,10 +44,11 @@ program
 
 program
   .command('uninstall')
-  .description('Remove Context Monkey from current repository')
-  .action(async () => {
+  .description('Remove Context Monkey (local: .claude/ or global: ~/.claude/)')
+  .option('-g, --global', 'Uninstall from ~/.claude instead of ./.claude')
+  .action(async (options) => {
     try {
-      await uninstall();
+      await uninstall(options);
     } catch (error) {
       console.error('Error:', error.message);
       process.exit(1);

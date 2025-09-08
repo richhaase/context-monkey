@@ -86,10 +86,11 @@ npx context-monkey install
 4. **Uninstall Command**: `lib/commands/uninstall.js`
 
 ## Architecture Indicators
-- **Pattern**: CLI Tool / Command-line utility
-- **API Style**: Command-line interface with subcommands
-- **Database Pattern**: File system operations only
-- **State Management**: Stateless (file-based configuration)
+- **Pattern**: Claude Code Extension Installer
+- **API Style**: NPM package with CLI interface (install/upgrade/uninstall)
+- **Distribution**: Local (`npx context-monkey install`) or Global (`npx context-monkey install --global`)
+- **Core Function**: Copies curated Claude Code commands and agents with project context references
+- **Key Feature**: Installed extensions use `@.monkey/stack.md` and `@.monkey/rules.md` for project awareness
 
 ## Development Setup
 
@@ -142,10 +143,10 @@ npx context-monkey install
 ## Key Technologies Summary
 
 - **Primary**: Node.js + Commander.js CLI framework
-- **Templates**: Mustache.js for dynamic content generation
+- **Templates**: Mustache.js for version injection (minimal templating)
 - **File System**: fs-extra for robust file operations
 - **Distribution**: NPM with GitHub Actions CI/CD
-- **Architecture**: Stateless CLI tool with template-based subagent generation
+- **Architecture**: File installer that copies pre-written Claude Code extensions with minimal templating
 
 ## Essential Commands
 
@@ -168,16 +169,16 @@ npm publish
 
 ## Architecture Overview
 
-Context Monkey is a Node.js CLI tool that generates specialized Claude Code subagents through a template-based system:
+Context Monkey is a Claude Code extension installer that provides curated slash commands and AI agents:
 
 1. **CLI Layer**: Commander.js handles command parsing and routing
 2. **Command Layer**: Install/upgrade/uninstall operations in `lib/commands/`
-3. **Template System**: Mustache templates in `templates/` for agent generation
-4. **File Operations**: fs-extra handles robust file system operations
-5. **Context Injection**: Project-aware templates that embed `.monkey/stack.md` and `.monkey/rules.md` content
+3. **File Operations**: fs-extra copies template files to `.claude/` directories
+4. **Minimal Templating**: Mustache.js injects version numbers into copied files
+5. **Project Context**: Installed extensions reference `@.monkey/stack.md` and `@.monkey/rules.md`
 
 The tool operates by:
-1. Reading project context from `.monkey/` files
-2. Processing Mustache templates with project data
-3. Installing customized commands and agents to Claude Code directories
-4. Providing specialized AI workflows with embedded project knowledge
+1. Copying pre-written Claude Code commands and agents from `templates/`
+2. Injecting version information using Mustache templating
+3. Installing files to local `.claude/` or global `~/.claude/` directories
+4. Providing project-aware Claude Code extensions via `@filepath` references

@@ -42,6 +42,14 @@ No meta-commands that chain existing ones:
 - Added `@.monkey/rules.md` references to all 5 agents for project-specific constraints
 - Agents now dynamically load project context for informed analysis
 
+## ✅ Upgrade System Overhaul
+**COMPLETED**: Fixed critical upgrade file management issues:
+- **Agent Prefixing**: All agents renamed with `cm-` prefix (cm-reviewer.md, cm-planner.md, etc.) for clean bulk management
+- **Pattern-Based Removal**: Upgrade uses safe pattern matching instead of hardcoded file lists
+- **Self-Healing System**: No more maintenance burden - automatically handles added/removed/renamed agents
+- **Security-Auditor Added**: New comprehensive security analysis agent with project-aware context
+- **Command Simplification**: Removed confusing `--force` flag, clean install/upgrade/uninstall workflow
+
 ## Recent Improvements
 - **Stack Detective Refactored**: Removed subjective recommendations and scoring from stack.md output format. Now generates pure factual documentation for objective reference.
 - **Stack Detective Enhanced**: Added Write and Edit capabilities so it can actually create and update stack.md files.
@@ -52,11 +60,11 @@ No meta-commands that chain existing ones:
 ### Missing Essential Agents
 Based on claude-code-expert review, these agents would significantly enhance the toolkit:
 
-#### security-auditor
+#### ✅ security-auditor - COMPLETED
 - **Purpose**: Security vulnerability assessment and compliance checking
-- **Tools**: Read, Glob, Grep, Bash(git:*, find:*), WebSearch
-- **Impact**: Critical for enterprise adoption
-- **Use Cases**: Dependency vulnerability scanning, secret detection, compliance validation
+- **Tools**: Read, Glob, Grep, Bash, WebSearch, WebFetch, Write, Edit
+- **Impact**: Critical for enterprise adoption - now available as cm-security-auditor
+- **Use Cases**: Code/infrastructure/dependency security analysis, compliance reporting
 
 #### doc-generator  
 - **Purpose**: Automated documentation generation and maintenance
@@ -94,10 +102,11 @@ Multi-agent workflow commands that chain analyses for complete developer workflo
 - **Purpose**: End-to-end feature development planning and validation
 - **Output**: Implementation plan with review criteria and stack impact assessment
 
-#### /security-assessment (requires security-auditor)
-- **Flow**: security-auditor → dependency-manager → code-reviewer
+#### /security-assessment
+- **Flow**: cm-security-auditor → dependency-manager → cm-reviewer
 - **Purpose**: Comprehensive security evaluation
 - **Output**: Security report with vulnerability assessment and remediation plan
+- **Status**: Ready to implement - security-auditor agent now available
 
 ## Additional Enhancement Ideas
 
@@ -134,4 +143,9 @@ Multi-agent workflow commands that chain analyses for complete developer workflo
 - **Result Memoization**: Cache common analysis patterns across projects
 
 ## Next Steps
-Priority focus areas: hooks implementation, MCP integrations, and command composition. Plan mode support, parallel tool execution, advanced tool permissions, dynamic context loading, and comprehensive error handling have been completed.
+Priority focus areas: hooks implementation, MCP integrations, and command composition. Plan mode support, parallel tool execution, advanced tool permissions, dynamic context loading, comprehensive error handling, and upgrade system overhaul have been completed.
+
+**Immediate Opportunities**:
+1. **Command Composition**: Implement `/security-assessment` workflow using existing cm-security-auditor
+2. **Dependency Manager**: Add the remaining high-value agent for maintenance workflows  
+3. **Hooks System**: Enable PreToolUse/PostToolUse automation for workflow integration

@@ -1,124 +1,63 @@
-# Unused Claude Code Features for Context Monkey
+# Future Claude Code Features for Context Monkey
 
-This document identifies specific Claude Code capabilities that context-monkey is not currently leveraging.
+This document identifies specific Claude Code capabilities that context-monkey could leverage next.
 
-## Hooks System
+## Priority Features to Implement
+
+### 1. Hooks System
 Currently not implemented. Hooks enable workflow automation:
 - `PreToolUse` hooks to validate before file edits
 - `SessionStart` hooks to auto-load project context  
 - `PostToolUse` hooks for automatic testing after code changes
 
-## ✅ Plan Mode Integration
-**COMPLETED**: All analytical commands now support plan mode:
-- Added `plan_mode: true` to `/stack-scan`, `/explain-repo`, `/deep-dive`, `/review-code`, `/intro`
-- Enables safe repository exploration without file modification risk
+**Impact**: High - enables automated workflows and quality gates
 
-## MCP (Model Context Protocol)
-No external integrations currently:
-- Database connections for data-driven analysis
-- GitHub API integration for issue/PR context
-- Monitoring service connections (Sentry, DataDog)
+### 2. Command Composition
+Meta-commands that chain existing analyses for complete workflows:
 
-## ✅ Multi-tool Parallel Execution
-**COMPLETED**: All agents now use parallel tool execution:
-- Added performance optimization guidance to all 5 agents
-- Batch multiple `Read`/`Glob`/`Grep` calls in single responses
-- Language-agnostic examples for universal compatibility
-
-## ✅ Advanced Tool Permissions
-**COMPLETED**: Expanded tool permissions for all agents:
-- Added `WebSearch` to stack-detective for technology research
-- Added `WebFetch` to repository-analyst, project-planner, and code-reviewer for documentation analysis
-- Expanded `Bash` permissions across all agents for comprehensive system analysis
-- Added cross-language support (python, ruby, php, docker, make, mvn, gradle)
-
-## Command Composition
-No meta-commands that chain existing ones:
-- Missing workflow commands that run multiple analyses in sequence
-
-## ✅ Dynamic Context Loading
-**COMPLETED**: Enhanced `@filepath` reference usage across all agents:
-- Added `@.monkey/stack.md` references to all 5 agents for technology awareness
-- Added `@.monkey/rules.md` references to all 5 agents for project-specific constraints
-- Agents now dynamically load project context for informed analysis
-
-## ✅ Upgrade System Overhaul
-**COMPLETED**: Fixed critical upgrade file management issues:
-- **Agent Prefixing**: All agents renamed with `cm-` prefix (cm-reviewer.md, cm-planner.md, etc.) for clean bulk management
-- **Pattern-Based Removal**: Upgrade uses safe pattern matching instead of hardcoded file lists
-- **Self-Healing System**: No more maintenance burden - automatically handles added/removed/renamed agents
-- **Security-Auditor Added**: New comprehensive security analysis agent with project-aware context
-- **Command Simplification**: Removed confusing `--force` flag, clean install/upgrade/uninstall workflow
-
-## Recent Improvements
-- **Stack Detective Refactored**: Removed subjective recommendations and scoring from stack.md output format. Now generates pure factual documentation for objective reference.
-- **Stack Detective Enhanced**: Added Write and Edit capabilities so it can actually create and update stack.md files.
-- **Comprehensive Error Handling**: Added robust error recovery protocols to all agents for graceful degradation, clear limitation communication, and professional quality outputs.
-
-## Future Agent Ideas (Deferred)
-
-### Missing Essential Agents
-Based on claude-code-expert review, these agents would significantly enhance the toolkit:
-
-#### ✅ security-auditor - COMPLETED
-- **Purpose**: Security vulnerability assessment and compliance checking
-- **Tools**: Read, Glob, Grep, Bash, WebSearch, WebFetch, Write, Edit
-- **Impact**: Critical for enterprise adoption - now available as cm-security-auditor
-- **Use Cases**: Code/infrastructure/dependency security analysis, compliance reporting
-
-#### doc-generator  
-- **Purpose**: Automated documentation generation and maintenance
-- **Tools**: Read, Glob, Grep, Write, Edit, WebSearch
-- **Impact**: Developer productivity multiplier
-- **Use Cases**: README generation, API docs, architecture documentation
-
-#### dependency-manager
-- **Purpose**: Dependency analysis, security scanning, and upgrade planning
-- **Tools**: Read, Glob, Grep, Bash(package managers), WebSearch, Edit
-- **Impact**: Critical for maintenance workflows
-- **Use Cases**: Dependency updates, security patching, license compliance
-
-#### performance-profiler
-- **Purpose**: Performance analysis and optimization recommendations  
-- **Tools**: Read, Glob, Grep, Bash(profiling tools), WebFetch
-- **Impact**: Essential for production systems
-- **Use Cases**: Performance bottleneck detection, optimization suggestions
-
-### Workflow Orchestration Ideas (Deferred)
-Multi-agent workflow commands that chain analyses for complete developer workflows:
-
-#### /onboard-project
-- **Flow**: stack-detective → repository-analyst → project-planner
-- **Purpose**: Complete project understanding for new team members
-- **Output**: Comprehensive project briefing with setup instructions
-
-#### /code-health-audit  
-- **Flow**: repository-analyst → code-reviewer → deep-researcher
-- **Purpose**: Complete codebase health assessment
-- **Output**: Technical debt report with prioritized improvement recommendations
-
-#### /feature-lifecycle
-- **Flow**: project-planner → code-reviewer → stack-detective  
-- **Purpose**: End-to-end feature development planning and validation
-- **Output**: Implementation plan with review criteria and stack impact assessment
-
-#### /security-assessment
+#### `/monkey:security-assessment`
 - **Flow**: cm-security-auditor → dependency-manager → cm-reviewer
 - **Purpose**: Comprehensive security evaluation
 - **Output**: Security report with vulnerability assessment and remediation plan
-- **Status**: Ready to implement - security-auditor agent now available
+- **Status**: Ready to implement - security-auditor agent available
 
-## Additional Enhancement Ideas
+#### ✅ `/monkey:onboard-project` - COMPLETED
+- **Flow**: cm-stack-profiler → cm-repo-explainer → cm-planner
+- **Purpose**: Complete project understanding for new team members
+- **Output**: Comprehensive project briefing with setup instructions
+- **Features**: 3 analysis modes (quick/standard/deep), sequential agent execution
 
-### Agent Quality Improvements
-- **TodoWrite Integration**: Add task tracking to project-planner and code-reviewer for complex workflows
-- **NotebookEdit Support**: Add Jupyter notebook editing capabilities to code-reviewer and deep-researcher
-- **MultiEdit Capabilities**: Enable multi-file editing for repository-wide changes
+**Impact**: High - provides complete workflow automation
 
-### Advanced Tool Permissions
-- **Specialized Command Sets**: Add domain-specific commands (e.g., `kubectl` for Kubernetes projects, `terraform` for IaC)
-- **Package Manager Integration**: Enhanced support for `composer`, `bundler`, `mix`, `pub`, etc.
-- **Cloud CLI Tools**: Add support for `aws`, `gcloud`, `az` for cloud-native projects
+### 3. MCP (Model Context Protocol) Integration
+External service integrations for enhanced analysis:
+- GitHub API integration for issue/PR context
+- Package registry connections for real-time dependency data
+- Documentation service integration (framework docs, etc.)
+
+**Impact**: Medium - enriches analysis with external data
+
+## Additional Agents to Consider
+
+### dependency-manager
+- **Purpose**: Dependency analysis, security scanning, and upgrade planning
+- **Tools**: Read, Glob, Grep, Bash(package managers), WebSearch, Edit
+- **Impact**: High - critical for maintenance workflows
+- **Use Cases**: Dependency updates, security patching, license compliance
+
+### doc-generator  
+- **Purpose**: Automated documentation generation and maintenance
+- **Tools**: Read, Glob, Grep, Write, Edit, WebSearch
+- **Impact**: Medium - developer productivity multiplier
+- **Use Cases**: README generation, API docs, architecture documentation
+
+### performance-profiler
+- **Purpose**: Performance analysis and optimization recommendations  
+- **Tools**: Read, Glob, Grep, Bash(profiling tools), WebFetch
+- **Impact**: Medium - essential for production systems
+- **Use Cases**: Performance bottleneck detection, optimization suggestions
+
+## Advanced Enhancements
 
 ### Context Enhancement  
 - **Dynamic README References**: Agents could reference `@README.md`, `@CONTRIBUTING.md`, `@ARCHITECTURE.md`
@@ -130,22 +69,33 @@ Multi-agent workflow commands that chain analyses for complete developer workflo
 - **CI/CD Awareness**: Agents that understand GitHub Actions, GitLab CI, Jenkins pipelines
 - **Issue Tracker Integration**: Connect planning agents with GitHub Issues, Jira tickets
 
-### Enterprise Features
-- **Audit Logging**: Track all agent decisions and changes for compliance
-- **Team Collaboration**: Multi-user context sharing and collaborative planning
-- **Role-Based Access**: Different agent capabilities based on user roles
-- **Custom Rule Templates**: Organization-wide rule templates for consistent development practices
-
 ### Performance Enhancements
 - **Intelligent Caching**: Cache file content, search results, and external research
 - **Progressive Analysis**: Quick/standard/deep analysis modes with different time/depth trade-offs  
 - **Context Validation**: Timestamp-based context freshness checking
-- **Result Memoization**: Cache common analysis patterns across projects
 
-## Next Steps
-Priority focus areas: hooks implementation, MCP integrations, and command composition. Plan mode support, parallel tool execution, advanced tool permissions, dynamic context loading, comprehensive error handling, and upgrade system overhaul have been completed.
+## Implementation Priority
 
-**Immediate Opportunities**:
-1. **Command Composition**: Implement `/security-assessment` workflow using existing cm-security-auditor
-2. **Dependency Manager**: Add the remaining high-value agent for maintenance workflows  
-3. **Hooks System**: Enable PreToolUse/PostToolUse automation for workflow integration
+**Next Sprint**:
+1. **Command Composition**: Implement `/monkey:security-assessment` workflow
+2. **Hooks Foundation**: Basic PreToolUse/PostToolUse validation hooks
+
+**Following Sprints**:
+1. **Dependency Manager**: High-value agent for maintenance workflows
+2. **MCP Integration**: GitHub API for issue/PR context
+3. **Advanced Security Workflows**: Complete `/monkey:security-assessment` implementation
+
+## Completed Features ✅
+
+- **Plan Mode Integration**: All analytical commands support safe exploration
+- **Multi-tool Parallel Execution**: Performance optimized with batched operations
+- **Advanced Tool Permissions**: Comprehensive tool access across all agents
+- **Dynamic Context Loading**: Project-aware analysis with `@.monkey/` references
+- **Upgrade System**: Self-healing pattern-based file management
+- **Security Auditor**: Comprehensive security analysis agent
+- **Error Handling**: Robust recovery protocols across all agents
+- **Command Composition**: Multi-agent workflows with `/monkey:onboard-project`
+
+---
+
+*This document focuses on remaining opportunities. Major architectural improvements have been completed in v0.5.0.*

@@ -178,29 +178,21 @@ When .monkey/stack.md exists, provide this concise format:
 - Optional: [List optional vars]
 - Example file: [.env.example present?]
 
-### 💡 Recommendations
+### 📋 Essential Commands
 
-#### Immediate Improvements
-1. **[Issue]**: [Solution and command]
-2. **[Issue]**: [Solution and command]
+```bash
+# Install dependencies
+[command from analysis]
 
-#### Tool Suggestions
-- Consider adding: [Tool] for [benefit]
-- Upgrade: [Tool] from [version] to [version]
+# Run locally  
+[command from analysis]
 
-#### Performance Optimizations
-- [Optimization opportunity]
-- [Optimization opportunity]
+# Test
+[command from analysis]
 
-### 📊 Stack Health Score
-
-**Overall**: [A/B/C/D/F]
-
-- **Dependencies**: [Up-to-date/Outdated/Security issues]
-- **Tooling**: [Modern/Adequate/Legacy]
-- **Documentation**: [Excellent/Good/Needs work]
-- **Testing**: [Comprehensive/Adequate/Minimal]
-- **Build Speed**: [Fast/Acceptable/Slow]
+# Build
+[command from analysis]
+```
 
 ## Guidelines
 
@@ -214,8 +206,8 @@ When .monkey/stack.md exists, provide this concise format:
 - Detect actual usage, not just presence of files
 - Prioritize actively used technologies
 - Provide runnable commands where possible
-- Note missing but recommended tools
-- Consider ecosystem best practices
+- Generate only factual information for stack.md - no recommendations or subjective assessments
+- Keep documentation objective and reference-focused
 
 ### Performance Optimization - Use Parallel Tool Execution
 - **Batch file reads**: Use multiple Read calls in single response (Read manifest + Read config + Read Dockerfile)

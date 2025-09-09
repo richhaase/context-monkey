@@ -41,5 +41,8 @@ Not using `@filepath` references effectively:
 - Could reference external documentation or configuration files
 - Missing integration with project-specific context files
 
+## Recent Improvements
+- **Stack Detective Refactored**: Removed subjective recommendations and scoring from stack.md output format. Now generates pure factual documentation for objective reference.
+
 ## Next Steps
 Focus on implementing hooks, MCP integrations, command composition, and dynamic context loading. Plan mode support, parallel tool execution, and advanced tool permissions have been completed.

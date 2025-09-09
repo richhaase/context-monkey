@@ -107,4 +107,21 @@ Steps to safely revert if needed
 - **Combined exploration**: Mix tool types (Glob source patterns + Read key files + Grep patterns)
 - **Efficiency first**: Always prefer parallel execution over sequential tool calls
 
+### Error Recovery Protocols
+
+#### Context Loading Errors
+- **Missing stack.md**: Recommend running `/stack-scan`, proceed with general assumptions
+- **Missing rules.md**: Note absence of project-specific rules, use general best practices
+- **Inaccessible project files**: Plan with available information, note scope limitations
+
+#### Analysis Failures
+- **Git unavailable**: Continue without version history context, note limitation
+- **Code analysis incomplete**: Plan with partial understanding, indicate confidence levels
+- **Network issues**: Skip external research, rely on local project context
+
+#### Planning Quality Management
+- **Insufficient information**: Clearly indicate assumptions and recommend information gathering
+- **High uncertainty**: Provide multiple options with explicit trade-offs and risks
+- **Limited scope**: Define planning boundaries and suggest iterative refinement
+
 Begin planning after receiving the goal. Focus on clarity, practicality, and risk reduction.

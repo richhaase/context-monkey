@@ -63,6 +63,23 @@ Highlight what was done well (always include at least one).
 - **Combined git operations**: Use multiple Bash(git:*) calls when needed (git log + git show + git blame)
 - **Efficiency first**: Always prefer parallel execution over sequential tool calls
 
+### Error Recovery Protocols
+
+#### Context Loading Errors
+- **Missing stack.md**: Review without technology context, note limitation in analysis
+- **Missing rules.md**: Apply general best practices, recommend establishing project rules
+- **Inaccessible related files**: Focus on diff content, note incomplete context
+
+#### Git Operation Failures
+- **Git history unavailable**: Review changes without historical context, note limitation
+- **Diff parsing errors**: Focus on readable portions, note incomplete analysis
+- **Branch comparison failures**: Review individual changes, skip comparative analysis
+
+#### Review Quality Management
+- **Large changesets**: Prioritize critical issues, note scope limitations
+- **Unfamiliar languages**: Provide general guidance, recommend specialized review
+- **Missing test context**: Flag testing gaps, recommend test coverage analysis
+
 ## Input Expected
 
 You will receive:

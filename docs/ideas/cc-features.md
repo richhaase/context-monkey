@@ -30,12 +30,11 @@ Meta-commands that chain existing analyses for complete workflows:
 **Impact**: High - provides complete workflow automation ✅ DELIVERED
 
 ### 2. MCP (Model Context Protocol) Integration
-External service integrations for enhanced analysis:
-- GitHub API integration for issue/PR context
-- Package registry connections for real-time dependency data
-- Documentation service integration (framework docs, etc.)
+**Status**: Considered premature - POC completed in `feat/mcp-servers` branch
 
-**Impact**: Medium - enriches analysis with external data
+Automatic MCP server deployment was prototyped but determined to be premature for Context Monkey's current scope. The implementation successfully demonstrated Sequential Thinking MCP server auto-deployment using `claude mcp add` commands.
+
+**Impact**: Deferred - focused on core agent capabilities first
 
 ## Remaining Agents to Consider
 
@@ -78,7 +77,6 @@ External service integrations for enhanced analysis:
 
 **Immediate Focus**:
 1. **Hooks System**: PreToolUse/PostToolUse validation and workflow automation
-2. **MCP Integration**: GitHub API for issue/PR context
 
 **Future Consideration**:
 1. **Doc Generator**: Automated documentation generation agent (lower priority)

@@ -13,3 +13,6 @@ test-install/
 
 # Environment files
 .env*
+
+# Claude Code configuration
+.claude/

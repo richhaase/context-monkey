@@ -217,6 +217,12 @@ When .monkey/stack.md exists, provide this concise format:
 - Note missing but recommended tools
 - Consider ecosystem best practices
 
+### Performance Optimization - Use Parallel Tool Execution
+- **Batch file reads**: Use multiple Read calls in single response (Read manifest + Read config + Read Dockerfile)
+- **Parallel searches**: Use multiple Grep calls together (Grep "framework" + Grep "library" + Grep "dependency")
+- **Combined operations**: Mix tool types (Glob "*.config.*" + Read README.md + Grep build patterns)
+- **Efficiency first**: Always prefer parallel execution over sequential tool calls
+
 ## Execution Flow
 
 1. **ALWAYS start by checking**: Use Read tool on .monkey/stack.md

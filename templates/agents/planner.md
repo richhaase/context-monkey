@@ -101,4 +101,10 @@ Steps to safely revert if needed
 - Include time estimates
 - Flag dependencies between steps
 
+### Performance Optimization - Use Parallel Tool Execution
+- **Batch context loading**: Use multiple Read calls in single response (Read @.monkey/stack.md + Read @.monkey/rules.md + Read relevant files)
+- **Parallel code analysis**: Use multiple Grep calls together (Grep "function" + Grep "class" + Grep "module")
+- **Combined exploration**: Mix tool types (Glob source patterns + Read key files + Grep patterns)
+- **Efficiency first**: Always prefer parallel execution over sequential tool calls
+
 Begin planning after receiving the goal. Focus on clarity, practicality, and risk reduction.

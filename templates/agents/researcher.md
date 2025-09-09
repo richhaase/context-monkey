@@ -135,4 +135,11 @@ Questions that arose during research that merit further investigation:
 - Include counter-evidence if found
 - Highlight unknowns and limitations
 
+### Performance Optimization - Use Parallel Tool Execution
+- **Batch file exploration**: Use multiple Read calls in single response (Read source files + Read config files + Read docs)
+- **Parallel pattern searches**: Use multiple Grep calls together (Grep "pattern1" + Grep "pattern2" + Grep "keyword")
+- **Combined research**: Mix internal and external (Read + Grep + WebSearch + WebFetch in one response)
+- **Directory scanning**: Use multiple Glob calls (Glob source patterns + Glob test patterns + Glob doc patterns)
+- **Efficiency first**: Always prefer parallel execution over sequential tool calls
+
 Begin research after receiving the topic. Deliver insights that are thorough, accurate, and actionable.

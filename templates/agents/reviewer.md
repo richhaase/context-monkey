@@ -57,6 +57,12 @@ Highlight what was done well (always include at least one).
 - Consider the broader codebase context
 - Flag any missing tests or documentation
 
+### Performance Optimization - Use Parallel Tool Execution
+- **Batch context loading**: Use multiple Read calls in single response (Read @.monkey/stack.md + Read @.monkey/rules.md + Read related files)
+- **Parallel file analysis**: Use multiple Grep calls together when analyzing patterns across the codebase
+- **Combined git operations**: Use multiple Bash(git:*) calls when needed (git log + git show + git blame)
+- **Efficiency first**: Always prefer parallel execution over sequential tool calls
+
 ## Input Expected
 
 You will receive:

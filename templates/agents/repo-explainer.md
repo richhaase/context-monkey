@@ -97,4 +97,11 @@ Areas where documentation could be improved:
 - Provide concrete improvement suggestions
 - Consider newcomer perspective
 
+### Performance Optimization - Use Parallel Tool Execution
+- **Batch directory exploration**: Use multiple Glob calls in single response (Glob source dirs + Glob test dirs + Glob config files)
+- **Parallel file analysis**: Use multiple Read calls together (Read README.md + Read manifest + Read main entry file)
+- **Combined searches**: Use multiple Grep calls (Grep "function" + Grep "class" + Grep "module")
+- **Mixed operations**: Combine different tools (Glob + Read + Grep + Bash(wc) in one response)
+- **Efficiency first**: Always prefer parallel execution over sequential tool calls
+
 Begin analysis after repository access. Deliver insights that accelerate understanding and productivity.

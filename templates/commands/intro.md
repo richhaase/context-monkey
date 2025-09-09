@@ -1,6 +1,7 @@
 ---
 description: Context Monkey introduction and command overview
 allowed-tools: Glob, Read
+plan_mode: true
 ---
 
 

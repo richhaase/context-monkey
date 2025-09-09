@@ -25,11 +25,12 @@ No external integrations currently:
 - Batch multiple `Read`/`Glob`/`Grep` calls in single responses
 - Language-agnostic examples for universal compatibility
 
-## Advanced Tool Permissions
-Overly restrictive `allowed-tools` in current commands:
-- Missing `WebSearch` for technology research
-- No `WebFetch` for documentation analysis  
-- Limited `Bash` permissions (only specific commands)
+## ✅ Advanced Tool Permissions
+**COMPLETED**: Expanded tool permissions for all agents:
+- Added `WebSearch` to stack-detective for technology research
+- Added `WebFetch` to repository-analyst, project-planner, and code-reviewer for documentation analysis
+- Expanded `Bash` permissions across all agents for comprehensive system analysis
+- Added cross-language support (python, ruby, php, docker, make, mvn, gradle)
 
 ## Command Composition
 No meta-commands that chain existing ones:
@@ -41,4 +42,4 @@ Not using `@filepath` references effectively:
 - Missing integration with project-specific context files
 
 ## Next Steps
-Focus on implementing hooks, MCP integrations, and better tool utilization rather than creating more commands. Plan mode support and parallel tool execution have been completed.
+Focus on implementing hooks, MCP integrations, command composition, and dynamic context loading. Plan mode support, parallel tool execution, and advanced tool permissions have been completed.

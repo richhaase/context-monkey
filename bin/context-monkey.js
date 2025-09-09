@@ -18,7 +18,6 @@ program
 program
   .command('install')
   .description('Install Context Monkey (local: .claude/ or global: ~/.claude/)')
-  .option('-f, --force', 'Overwrite existing files')
   .option('-g, --global', 'Install to ~/.claude instead of ./.claude')
   .action(async (options) => {
     try {

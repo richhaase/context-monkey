@@ -1,5 +1,5 @@
 ---
-description: Delegate to stack-detective subagent for comprehensive technology stack analysis
+description: Delegate to cm-stack-profiler subagent for comprehensive technology stack analysis
 argument-hint: "[overwrite|append|skip]"
 allowed-tools: Task, Write, Edit
 plan_mode: true
@@ -8,7 +8,7 @@ plan_mode: true
 
 # Intent
 
-Delegate stack analysis to the specialized stack-detective subagent for comprehensive technology profiling.
+Delegate stack analysis to the specialized cm-stack-profiler subagent for comprehensive technology profiling.
 
 # Procedure
 
@@ -30,10 +30,10 @@ When this command runs, Claude Code will:
 
 1. Check if .monkey/stack.md exists:
    - **If exists**: Read and provide a concise summary of the current stack
-   - **If missing**: Use Task tool to invoke the stack-detective subagent
+   - **If missing**: Use Task tool to invoke the cm-stack-profiler subagent
 
-2. For new stack analysis, use Task tool to invoke the stack-detective subagent with:
-   - subagent_type: "general-purpose"
+2. For new stack analysis, use Task tool to invoke the cm-stack-profiler subagent with:
+   - subagent_type: "cm-stack-profiler"
    - prompt: Request stack analysis with action from $ARGUMENTS
    - description: "Analyze technology stack"
 
@@ -44,7 +44,7 @@ When this command runs, Claude Code will:
    - `skip`: Show profile in chat only
    - No args: Ask user what to do
 
-The stack-detective subagent specializes in:
+The cm-stack-profiler subagent specializes in:
 - Multi-language ecosystem detection
 - Build tool and dependency analysis
 - Development workflow optimization

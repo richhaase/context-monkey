@@ -1,5 +1,5 @@
 ---
-description: Delegate to repository-analyst subagent for comprehensive codebase analysis
+description: Delegate to cm-repo-explainer subagent for comprehensive codebase analysis
 argument-hint: "[focus-area]"
 allowed-tools: Task
 plan_mode: true
@@ -8,7 +8,7 @@ plan_mode: true
 
 # Intent
 
-Delegate repository analysis to the specialized repository-analyst subagent for comprehensive architectural understanding.
+Delegate repository analysis to the specialized cm-repo-explainer subagent for comprehensive architectural understanding.
 
 # Procedure
 
@@ -27,12 +27,12 @@ Delegate repository analysis to the specialized repository-analyst subagent for 
 
 When this command runs, Claude Code will:
 
-1. Use Task tool to invoke the repository-analyst subagent with:
-   - subagent_type: "general-purpose"
+1. Use Task tool to invoke the cm-repo-explainer subagent with:
+   - subagent_type: "cm-repo-explainer"
    - prompt: Request repository analysis with optional focus from $ARGUMENTS
    - description: "Analyze repository architecture"
 
-The repository-analyst subagent specializes in:
+The cm-repo-explainer subagent specializes in:
 - Understanding complex codebases
 - Identifying architectural patterns
 - Finding improvement opportunities

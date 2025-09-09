@@ -1,5 +1,5 @@
 ---
-description: Delegate to deep-researcher subagent for comprehensive topic investigation
+description: Delegate to cm-researcher subagent for comprehensive topic investigation
 argument-hint: "[topic]"
 allowed-tools: Task
 plan_mode: true
@@ -8,7 +8,7 @@ plan_mode: true
 
 # Intent
 
-Delegate deep research to the specialized deep-researcher subagent for thorough topic investigation combining codebase analysis with external research.
+Delegate deep research to the specialized cm-researcher subagent for thorough topic investigation combining codebase analysis with external research.
 
 # Procedure
 
@@ -26,12 +26,12 @@ Delegate deep research to the specialized deep-researcher subagent for thorough 
 
 When this command runs, Claude Code will:
 
-1. Use Task tool to invoke the deep-researcher subagent with:
-   - subagent_type: "general-purpose"
+1. Use Task tool to invoke the cm-researcher subagent with:
+   - subagent_type: "cm-researcher"
    - prompt: Request deep research on topic from $ARGUMENTS
    - description: "Conduct deep research investigation"
 
-The deep-researcher subagent specializes in:
+The cm-researcher subagent specializes in:
 - Systematic investigation methodology
 - Combining internal and external sources
 - Pattern recognition and analysis

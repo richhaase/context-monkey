@@ -1,5 +1,5 @@
 ---
-description: Delegate to project-planner subagent for comprehensive implementation planning
+description: Delegate to cm-planner subagent for comprehensive implementation planning
 argument-hint: "<goal…>"
 allowed-tools: Task
 ---
@@ -7,7 +7,7 @@ allowed-tools: Task
 
 # Intent
 
-Delegate implementation planning to the specialized project-planner subagent for deep technical analysis and risk-aware planning.
+Delegate implementation planning to the specialized cm-planner subagent for deep technical analysis and risk-aware planning.
 
 # Procedure
 
@@ -26,12 +26,12 @@ Delegate implementation planning to the specialized project-planner subagent for
 
 When this command runs, Claude Code will:
 
-1. Use Task tool to invoke the project-planner subagent with:
-   - subagent_type: "general-purpose"
+1. Use Task tool to invoke the cm-planner subagent with:
+   - subagent_type: "cm-planner"
    - prompt: Pass the planning goal from $ARGUMENTS
    - description: "Create implementation plan"
 
-The project-planner subagent specializes in:
+The cm-planner subagent specializes in:
 - Breaking down complex tasks
 - Evaluating multiple approaches
 - Identifying risks and dependencies

@@ -1,5 +1,5 @@
 ---
-description: Delegate to code-reviewer subagent for comprehensive code review
+description: Delegate to cm-reviewer subagent for comprehensive code review
 argument-hint: "[commit-range | file-paths | HEAD~1]"
 allowed-tools: Bash(git:*), Task
 plan_mode: true
@@ -8,7 +8,7 @@ plan_mode: true
 
 # Intent
 
-Delegate code review to the specialized code-reviewer subagent for comprehensive analysis of changes.
+Delegate code review to the specialized cm-reviewer subagent for comprehensive analysis of changes.
 
 # Procedure
 
@@ -18,7 +18,7 @@ Delegate code review to the specialized code-reviewer subagent for comprehensive
    - File paths → review specific files (`git diff HEAD -- file.js`)
    - HEAD~N → review last N commits
 
-2. **Invoke subagent**: Pass diff to code-reviewer subagent
+2. **Invoke subagent**: Pass diff to cm-reviewer subagent
 
 3. **Subagent provides**: Structured review with:
    - 🔴 CRITICAL (Must Fix) - bugs, security issues
@@ -31,9 +31,9 @@ Delegate code review to the specialized code-reviewer subagent for comprehensive
 When this command runs, Claude Code will:
 
 1. Use Bash tool to get the appropriate git diff based on $ARGUMENTS
-2. Use Task tool to invoke the code-reviewer subagent with:
-   - subagent_type: "general-purpose" (since code-reviewer isn't a built-in type)
+2. Use Task tool to invoke the cm-reviewer subagent with:
+   - subagent_type: "cm-reviewer"
    - prompt: Include the diff output and request for code review
    - description: "Code review of changes"
 
-The code-reviewer subagent will analyze the changes with senior engineer expertise, checking for correctness, design, security, performance, and style issues.
+The cm-reviewer subagent will analyze the changes with senior engineer expertise, checking for correctness, design, security, performance, and style issues.

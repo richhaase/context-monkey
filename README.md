@@ -1,6 +1,6 @@
 # Context Monkey
 
-**v0.5.0** - Non-invasive prompt engineering framework for Claude Code using project-aware specialized subagents.
+**v0.6.0** - Non-invasive prompt engineering framework for Claude Code using project-aware specialized subagents.
 
 ## Quick Start
 
@@ -134,12 +134,13 @@ Get comprehensive project understanding: stack analysis → architecture → imp
 - Node.js 16+
 - Claude Code
 
-## What's New in v0.5.0
+## What's New in v0.6.0
 
-- **Security Auditor**: New comprehensive security analysis agent
-- **Bulletproof Upgrades**: Self-healing upgrade system with pattern-based cleanup
-- **Enhanced Reliability**: Comprehensive error handling across all agents
-- **Performance Optimizations**: Parallel tool execution for faster analysis
+- **Security & Dependency Management**: Complete security assessment workflows
+- **Dependency Manager**: Multi-ecosystem dependency analysis, CVE scanning, upgrade planning
+- **Security Assessment Workflow**: 3-phase comprehensive security evaluation 
+- **Command Composition**: Multi-agent workflows for complex development tasks
+- **7 Specialized Agents**: Complete toolkit for all aspects of software development
 
 ---
 

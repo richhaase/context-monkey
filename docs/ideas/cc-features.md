@@ -15,11 +15,11 @@ Currently not implemented. Hooks enable workflow automation:
 ### 2. Command Composition
 Meta-commands that chain existing analyses for complete workflows:
 
-#### `/monkey:security-assessment`
-- **Flow**: cm-security-auditor → dependency-manager → cm-reviewer
-- **Purpose**: Comprehensive security evaluation
-- **Output**: Security report with vulnerability assessment and remediation plan
-- **Status**: Ready to implement - security-auditor agent available
+#### ✅ `/monkey:security-assessment` - COMPLETED
+- **Flow**: cm-security-auditor → cm-dependency-manager → cm-reviewer
+- **Purpose**: Comprehensive security evaluation across all attack surfaces
+- **Output**: Integrated security report with vulnerability assessment and remediation plan
+- **Features**: 3 analysis modes (quick/standard/deep), multi-layered security coverage
 
 #### ✅ `/monkey:onboard-project` - COMPLETED
 - **Flow**: cm-stack-profiler → cm-repo-explainer → cm-planner
@@ -39,11 +39,11 @@ External service integrations for enhanced analysis:
 
 ## Additional Agents to Consider
 
-### dependency-manager
+### ✅ dependency-manager - COMPLETED
 - **Purpose**: Dependency analysis, security scanning, and upgrade planning
-- **Tools**: Read, Glob, Grep, Bash(package managers), WebSearch, Edit
-- **Impact**: High - critical for maintenance workflows
-- **Use Cases**: Dependency updates, security patching, license compliance
+- **Tools**: Read, Glob, Grep, Bash, WebSearch, WebFetch, Write, Edit
+- **Impact**: High - critical for maintenance workflows - now available as cm-dependency-manager
+- **Use Cases**: Multi-ecosystem dependency analysis, CVE scanning, upgrade planning, license compliance
 
 ### doc-generator  
 - **Purpose**: Automated documentation generation and maintenance
@@ -77,13 +77,13 @@ External service integrations for enhanced analysis:
 ## Implementation Priority
 
 **Next Sprint**:
-1. **Command Composition**: Implement `/monkey:security-assessment` workflow
-2. **Hooks Foundation**: Basic PreToolUse/PostToolUse validation hooks
+1. **Hooks Foundation**: Basic PreToolUse/PostToolUse validation hooks
+2. **MCP Integration**: GitHub API for issue/PR context
 
 **Following Sprints**:
-1. **Dependency Manager**: High-value agent for maintenance workflows
-2. **MCP Integration**: GitHub API for issue/PR context
-3. **Advanced Security Workflows**: Complete `/monkey:security-assessment` implementation
+1. **Doc Generator**: Automated documentation generation agent
+2. **Performance Profiler**: Performance analysis and optimization agent
+3. **Advanced Context Enhancement**: Dynamic manifest loading and README references
 
 ## Completed Features ✅
 
@@ -94,7 +94,8 @@ External service integrations for enhanced analysis:
 - **Upgrade System**: Self-healing pattern-based file management
 - **Security Auditor**: Comprehensive security analysis agent
 - **Error Handling**: Robust recovery protocols across all agents
-- **Command Composition**: Multi-agent workflows with `/monkey:onboard-project`
+- **Command Composition**: Multi-agent workflows with `/monkey:onboard-project` and `/monkey:security-assessment`
+- **Dependency Manager**: Multi-ecosystem dependency analysis and security scanning agent
 
 ---
 

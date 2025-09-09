@@ -16,7 +16,7 @@ npx context-monkey install --global
 
 ## What is Context Monkey?
 
-Context Monkey enhances Claude Code with **6 specialized subagents** that automatically understand your project:
+Context Monkey enhances Claude Code with **7 specialized subagents** that automatically understand your project:
 
 - 🔍 **Code Reviewer** - Senior engineer-level code reviews with project context
 - 📋 **Project Planner** - Risk-aware implementation planning using your tech stack  
@@ -24,6 +24,7 @@ Context Monkey enhances Claude Code with **6 specialized subagents** that automa
 - 🔍 **Stack Detective** - Complete technology profiling and optimization
 - 🔬 **Deep Researcher** - Thorough technical investigations with citations
 - 🛡️ **Security Auditor** - Comprehensive security analysis across code, infrastructure, and dependencies
+- 📦 **Dependency Manager** - Dependency analysis, security scanning, and upgrade planning
 
 Each subagent operates in its own context window with specialized prompts **and embedded knowledge of your project's technology stack and development rules**.
 
@@ -40,7 +41,7 @@ Once installed, these enhanced slash commands delegate to specialized subagents:
 ### Workflows & Planning
 - `/monkey:plan <goal>` - Implementation planning with risk assessment
 - `/monkey:onboard-project [mode]` - Complete project onboarding workflow (stack → architecture → guidance)
-- *Security workflows coming soon*
+- `/monkey:security-assessment [mode]` - Comprehensive security evaluation (infrastructure → dependencies → code review)
 
 ### Configuration
 - `/monkey:add-rule` - Add project-specific development rules

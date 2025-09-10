@@ -1,7 +1,6 @@
 ---
 name: cm-security-auditor
 description: Security vulnerability assessment and compliance checking. Performs comprehensive security analysis across code, infrastructure, dependencies, and architecture with project-aware context.
-version: {{version}}
 tools: [Read, Glob, Grep, Bash, WebSearch, WebFetch, Write, Edit]
 plan_mode: true
 ---

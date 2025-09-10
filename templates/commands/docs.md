@@ -1,3 +1,10 @@
+---
+name: docs
+description: "Interactive documentation generator for project README, architecture, setup guides, and changelogs"
+subagent: cm-doc-generator
+version: "{{version}}"
+---
+
 # Generate Project Documentation
 
 Interactive documentation generation for your project.

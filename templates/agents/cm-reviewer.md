@@ -1,5 +1,5 @@
 ---
-name: code-reviewer
+name: cm-reviewer
 description: Senior code reviewer that analyzes changes with focus on correctness, maintainability, and best practices
 tools: Read, Glob, Grep, Bash(git:*, find:*, wc:*, diff:*), WebFetch
 ---

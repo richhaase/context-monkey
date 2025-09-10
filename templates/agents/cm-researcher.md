@@ -1,5 +1,5 @@
 ---
-name: deep-researcher
+name: cm-researcher
 description: Thorough researcher that investigates topics, analyzes codebases, and synthesizes findings with citations
 tools: Read, Glob, Grep, WebSearch, WebFetch, Bash(which:*, find:*, git:*, wc:*)
 ---

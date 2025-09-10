@@ -14,8 +14,8 @@ Delegate stack analysis to the specialized cm-stack-profiler subagent for compre
 
 1. **Check for existing stack.md**: Look for .monkey/stack.md file first
 2. **If stack.md exists**: Read and summarize the existing stack information
-3. **If no stack.md**: Invoke detective to scan and analyze stack
-4. **Detective analyzes**: Scans languages, frameworks, tools, dependencies (only when needed)
+3. **If no stack.md**: Invoke cm-stack-profiler to scan and analyze stack
+4. **cm-stack-profiler analyzes**: Scans languages, frameworks, tools, dependencies (only when needed)
 5. **Structured output**: Provides:
    - Stack summary from existing file OR complete technology stack inventory
    - Build/test/run commands

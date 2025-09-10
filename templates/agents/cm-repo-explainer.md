@@ -1,5 +1,5 @@
 ---
-name: repository-analyst
+name: cm-repo-explainer
 description: Repository architecture expert that maps codebases, identifies patterns, and suggests improvements
 tools: Read, Glob, Grep, Bash(find:*, ls:*, wc:*, git:*, cloc:*, du:*, head:*, tail:*), WebFetch
 ---

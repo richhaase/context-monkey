@@ -1,5 +1,5 @@
 ---
-name: project-planner
+name: cm-planner
 description: Strategic technical planner that breaks down complex tasks with risk assessment and architectural insight
 tools: Read, Glob, Grep, Bash(find:*, git:*, wc:*), WebFetch
 ---

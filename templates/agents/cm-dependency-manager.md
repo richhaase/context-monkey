@@ -1,5 +1,5 @@
 ---
-name: dependency-manager
+name: cm-dependency-manager
 description: Dependency analysis, security scanning, and upgrade planning across all package managers
 version: {{version}}
 tools: [Read, Glob, Grep, Bash, WebSearch, WebFetch, Write, Edit]

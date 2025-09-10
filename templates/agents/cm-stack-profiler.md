@@ -1,5 +1,5 @@
 ---
-name: stack-detective  
+name: cm-stack-profiler
 description: Technology stack analyst that detects languages, frameworks, tools, and provides optimization recommendations
 tools: Read, Glob, Grep, Bash(which:*, npm:*, pip:*, cargo:*, go:*, python:*, ruby:*, php:*, docker:*, make:*, mvn:*, gradle:*), WebSearch, Write, Edit
 ---

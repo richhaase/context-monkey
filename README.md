@@ -107,10 +107,9 @@ npx context-monkey uninstall -g   # Remove global installation
 
 Context Monkey operates as a Claude Code extension installer:
 
-1. **Template Copying**: Pre-written commands and agents are copied from `templates/`
-2. **Version Injection**: Mustache.js templates inject current version information
-3. **Context Integration**: Installed extensions reference `@.monkey/stack.md` and `@.monkey/rules.md`
-4. **Project Awareness**: Commands automatically understand your project structure and conventions
+1. **Resource Copying**: Pre-written commands and agents are copied from source files
+2. **Context Integration**: Installed extensions reference `@.monkey/stack.md` and `@.monkey/rules.md`
+3. **Project Awareness**: Commands automatically understand your project structure and conventions
 
 ### Architecture
 
@@ -119,7 +118,6 @@ Context Monkey
 ├── CLI Layer (Commander.js)
 ├── Command Layer (install/upgrade/uninstall)
 ├── File Operations (fs-extra)
-├── Minimal Templating (Mustache.js)
 └── Project Context (@.monkey/ references)
 ```
 
@@ -160,7 +158,6 @@ npx context-monkey install
 - **Runtime**: Node.js 16+
 - **CLI Framework**: Commander.js
 - **File Operations**: fs-extra
-- **Templating**: Mustache.js (minimal usage)
 - **Distribution**: NPM with GitHub Actions CI/CD
 
 ## 📄 License

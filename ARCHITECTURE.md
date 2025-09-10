@@ -133,7 +133,7 @@ Installation complete
 ```
 User runs: /monkey:stack-scan
     ↓
-Claude Code loads command from .claude/commands/
+Claude Code loads command from .claude/commands/monkey/
     ↓
 Command references @.monkey/stack.md for context
     ↓
@@ -207,9 +207,10 @@ context-monkey/
 project-root/
 ├── .claude/
 │   ├── commands/
-│   │   ├── stack-scan.md
-│   │   ├── explain-repo.md
-│   │   └── [other commands...]
+│   │   └── monkey/
+│   │       ├── stack-scan.md
+│   │       ├── explain-repo.md
+│   │       └── [other commands...]
 │   └── agents/
 │       ├── cm-stack-profiler.md
 │       ├── cm-repo-explainer.md
@@ -223,9 +224,10 @@ project-root/
 ```
 ~/.claude/
 ├── commands/
-│   ├── monkey_stack-scan.md       # Prefixed for global use
-│   ├── monkey_explain-repo.md
-│   └── [other commands...]
+│   └── monkey/
+│       ├── stack-scan.md
+│       ├── explain-repo.md
+│       └── [other commands...]
 └── agents/
     ├── cm-stack-profiler.md
     ├── cm-repo-explainer.md

@@ -133,7 +133,7 @@ Installation complete
 ```
 User runs: /cm:stack-scan
     ↓
-Claude Code loads command from .claude/commands/monkey/
+Claude Code loads command from .claude/commands/cm/
     ↓
 Command references @.cm/stack.md for context
     ↓

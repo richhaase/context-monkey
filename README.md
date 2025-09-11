@@ -5,6 +5,7 @@
 [![npm version](https://badge.fury.io/js/context-monkey.svg)](https://www.npmjs.com/package/context-monkey)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D16.0.0-brightgreen)](https://nodejs.org/)
+[![Bun](https://img.shields.io/badge/bun-%3E%3D1.0.0-ff69b4)](https://bun.sh/)
 
 Context Monkey is a Claude Code extension installer that provides curated slash commands and AI agents with project awareness. It enhances your Claude Code workflow by installing specialized commands that understand your technology stack and development patterns.
 
@@ -12,6 +13,7 @@ Context Monkey is a Claude Code extension installer that provides curated slash 
 
 ### Installation
 
+#### Using npm/npx (traditional)
 Install Context Monkey commands globally (recommended):
 
 ```bash
@@ -23,6 +25,19 @@ Or install locally for project-specific work:
 ```bash
 npx context-monkey install --local
 ```
+
+#### Using Bun/bunx (faster ⚡)
+For **4x faster execution** and **dramatically improved performance**:
+
+```bash
+# Global installation (recommended)
+bunx context-monkey install
+
+# Local installation  
+bunx context-monkey install --local
+```
+
+> **Performance Note**: `bunx` provides the same functionality as `npx` but with significantly faster startup times and package execution. Perfect for frequent CLI usage!
 
 ### First Steps
 
@@ -79,13 +94,21 @@ Each command uses purpose-built AI agents:
 
 ### Global Installation (Recommended)
 ```bash
+# Using npm/npx
 npx context-monkey install
+
+# Using Bun/bunx (faster)  
+bunx context-monkey install
 ```
 Installs commands to `~/.claude/` for use across all projects with full context awareness.
 
 ### Local Installation  
 ```bash
+# Using npm/npx
 npx context-monkey install --local
+
+# Using Bun/bunx (faster)
+bunx context-monkey install --local
 ```
 Installs commands to `./.claude/` for project-specific use.
 
@@ -93,14 +116,22 @@ Installs commands to `./.claude/` for project-specific use.
 
 ### Upgrade to Latest Version
 ```bash
-npx context-monkey upgrade        # Upgrade global installation
-npx context-monkey upgrade --local     # Upgrade local installation
+# Using npm/npx
+npx context-monkey install        # Automatically detects and upgrades
+
+# Using Bun/bunx (faster)
+bunx context-monkey install       # Automatically detects and upgrades
 ```
 
 ### Uninstall
 ```bash
+# Using npm/npx  
 npx context-monkey uninstall      # Remove global installation  
 npx context-monkey uninstall --local   # Remove local installation
+
+# Using Bun/bunx (faster)
+bunx context-monkey uninstall     # Remove global installation
+bunx context-monkey uninstall --local  # Remove local installation
 ```
 
 ## 🏗️ How It Works
@@ -142,6 +173,8 @@ Context Monkey
 ## 🛠️ Development
 
 ### Local Development
+
+#### Using Node.js (traditional)
 ```bash
 git clone https://github.com/richhaase/context-monkey.git
 cd context-monkey
@@ -154,11 +187,25 @@ node bin/context-monkey.js --help
 npx context-monkey install
 ```
 
+#### Using Bun (faster)
+```bash
+git clone https://github.com/richhaase/context-monkey.git
+cd context-monkey
+bun install
+
+# Test locally  
+bun bin/context-monkey.js --help
+
+# Test installation
+bunx context-monkey install
+```
+
 ### Tech Stack
-- **Runtime**: Node.js 16+
+- **Runtime**: Node.js 16+ or Bun 1.0+
 - **CLI Framework**: Commander.js
 - **File Operations**: fs-extra
 - **Distribution**: NPM with GitHub Actions CI/CD
+- **Performance**: Optimized for both Node.js and Bun runtimes
 
 ## 📄 License
 

@@ -7,7 +7,7 @@
 
 ### Primary Stack
 - **Language**: JavaScript (ES6+)
-- **Runtime**: Node.js 16+ (as specified in package.json engines)
+- **Runtime**: Node.js 16+ or Bun 1.0+ (dual runtime support)
 - **Framework**: CLI application using Commander.js
 - **Type System**: None (vanilla JavaScript)
 
@@ -15,23 +15,29 @@
 - **File System**: fs-extra for enhanced file operations
 
 ## Package Management
-- **Manager**: npm
-- **Lock File**: Present (package-lock.json)
+- **Manager**: npm or bun (dual support)
+- **Lock Files**: package-lock.json (npm) or bun.lockb (bun)
 - **Workspaces**: Not configured (single package)
 - **Registry**: Public (npmjs.org)
+- **Execution**: npx or bunx (bunx provides ~4x performance improvement)
 
 ## Build & Development
 
 ### Build System
 ```bash
 # No explicit build step (vanilla JavaScript)
-npm install
 
-# Development testing
+# Using npm
+npm install
 node bin/context-monkey.js --help
 
+# Using bun (faster)
+bun install  
+bun bin/context-monkey.js --help
+
 # Global installation testing  
-npm link
+npm link  # npm
+bun link  # bun
 ```
 
 ### Testing
@@ -39,8 +45,11 @@ npm link
 # No formal test suite configured
 # Manual testing via CLI commands
 
-# Installation testing
+# Installation testing (npm)
 npx context-monkey install
+
+# Installation testing (bun - faster)
+bunx context-monkey install
 ```
 
 ### Code Quality
@@ -149,6 +158,7 @@ npx context-monkey install
 
 ## Essential Commands
 
+### Using npm
 ```bash
 # Install dependencies
 npm install
@@ -164,6 +174,24 @@ npm link
 
 # Publish (automated via GitHub Actions)
 npm publish
+```
+
+### Using bun (faster)
+```bash
+# Install dependencies
+bun install
+
+# Run locally
+bun bin/context-monkey.js --help
+
+# Test installation
+bunx context-monkey install
+
+# Link for global development
+bun link
+
+# Publish (automated via GitHub Actions)
+npm publish  # Still uses npm for publishing
 ```
 
 ## Architecture Overview

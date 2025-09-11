@@ -9,12 +9,21 @@ Complete guide for setting up Context Monkey for development, testing, and contr
 ## Prerequisites
 
 ### System Requirements
+
+#### Option 1: Node.js (traditional)
 - **Node.js**: Version 16.0.0 or higher
 - **npm**: Version 7.0.0 or higher (included with Node.js 16+)
 - **Git**: For version control and repository management
 - **Claude Code**: For testing installed extensions
 
+#### Option 2: Bun (faster, recommended)
+- **Bun**: Version 1.0.0 or higher
+- **Git**: For version control and repository management  
+- **Claude Code**: For testing installed extensions
+
 ### Verify Prerequisites
+
+#### Node.js Setup
 ```bash
 # Check Node.js version
 node --version  # Should be >= 16.0.0
@@ -29,6 +38,21 @@ git --version
 claude --version  # Optional but recommended for testing
 ```
 
+#### Bun Setup  
+```bash
+# Install Bun (if not already installed)
+curl -fsSL https://bun.sh/install | bash
+
+# Check Bun version
+bun --version   # Should be >= 1.0.0
+
+# Check Git installation
+git --version
+
+# Verify Claude Code is available  
+claude --version  # Optional but recommended for testing
+```
+
 ## Quick Start
 
 ### 1. Clone Repository
@@ -38,19 +62,37 @@ cd context-monkey
 ```
 
 ### 2. Install Dependencies
+
+#### Using Node.js
 ```bash
 npm install
 ```
 
+#### Using Bun (faster)
+```bash
+bun install
+```
+
 ### 3. Verify Installation
+
+#### Using Node.js
 ```bash
 # Test CLI help
 node bin/context-monkey.js --help
 
 # Test local installation
-node bin/context-monkey.js install
+npx context-monkey install --local
+```
 
-# Verify commands installed
+#### Using Bun (faster)  
+```bash
+# Test CLI help
+bun bin/context-monkey.js --help
+
+# Test local installation
+bunx context-monkey install --local
+
+# Verify commands installed  
 ls .claude/commands/
 ls .claude/agents/
 ```

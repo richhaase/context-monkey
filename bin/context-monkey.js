@@ -17,11 +17,11 @@ program
 
 program
   .command('install')
-  .description('Install Context Monkey (local: .claude/ or global: ~/.claude/)')
-  .option('-g, --global', 'Install to ~/.claude instead of ./.claude')
+  .description('Install Context Monkey (global: ~/.claude/ or local: .claude/)')
+  .option('-l, --local', 'Install to ./.claude instead of ~/.claude')
   .action(async (options) => {
     try {
-      await install(options);
+      await install({ local: options.local });
     } catch (error) {
       console.error('Error:', error.message);
       process.exit(1);
@@ -31,10 +31,10 @@ program
 program
   .command('upgrade')
   .description('Upgrade Context Monkey to latest version')
-  .option('-g, --global', 'Upgrade global installation in ~/.claude')
+  .option('-l, --local', 'Upgrade local installation in ./.claude')
   .action(async (options) => {
     try {
-      await upgrade(options);
+      await upgrade({ local: options.local });
     } catch (error) {
       console.error('Error:', error.message);
       process.exit(1);
@@ -43,11 +43,11 @@ program
 
 program
   .command('uninstall')
-  .description('Remove Context Monkey (local: .claude/ or global: ~/.claude/)')
-  .option('-g, --global', 'Uninstall from ~/.claude instead of ./.claude')
+  .description('Remove Context Monkey (global: ~/.claude/ or local: .claude/)')
+  .option('-l, --local', 'Uninstall from ./.claude instead of ~/.claude')
   .action(async (options) => {
     try {
-      await uninstall(options);
+      await uninstall({ local: options.local });
     } catch (error) {
       console.error('Error:', error.message);
       process.exit(1);

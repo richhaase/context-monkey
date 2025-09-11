@@ -12,16 +12,16 @@ Context Monkey is a Claude Code extension installer that provides curated slash 
 
 ### Installation
 
-Install Context Monkey commands locally (recommended for project-specific work):
+Install Context Monkey commands globally (recommended):
 
 ```bash
 npx context-monkey install
 ```
 
-Or install globally for use across all projects:
+Or install locally for project-specific work:
 
 ```bash
-npx context-monkey install --global
+npx context-monkey install --local
 ```
 
 ### First Steps
@@ -77,30 +77,30 @@ Each command uses purpose-built AI agents:
 
 ## 📦 Installation Types
 
-### Local Installation (Recommended)
+### Global Installation (Recommended)
 ```bash
 npx context-monkey install
 ```
-Installs commands to `./.claude/` for project-specific use with full context awareness.
+Installs commands to `~/.claude/` for use across all projects with full context awareness.
 
-### Global Installation  
+### Local Installation  
 ```bash
-npx context-monkey install --global
+npx context-monkey install --local
 ```
-Installs commands to `~/.claude/` for use across all projects.
+Installs commands to `./.claude/` for project-specific use.
 
 ## 🔄 Managing Installations
 
 ### Upgrade to Latest Version
 ```bash
-npx context-monkey upgrade        # Upgrade local installation
-npx context-monkey upgrade -g     # Upgrade global installation
+npx context-monkey upgrade        # Upgrade global installation
+npx context-monkey upgrade --local     # Upgrade local installation
 ```
 
 ### Uninstall
 ```bash
-npx context-monkey uninstall      # Remove local installation  
-npx context-monkey uninstall -g   # Remove global installation
+npx context-monkey uninstall      # Remove global installation  
+npx context-monkey uninstall --local   # Remove local installation
 ```
 
 ## 🏗️ How It Works

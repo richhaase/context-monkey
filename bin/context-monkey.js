@@ -5,7 +5,6 @@ const path = require('path');
 
 // Import command handlers
 const { install } = require('../lib/commands/install');
-const { upgrade } = require('../lib/commands/upgrade');
 const { uninstall } = require('../lib/commands/uninstall');
 
 const packageJson = require('../package.json');
@@ -17,24 +16,12 @@ program
 
 program
   .command('install')
-  .description('Install Context Monkey (global: ~/.claude/ or local: .claude/)')
+  .description('Install or upgrade Context Monkey (global: ~/.claude/ or local: .claude/)')
   .option('-l, --local', 'Install to ./.claude instead of ~/.claude')
+  .option('-y, --yes', 'Skip confirmation prompt')
   .action(async (options) => {
     try {
-      await install({ local: options.local });
-    } catch (error) {
-      console.error('Error:', error.message);
-      process.exit(1);
-    }
-  });
-
-program
-  .command('upgrade')
-  .description('Upgrade Context Monkey to latest version')
-  .option('-l, --local', 'Upgrade local installation in ./.claude')
-  .action(async (options) => {
-    try {
-      await upgrade({ local: options.local });
+      await install({ local: options.local, assumeYes: options.yes });
     } catch (error) {
       console.error('Error:', error.message);
       process.exit(1);
@@ -45,9 +32,10 @@ program
   .command('uninstall')
   .description('Remove Context Monkey (global: ~/.claude/ or local: .claude/)')
   .option('-l, --local', 'Uninstall from ./.claude instead of ~/.claude')
+  .option('-y, --yes', 'Skip confirmation prompt')
   .action(async (options) => {
     try {
-      await uninstall({ local: options.local });
+      await uninstall({ local: options.local, assumeYes: options.yes });
     } catch (error) {
       console.error('Error:', error.message);
       process.exit(1);
@@ -58,8 +46,7 @@ program
 program.on('command:*', function (operands) {
   console.error(`Unknown command: ${operands[0]}`);
   console.log('Available commands:');
-  console.log('  install   - Install Context Monkey');
-  console.log('  upgrade   - Upgrade to latest version');
+  console.log('  install   - Install or upgrade Context Monkey');
   console.log('  uninstall - Remove Context Monkey');
   process.exit(1);
 });

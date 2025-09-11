@@ -16,3 +16,10 @@ test-install/
 
 # Claude Code configuration
 .claude/
+
+# TypeScript build output
+dist/
+*.tsbuildinfo
+
+# macOS
+.DS_Store

@@ -19,7 +19,7 @@
 - **Lock Files**: package-lock.json (npm) or bun.lockb (bun)
 - **Workspaces**: Not configured (single package)
 - **Registry**: Public (npmjs.org)
-- **Execution**: npx or bunx (bunx provides ~4x performance improvement)
+- **Execution**: npx or bunx
 
 ## Build & Development
 
@@ -31,7 +31,7 @@
 npm install
 node bin/context-monkey.js --help
 
-# Using bun (faster)
+# Using bun
 bun install  
 bun bin/context-monkey.js --help
 
@@ -48,7 +48,7 @@ bun link  # bun
 # Installation testing (npm)
 npx context-monkey install
 
-# Installation testing (bun - faster)
+# Installation testing (bun)
 bunx context-monkey install
 ```
 
@@ -176,7 +176,7 @@ npm link
 npm publish
 ```
 
-### Using bun (faster)
+### Using bun
 ```bash
 # Install dependencies
 bun install

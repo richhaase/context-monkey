@@ -26,9 +26,7 @@ Or install locally for project-specific work:
 npx context-monkey install --local
 ```
 
-#### Using Bun/bunx (faster ⚡)
-For **4x faster execution** and **dramatically improved performance**:
-
+#### Using Bun/bunx
 ```bash
 # Global installation (recommended)
 bunx context-monkey install
@@ -36,8 +34,6 @@ bunx context-monkey install
 # Local installation  
 bunx context-monkey install --local
 ```
-
-> **Performance Note**: `bunx` provides the same functionality as `npx` but with significantly faster startup times and package execution. Perfect for frequent CLI usage!
 
 ### First Steps
 
@@ -97,7 +93,7 @@ Each command uses purpose-built AI agents:
 # Using npm/npx
 npx context-monkey install
 
-# Using Bun/bunx (faster)  
+# Using Bun/bunx
 bunx context-monkey install
 ```
 Installs commands to `~/.claude/` for use across all projects with full context awareness.
@@ -107,7 +103,7 @@ Installs commands to `~/.claude/` for use across all projects with full context 
 # Using npm/npx
 npx context-monkey install --local
 
-# Using Bun/bunx (faster)
+# Using Bun/bunx
 bunx context-monkey install --local
 ```
 Installs commands to `./.claude/` for project-specific use.
@@ -119,7 +115,7 @@ Installs commands to `./.claude/` for project-specific use.
 # Using npm/npx
 npx context-monkey install        # Automatically detects and upgrades
 
-# Using Bun/bunx (faster)
+# Using Bun/bunx
 bunx context-monkey install       # Automatically detects and upgrades
 ```
 
@@ -129,7 +125,7 @@ bunx context-monkey install       # Automatically detects and upgrades
 npx context-monkey uninstall      # Remove global installation  
 npx context-monkey uninstall --local   # Remove local installation
 
-# Using Bun/bunx (faster)
+# Using Bun/bunx
 bunx context-monkey uninstall     # Remove global installation
 bunx context-monkey uninstall --local  # Remove local installation
 ```
@@ -187,7 +183,7 @@ node bin/context-monkey.js --help
 npx context-monkey install
 ```
 
-#### Using Bun (faster)
+#### Using Bun
 ```bash
 git clone https://github.com/richhaase/context-monkey.git
 cd context-monkey

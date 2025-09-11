@@ -16,7 +16,7 @@ Complete guide for setting up Context Monkey for development, testing, and contr
 - **Git**: For version control and repository management
 - **Claude Code**: For testing installed extensions
 
-#### Option 2: Bun (faster, recommended)
+#### Option 2: Bun
 - **Bun**: Version 1.0.0 or higher
 - **Git**: For version control and repository management  
 - **Claude Code**: For testing installed extensions
@@ -68,7 +68,7 @@ cd context-monkey
 npm install
 ```
 
-#### Using Bun (faster)
+#### Using Bun
 ```bash
 bun install
 ```
@@ -84,7 +84,7 @@ node bin/context-monkey.js --help
 npx context-monkey install --local
 ```
 
-#### Using Bun (faster)  
+#### Using Bun  
 ```bash
 # Test CLI help
 bun bin/context-monkey.js --help

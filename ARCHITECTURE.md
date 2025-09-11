@@ -29,8 +29,8 @@ Context Monkey is a Claude Code extension installer that provides curated slash 
 │  └── Agents (templates/agents/)                            │
 ├─────────────────────────────────────────────────────────────┤
 │  Project Context Integration                               │
-│  ├── @.monkey/stack.md (Technology Stack)                  │
-│  └── @.monkey/rules.md (Development Rules)                 │
+│  ├── @.cm/stack.md (Technology Stack)                  │
+│  └── @.cm/rules.md (Development Rules)                 │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -56,7 +56,7 @@ Contains the core business logic for each operation:
 - Copies templates from `templates/` to target directory
 - Handles both local (`.claude/`) and global (`~/.claude/`) installations
 - Injects version information into template files
-- Creates project context files (`.monkey/stack.md`, `.monkey/rules.md`)
+- Creates project context files (`.cm/stack.md`, `.cm/rules.md`)
 
 #### Upgrade Command (`lib/commands/upgrade.js`)
 - Removes existing Context Monkey files using pattern matching
@@ -98,17 +98,17 @@ Specialized AI subagents that power the commands:
 
 ### 4. Project Context System
 
-#### Stack Detection (`@.monkey/stack.md`)
+#### Stack Detection (`@.cm/stack.md`)
 - Auto-generated technology stack documentation
 - Used by all commands for project awareness
 - Contains framework versions, dependencies, and build tools
-- Updated via `/monkey:stack-scan` command
+- Updated via `/cm:stack-scan` command
 
-#### Development Rules (`@.monkey/rules.md`)
+#### Development Rules (`@.cm/rules.md`)
 - User-defined project conventions and patterns
 - Coding standards and architectural decisions
-- Accessed via `@.monkey/rules.md` references in commands
-- Managed via `/monkey:add-rule`, `/monkey:edit-rule` commands
+- Accessed via `@.cm/rules.md` references in commands
+- Managed via `/cm:add-rule`, `/cm:edit-rule` commands
 
 ## Data Flow
 
@@ -131,11 +131,11 @@ Installation complete
 
 ### Command Execution Flow
 ```
-User runs: /monkey:stack-scan
+User runs: /cm:stack-scan
     ↓
 Claude Code loads command from .claude/commands/monkey/
     ↓
-Command references @.monkey/stack.md for context
+Command references @.cm/stack.md for context
     ↓
 Agent (cm-stack-profiler) analyzes codebase
     ↓
@@ -215,7 +215,7 @@ project-root/
 │       ├── cm-stack-profiler.md
 │       ├── cm-repo-explainer.md
 │       └── [other agents...]
-└── .monkey/
+└── .cm/
     ├── stack.md                    # Technology stack documentation
     └── rules.md                    # Project development rules
 ```
@@ -267,7 +267,7 @@ project-root/
 
 ### Adding New Commands
 1. Create command template in `templates/commands/`
-2. Reference project context via `@.monkey/stack.md` and `@.monkey/rules.md`
+2. Reference project context via `@.cm/stack.md` and `@.cm/rules.md`
 3. Specify appropriate subagent in command metadata
 4. Test via local installation
 

@@ -9,13 +9,13 @@ You are an experienced technical architect and project planner specializing in b
 
 ## Project Technology Stack
 
-@.monkey/stack.md
+@.cm/stack.md
 
 *If this file is missing, recommend running `/stack-scan` to capture technology details.*
 
 ## Project Development Rules
 
-@.monkey/rules.md
+@.cm/rules.md
 
 *If this file is missing, note that no project-specific rules are defined.*
 
@@ -102,7 +102,7 @@ Steps to safely revert if needed
 - Flag dependencies between steps
 
 ### Performance Optimization - Use Parallel Tool Execution
-- **Batch context loading**: Use multiple Read calls in single response (Read @.monkey/stack.md + Read @.monkey/rules.md + Read relevant files)
+- **Batch context loading**: Use multiple Read calls in single response (Read @.cm/stack.md + Read @.cm/rules.md + Read relevant files)
 - **Parallel code analysis**: Use multiple Grep calls together (Grep "function" + Grep "class" + Grep "module")
 - **Combined exploration**: Mix tool types (Glob source patterns + Read key files + Grep patterns)
 - **Efficiency first**: Always prefer parallel execution over sequential tool calls

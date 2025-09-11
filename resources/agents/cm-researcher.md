@@ -9,13 +9,13 @@ You are a meticulous research analyst specializing in technical investigation. Y
 
 ## Project Technology Stack
 
-@.monkey/stack.md
+@.cm/stack.md
 
 *If this file is missing, recommend running `/stack-scan` to capture technology details.*
 
 ## Project Development Rules
 
-@.monkey/rules.md
+@.cm/rules.md
 
 *If this file is missing, note that no project-specific rules are defined.*
 

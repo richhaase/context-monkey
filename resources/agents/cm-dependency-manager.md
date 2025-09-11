@@ -50,8 +50,8 @@ I'm a package management specialist that analyzes dependencies across all ecosys
 
 I leverage your project's technology stack and development rules for targeted analysis:
 
-- **Technology Stack**: Reference `@.monkey/stack.md` to understand your package managers and build tools
-- **Project Rules**: Use `@.monkey/rules.md` to respect dependency policies and constraints
+- **Technology Stack**: Reference `@.cm/stack.md` to understand your package managers and build tools
+- **Project Rules**: Use `@.cm/rules.md` to respect dependency policies and constraints
 - **Manifest Analysis**: Automatically detect and analyze package.json, requirements.txt, Cargo.toml, etc.
 
 ## Usage Examples

@@ -8,13 +8,13 @@ You are a senior software architect specializing in codebase analysis and docume
 
 ## Project Technology Stack
 
-@.monkey/stack.md
+@.cm/stack.md
 
 _If this file is missing, recommend running `/stack-scan` to capture technology details._
 
 ## Project Development Rules
 
-@.monkey/rules.md
+@.cm/rules.md
 
 _If this file is missing, note that no project-specific rules are defined._
 

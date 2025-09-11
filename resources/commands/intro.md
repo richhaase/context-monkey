@@ -12,46 +12,46 @@ Welcome! Context Monkey provides curated Claude Code commands and agents that un
 ## Available Commands
 
 ### 📊 Analysis Commands
-- `/monkey:stack-scan` - Auto-detect and document your technology stack
-- `/monkey:explain-repo` - Generate comprehensive repository documentation
-- `/monkey:deep-dive` - Perform detailed code analysis with context
-- `/monkey:review-code` - Review code changes with project awareness
+- `/cm:stack-scan` - Auto-detect and document your technology stack
+- `/cm:explain-repo` - Generate comprehensive repository documentation
+- `/cm:deep-dive` - Perform detailed code analysis with context
+- `/cm:review-code` - Review code changes with project awareness
 
 ### 📋 Planning Commands  
-- `/monkey:plan` - Create detailed implementation plans for features
+- `/cm:plan` - Create detailed implementation plans for features
 
 ### ⚙️ Configuration Commands
-- `/monkey:add-rule` - Add new project-specific development rules
-- `/monkey:edit-rule` - Modify existing development rules  
-- `/monkey:list-rules` - View all active project rules
+- `/cm:add-rule` - Add new project-specific development rules
+- `/cm:edit-rule` - Modify existing development rules  
+- `/cm:list-rules` - View all active project rules
 
 ## Project Context Status
 
 Context Monkey enhances Claude Code with project awareness through these configuration files:
 
-- **Stack Documentation**: `@.monkey/stack.md` - Auto-generated technology stack overview
-- **Development Rules**: `@.monkey/rules.md` - Project-specific coding standards and patterns
+- **Stack Documentation**: `@.cm/stack.md` - Auto-generated technology stack overview
+- **Development Rules**: `@.cm/rules.md` - Project-specific coding standards and patterns
 
 Let me check your current project context setup:
 
-@.monkey/stack.md
-@.monkey/rules.md
+@.cm/stack.md
+@.cm/rules.md
 
 ## Getting Started
 
 ### First Time Setup
-1. **Scan your stack**: Run `/monkey:stack-scan` to document your technology choices
-2. **Set project rules**: Use `/monkey:add-rule` to capture coding standards
-3. **Explore your code**: Try `/monkey:explain-repo` for a comprehensive overview
+1. **Scan your stack**: Run `/cm:stack-scan` to document your technology choices
+2. **Set project rules**: Use `/cm:add-rule` to capture coding standards
+3. **Explore your code**: Try `/cm:explain-repo` for a comprehensive overview
 
 ### Daily Workflow
-- Use `/monkey:plan` before implementing new features
-- Run `/monkey:review-code` before committing changes
-- Reference `/monkey:deep-dive` for understanding complex code sections
+- Use `/cm:plan` before implementing new features
+- Run `/cm:review-code` before committing changes
+- Reference `/cm:deep-dive` for understanding complex code sections
 
 ## Key Features
 
-✨ **Project Awareness**: All commands understand your stack and rules through `@.monkey/` references
+✨ **Project Awareness**: All commands understand your stack and rules through `@.cm/` references
 🚀 **Zero Configuration**: Commands work immediately after installation  
 📚 **Context Preservation**: Maintains consistent project knowledge across sessions
 🔧 **Extensible**: Easy to add new rules and patterns specific to your project

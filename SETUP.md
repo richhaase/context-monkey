@@ -70,7 +70,7 @@ context-monkey/
 ├── templates/
 │   ├── commands/                   # Claude Code slash commands
 │   └── agents/                     # AI subagent definitions
-├── .monkey/                        # Project context (generated)
+├── .cm/                        # Project context (generated)
 │   ├── stack.md
 │   └── rules.md
 ├── package.json                    # Project metadata
@@ -93,7 +93,7 @@ context-monkey/
 #### Templates (`templates/`)
 - Pre-written Claude Code commands and agents
 - Static markdown files with embedded YAML metadata
-- Project-aware via `@.monkey/` file references
+- Project-aware via `@.cm/` file references
 
 ## Development Workflow
 
@@ -122,7 +122,7 @@ context-monkey --help
 node bin/context-monkey.js install
 
 # Test the installed commands in Claude Code
-# Example: /monkey:stack-scan
+# Example: /cm:stack-scan
 ```
 
 #### 2. Core Logic Changes
@@ -158,18 +158,18 @@ node bin/context-monkey.js --version
 - [ ] Upgrade with missing source files
 
 #### Uninstall Testing
-- [ ] Local uninstall (preserves `.monkey/`)
+- [ ] Local uninstall (preserves `.cm/`)
 - [ ] Global uninstall  
 - [ ] Uninstall with partial installation
 - [ ] Uninstall with modified files
 
 #### Command Testing (in Claude Code)
-- [ ] `/monkey:stack-scan` generates accurate stack.md
-- [ ] `/monkey:explain-repo` analyzes repository structure
-- [ ] `/monkey:review-code` provides project-aware feedback
-- [ ] `/monkey:plan` creates detailed implementation plans
-- [ ] `/monkey:deep-dive` performs thorough code analysis
-- [ ] Context files (`@.monkey/stack.md`, `@.monkey/rules.md`) load correctly
+- [ ] `/cm:stack-scan` generates accurate stack.md
+- [ ] `/cm:explain-repo` analyzes repository structure
+- [ ] `/cm:review-code` provides project-aware feedback
+- [ ] `/cm:plan` creates detailed implementation plans
+- [ ] `/cm:deep-dive` performs thorough code analysis
+- [ ] Context files (`@.cm/stack.md`, `@.cm/rules.md`) load correctly
 
 ## Environment Setup
 
@@ -207,7 +207,7 @@ context-monkey install --global
 npx create-react-app test-react
 cd test-react
 context-monkey install
-# Test: /monkey:stack-scan should detect React
+# Test: /cm:stack-scan should detect React
 
 # Test with Node.js project  
 mkdir test-node
@@ -215,7 +215,7 @@ cd test-node
 npm init -y
 npm install express
 context-monkey install
-# Test: /monkey:stack-scan should detect Node.js + Express
+# Test: /cm:stack-scan should detect Node.js + Express
 ```
 
 ## Debugging
@@ -305,7 +305,7 @@ git push origin feature/your-feature-name
 - Update documentation when needed
 
 ### Template Guidelines
-- Commands should reference `@.monkey/stack.md` and `@.monkey/rules.md`
+- Commands should reference `@.cm/stack.md` and `@.cm/rules.md`
 - Include proper YAML frontmatter with metadata
 - Write clear descriptions and usage examples
 - Test with multiple project types

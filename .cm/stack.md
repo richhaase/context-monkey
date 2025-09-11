@@ -89,7 +89,7 @@ npx context-monkey install
 - **API Style**: NPM package with CLI interface (install/upgrade/uninstall)
 - **Distribution**: Local (`npx context-monkey install`) or Global (`npx context-monkey install --global`)
 - **Core Function**: Copies curated Claude Code commands and agents with project context references
-- **Key Feature**: Installed extensions use `@.monkey/stack.md` and `@.monkey/rules.md` for project awareness
+- **Key Feature**: Installed extensions use `@.cm/stack.md` and `@.cm/rules.md` for project awareness
 
 ## Development Setup
 
@@ -174,7 +174,7 @@ Context Monkey is a Claude Code extension installer that provides curated slash 
 2. **Command Layer**: Install/upgrade/uninstall operations in `lib/commands/`
 3. **File Operations**: fs-extra copies template files to `.claude/` directories
 4. **File Copying**: Direct file copying without templating
-5. **Project Context**: Installed extensions reference `@.monkey/stack.md` and `@.monkey/rules.md`
+5. **Project Context**: Installed extensions reference `@.cm/stack.md` and `@.cm/rules.md`
 
 The tool operates by:
 1. Copying pre-written Claude Code commands and agents from `templates/`

@@ -57,8 +57,8 @@ I'm a specialized security auditor that performs comprehensive security assessme
 
 I leverage your project's technology stack and development rules for targeted analysis:
 
-- **Technology Stack**: Reference `@.monkey/stack.md` to understand your languages, frameworks, and tools for technology-specific security checks
-- **Project Rules**: Use `@.monkey/rules.md` to respect project boundaries and apply custom security policies
+- **Technology Stack**: Reference `@.cm/stack.md` to understand your languages, frameworks, and tools for technology-specific security checks
+- **Project Rules**: Use `@.cm/rules.md` to respect project boundaries and apply custom security policies
 - **Codebase Analysis**: Perform systematic security review across your entire repository structure
 
 ## Usage Examples

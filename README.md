@@ -26,37 +26,37 @@ npx context-monkey install --global
 
 ### First Steps
 
-1. **Document your stack**: Run `/monkey:stack-scan` to auto-detect your technology choices
-2. **Set project rules**: Use `/monkey:add-rule` to capture coding standards  
-3. **Get project overview**: Try `/monkey:explain-repo` for comprehensive documentation
+1. **Document your stack**: Run `/cm:stack-scan` to auto-detect your technology choices
+2. **Set project rules**: Use `/cm:add-rule` to capture coding standards  
+3. **Get project overview**: Try `/cm:explain-repo` for comprehensive documentation
 
 ## 📋 Available Commands
 
 ### 📊 Analysis & Documentation
-- **`/monkey:stack-scan`** - Auto-detect and document your technology stack
-- **`/monkey:explain-repo`** - Generate comprehensive repository documentation  
-- **`/monkey:deep-dive`** - Perform detailed code analysis with project context
-- **`/monkey:docs`** - Interactive documentation generator (README, architecture, etc.)
+- **`/cm:stack-scan`** - Auto-detect and document your technology stack
+- **`/cm:explain-repo`** - Generate comprehensive repository documentation  
+- **`/cm:deep-dive`** - Perform detailed code analysis with project context
+- **`/cm:docs`** - Interactive documentation generator (README, architecture, etc.)
 
 ### 🔍 Code Review & Quality
-- **`/monkey:review-code`** - Review code changes with project awareness
-- **`/monkey:security-assessment`** - Comprehensive security vulnerability analysis
-- **`/monkey:onboard-project`** - Multi-step project onboarding workflow
+- **`/cm:review-code`** - Review code changes with project awareness
+- **`/cm:security-assessment`** - Comprehensive security vulnerability analysis
+- **`/cm:onboard-project`** - Multi-step project onboarding workflow
 
 ### 📋 Planning & Architecture  
-- **`/monkey:plan`** - Create detailed implementation plans for features
+- **`/cm:plan`** - Create detailed implementation plans for features
 
 ### ⚙️ Configuration & Rules
-- **`/monkey:add-rule`** - Add new project-specific development rules
-- **`/monkey:edit-rule`** - Modify existing development rules
-- **`/monkey:list-rules`** - View all active project rules
+- **`/cm:add-rule`** - Add new project-specific development rules
+- **`/cm:edit-rule`** - Modify existing development rules
+- **`/cm:list-rules`** - View all active project rules
 
 ## 🎯 Key Features
 
 ### ✨ Project Awareness
 All commands automatically understand your project through:
-- **Stack Detection**: Technology choices documented in `@.monkey/stack.md`
-- **Development Rules**: Project conventions stored in `@.monkey/rules.md`
+- **Stack Detection**: Technology choices documented in `@.cm/stack.md`
+- **Development Rules**: Project conventions stored in `@.cm/rules.md`
 - **Context Preservation**: Consistent project knowledge across Claude Code sessions
 
 ### 🚀 Zero Configuration
@@ -108,7 +108,7 @@ npx context-monkey uninstall -g   # Remove global installation
 Context Monkey operates as a Claude Code extension installer:
 
 1. **Resource Copying**: Pre-written commands and agents are copied from source files
-2. **Context Integration**: Installed extensions reference `@.monkey/stack.md` and `@.monkey/rules.md`
+2. **Context Integration**: Installed extensions reference `@.cm/stack.md` and `@.cm/rules.md`
 3. **Project Awareness**: Commands automatically understand your project structure and conventions
 
 ### Architecture
@@ -118,26 +118,26 @@ Context Monkey
 ├── CLI Layer (Commander.js)
 ├── Command Layer (install/upgrade/uninstall)
 ├── File Operations (fs-extra)
-└── Project Context (@.monkey/ references)
+└── Project Context (@.cm/ references)
 ```
 
 ## 💡 Daily Workflow
 
 ### Before Coding
-- Run `/monkey:plan` to break down features into implementation steps
-- Use `/monkey:stack-scan` to update technology documentation
+- Run `/cm:plan` to break down features into implementation steps
+- Use `/cm:stack-scan` to update technology documentation
 
 ### During Development
-- Reference `/monkey:deep-dive` for understanding complex code sections
-- Use `/monkey:security-assessment` to identify potential vulnerabilities
+- Reference `/cm:deep-dive` for understanding complex code sections
+- Use `/cm:security-assessment` to identify potential vulnerabilities
 
 ### Before Committing
-- Run `/monkey:review-code` to review changes with project awareness
-- Update rules with `/monkey:add-rule` if new patterns emerge
+- Run `/cm:review-code` to review changes with project awareness
+- Update rules with `/cm:add-rule` if new patterns emerge
 
 ### Documentation
-- Generate comprehensive docs with `/monkey:docs`
-- Update repository overview using `/monkey:explain-repo`
+- Generate comprehensive docs with `/cm:docs`
+- Update repository overview using `/cm:explain-repo`
 
 ## 🛠️ Development
 

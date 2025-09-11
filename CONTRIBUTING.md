@@ -205,7 +205,7 @@ Before submitting changes, test:
 #### Resource Testing
 - [ ] All resource files copy correctly
 - [ ] YAML frontmatter is valid in commands and agents
-- [ ] Context references (`@.monkey/stack.md`) work correctly
+- [ ] Context references (`@.cm/stack.md`) work correctly
 
 ### Future Testing Framework
 
@@ -331,13 +331,13 @@ Releases are automated via GitHub Actions:
 
 - **Direct Copying**: No templating or modification
 - **Preserve Structure**: Maintain file organization
-- **Context References**: Use `@.monkey/` references appropriately
+- **Context References**: Use `@.cm/` references appropriately
 
 ### Project Context Integration
 
 All extensions should leverage:
-- **Stack Awareness**: `@.monkey/stack.md` for technology detection
-- **Rule Compliance**: `@.monkey/rules.md` for project conventions
+- **Stack Awareness**: `@.cm/stack.md` for technology detection
+- **Rule Compliance**: `@.cm/rules.md` for project conventions
 - **Context Preservation**: Maintain project-specific context
 
 ## Community Guidelines

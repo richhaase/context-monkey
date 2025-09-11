@@ -12,7 +12,7 @@ Delegate stack analysis to the specialized cm-stack-profiler subagent for compre
 
 # Procedure
 
-1. **Check for existing stack.md**: Look for .monkey/stack.md file first
+1. **Check for existing stack.md**: Look for .cm/stack.md file first
 2. **If stack.md exists**: Read and summarize the existing stack information
 3. **If no stack.md**: Invoke cm-stack-profiler to scan and analyze stack
 4. **cm-stack-profiler analyzes**: Scans languages, frameworks, tools, dependencies (only when needed)
@@ -28,7 +28,7 @@ Delegate stack analysis to the specialized cm-stack-profiler subagent for compre
 
 When this command runs, Claude Code will:
 
-1. Check if .monkey/stack.md exists:
+1. Check if .cm/stack.md exists:
    - **If exists**: Read and provide a concise summary of the current stack
    - **If missing**: Use Task tool to invoke the cm-stack-profiler subagent
 
@@ -37,7 +37,7 @@ When this command runs, Claude Code will:
    - prompt: Request stack analysis with action from $ARGUMENTS
    - description: "Analyze technology stack"
 
-3. Handle .monkey/stack.md file (only when rescanning):
+3. Handle .cm/stack.md file (only when rescanning):
    - No file exists: Create with detected stack profile
    - `overwrite`: Replace existing file
    - `append`: Add new dated section

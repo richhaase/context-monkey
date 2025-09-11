@@ -15,13 +15,13 @@ Currently not implemented. Hooks enable workflow automation:
 ### ✅ 2. Command Composition - COMPLETED
 Meta-commands that chain existing analyses for complete workflows:
 
-#### ✅ `/monkey:security-assessment` - COMPLETED
+#### ✅ `/cm:security-assessment` - COMPLETED
 - **Flow**: cm-security-auditor → cm-dependency-manager → cm-reviewer
 - **Purpose**: Comprehensive security evaluation across all attack surfaces
 - **Output**: Integrated security report with vulnerability assessment and remediation plan
 - **Features**: 3 analysis modes (quick/standard/deep), multi-layered security coverage
 
-#### ✅ `/monkey:onboard-project` - COMPLETED
+#### ✅ `/cm:onboard-project` - COMPLETED
 - **Flow**: cm-stack-profiler → cm-repo-explainer → cm-planner
 - **Purpose**: Complete project understanding for new team members
 - **Output**: Comprehensive project briefing with setup instructions
@@ -88,11 +88,11 @@ Automatic MCP server deployment was prototyped but determined to be premature fo
 - **Plan Mode Integration**: All analytical commands support safe exploration
 - **Multi-tool Parallel Execution**: Performance optimized with batched operations
 - **Advanced Tool Permissions**: Comprehensive tool access across all agents
-- **Dynamic Context Loading**: Project-aware analysis with `@.monkey/` references
+- **Dynamic Context Loading**: Project-aware analysis with `@.cm/` references
 - **Upgrade System**: Self-healing pattern-based file management
 - **Security Auditor**: Comprehensive security analysis agent
 - **Error Handling**: Robust recovery protocols across all agents
-- **Command Composition**: Multi-agent workflows with `/monkey:onboard-project` and `/monkey:security-assessment`
+- **Command Composition**: Multi-agent workflows with `/cm:onboard-project` and `/cm:security-assessment`
 - **Dependency Manager**: Multi-ecosystem dependency analysis and security scanning agent
 
 ---

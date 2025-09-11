@@ -10,7 +10,7 @@ Interactive documentation generation for your project.
 
 ## Description
 
-The `/monkey:docs` command launches an interactive documentation generator that analyzes your codebase and creates comprehensive project documentation based on your selection.
+The `/cm:docs` command launches an interactive documentation generator that analyzes your codebase and creates comprehensive project documentation based on your selection.
 
 ## Features
 
@@ -23,7 +23,7 @@ The `/monkey:docs` command launches an interactive documentation generator that 
 ## Usage
 
 ```
-/monkey:docs
+/cm:docs
 ```
 
 The command will present an interactive menu allowing you to select which documentation to generate or update.
@@ -31,8 +31,8 @@ The command will present an interactive menu allowing you to select which docume
 ## Context Awareness
 
 The documentation generator uses your project's context:
-- **Stack Detection**: Analyzes @.monkey/stack.md for technology-specific instructions
-- **Project Rules**: Respects conventions from @.monkey/rules.md
+- **Stack Detection**: Analyzes @.cm/stack.md for technology-specific instructions
+- **Project Rules**: Respects conventions from @.cm/rules.md
 - **Existing Docs**: Preserves manual content while updating generated sections
 - **Git History**: Uses commit messages for changelog generation
 

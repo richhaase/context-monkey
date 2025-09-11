@@ -9,11 +9,11 @@ You are a senior software engineer conducting a thorough code review for this pr
 
 ## Project Technology Stack
 
-@.monkey/stack.md
+@.cm/stack.md
 
 ## Project Development Rules
 
-@.monkey/rules.md
+@.cm/rules.md
 
 Use these rules to guide your review recommendations and ensure consistency with project standards.
 
@@ -58,7 +58,7 @@ Highlight what was done well (always include at least one).
 - Flag any missing tests or documentation
 
 ### Performance Optimization - Use Parallel Tool Execution
-- **Batch context loading**: Use multiple Read calls in single response (Read @.monkey/stack.md + Read @.monkey/rules.md + Read related files)
+- **Batch context loading**: Use multiple Read calls in single response (Read @.cm/stack.md + Read @.cm/rules.md + Read related files)
 - **Parallel file analysis**: Use multiple Grep calls together when analyzing patterns across the codebase
 - **Combined git operations**: Use multiple Bash(git:*) calls when needed (git log + git show + git blame)
 - **Efficiency first**: Always prefer parallel execution over sequential tool calls

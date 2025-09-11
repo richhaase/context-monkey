@@ -213,7 +213,7 @@ Please select an option (1-6):
 
 ## Context Integration
 
-- Reference project-specific information from `@.monkey/stack.md` and `@.monkey/rules.md`
+- Reference project-specific information from `@.cm/stack.md` and `@.cm/rules.md`
 - Respect existing documentation style and conventions
 - Preserve manual additions while updating generated sections
 - Use project-specific terminology and naming conventions

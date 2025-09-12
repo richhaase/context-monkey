@@ -1,307 +1,188 @@
-# Context Monkey Architecture
+# Architecture
 
-> **Generated**: 2025-09-09  
-> **Version**: 0.6.0  
-> **Repository**: context-monkey
+Context Monkey is a TypeScript CLI application that extends Claude Code with specialized subagents and project-aware commands.
 
-## Overview
+## System Overview
 
-Context Monkey is a Claude Code extension installer that provides curated slash commands and AI agents with project awareness. The architecture follows a simple, file-based approach focused on reliability and ease of maintenance.
+Context Monkey follows a **modular CLI architecture** with three main components:
 
-## System Architecture
+- **CLI Interface** - Command registration and user interaction
+- **Installation System** - File deployment and configuration management
+- **Resource Templates** - Reusable agents and commands
+
+## Component Architecture
+
+### CLI Core (`src/`)
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                     Context Monkey                         │
-├─────────────────────────────────────────────────────────────┤
-│  CLI Layer (Commander.js)                                  │
-│  ├── Install Command (/install)                            │
-│  ├── Upgrade Command (/upgrade)                            │
-│  └── Uninstall Command (/uninstall)                        │
-├─────────────────────────────────────────────────────────────┤
-│  File Operations Layer (fs-extra)                          │
-│  ├── Template Copying                                      │
-│  ├── Directory Management                                  │
-│  └── Version Injection                                     │
-├─────────────────────────────────────────────────────────────┤
-│  Template System                                           │
-│  ├── Commands (templates/commands/)                        │
-│  └── Agents (templates/agents/)                            │
-├─────────────────────────────────────────────────────────────┤
-│  Project Context Integration                               │
-│  ├── @.cm/stack.md (Technology Stack)                  │
-│  └── @.cm/rules.md (Development Rules)                 │
-└─────────────────────────────────────────────────────────────┘
+src/
+├── bin/context-monkey.ts    # Main CLI entry point
+├── commands/
+│   ├── install.ts          # Installation logic
+│   └── uninstall.ts        # Cleanup logic
+├── config/
+│   └── hooks.ts            # Notification hook generation
+├── utils/
+│   ├── files.ts            # File operations
+│   ├── platform.ts         # OS detection
+│   ├── prompt.ts           # User interaction
+│   └── settings.ts         # Configuration management
+└── types/
+    └── index.ts            # TypeScript definitions
 ```
 
-## Core Components
+**Key Responsibilities:**
 
-### 1. CLI Layer (`bin/context-monkey.js`)
+- **CLI Interface**: Command parsing and routing using Commander.js
+- **Installation Engine**: Safe deployment of resources to Claude Code directories
+- **Platform Detection**: OS-specific functionality (notifications, paths)
+- **Configuration Management**: Settings merging and validation
 
-**Purpose**: Entry point that handles command-line interface and argument parsing.
+### Resource System (`resources/`)
 
-**Technologies**: Commander.js for robust CLI handling
+```
+resources/
+├── commands/               # Slash commands for Claude Code
+│   ├── intro.md           # Welcome and overview
+│   ├── stack-scan.md      # Technology detection
+│   ├── explain-repo.md    # Repository analysis
+│   ├── plan.md            # Implementation planning
+│   ├── review-code.md     # Code review
+│   ├── deep-dive.md       # Detailed analysis
+│   ├── docs.md            # Documentation generation
+│   ├── add-rule.md        # Rule management
+│   ├── edit-rule.md       # Rule editing
+│   └── list-rules.md      # Rule listing
+└── agents/                # Specialized AI subagents
+    ├── cm-researcher.md   # Technical investigation
+    ├── cm-planner.md      # Implementation planning
+    ├── cm-reviewer.md     # Code review specialist
+    ├── cm-repo-explainer.md # Repository documentation
+    ├── cm-stack-profiler.md # Technology detection
+    ├── cm-doc-generator.md # Documentation automation
+    ├── cm-security-auditor.md # Security assessment
+    └── cm-dependency-manager.md # Dependency analysis
+```
 
-**Responsibilities**:
-- Parse command-line arguments and options
-- Route commands to appropriate handlers
-- Provide help and version information
-- Handle global vs local installation flags
+**Design Pattern**: Each resource follows a **template pattern** with:
 
-### 2. Command Layer (`lib/commands/`)
-
-Contains the core business logic for each operation:
-
-#### Install Command (`lib/commands/install.js`)
-- Copies templates from `templates/` to target directory
-- Handles both local (`.claude/`) and global (`~/.claude/`) installations
-- Injects version information into template files
-- Creates project context files (`.cm/stack.md`, `.cm/rules.md`)
-
-#### Upgrade Command (`lib/commands/upgrade.js`)
-- Removes existing Context Monkey files using pattern matching
-- Performs fresh installation of latest templates
-- Preserves user-modified project context files
-- Handles version migration scenarios
-
-#### Uninstall Command (`lib/commands/uninstall.js`)
-- Removes all Context Monkey installed files
-- Cleans up generated directories if empty
-- Preserves project context files (user decision)
-
-### 3. Template System (`templates/`)
-
-#### Commands (`templates/commands/`)
-Pre-written Claude Code slash commands that provide specialized functionality:
-
-- **stack-scan.md**: Technology stack detection and documentation
-- **explain-repo.md**: Repository structure analysis
-- **review-code.md**: Project-aware code review
-- **deep-dive.md**: Detailed code analysis
-- **plan.md**: Feature planning and implementation strategies
-- **security-assessment.md**: Security vulnerability analysis
-- **onboard-project.md**: Multi-step project onboarding
-- **docs.md**: Interactive documentation generator
-- **add-rule.md / edit-rule.md / list-rules.md**: Project rule management
-
-#### Agents (`templates/agents/`)
-Specialized AI subagents that power the commands:
-
-- **cm-stack-profiler.md**: Technology analysis specialist
-- **cm-repo-explainer.md**: Repository documentation expert
-- **cm-reviewer.md**: Code review specialist
-- **cm-researcher.md**: Deep code investigation
-- **cm-planner.md**: Strategic planning and architecture
-- **cm-security-auditor.md**: Security assessment specialist
-- **cm-dependency-manager.md**: Dependency analysis expert
-- **cm-doc-generator.md**: Documentation generation specialist
-
-### 4. Project Context System
-
-#### Stack Detection (`@.cm/stack.md`)
-- Auto-generated technology stack documentation
-- Used by all commands for project awareness
-- Contains framework versions, dependencies, and build tools
-- Updated via `/cm:stack-scan` command
-
-#### Development Rules (`@.cm/rules.md`)
-- User-defined project conventions and patterns
-- Coding standards and architectural decisions
-- Accessed via `@.cm/rules.md` references in commands
-- Managed via `/cm:add-rule`, `/cm:edit-rule` commands
+- **YAML frontmatter** - Configuration and metadata
+- **Markdown content** - Instructions and context for Claude Code
+- **Consistent naming** - `cm-` prefix for agents, `/cm:` for commands
 
 ## Data Flow
 
-### Installation Flow
-```
-User runs: npx context-monkey install
-    ↓
-Commander.js parses arguments
-    ↓
-Install command determines target directory
-    ↓
-Templates copied with fs-extra
-    ↓
-Version injection (if needed)
-    ↓
-Project context files created
-    ↓
-Installation complete
-```
-
-### Command Execution Flow
-```
-User runs: /cm:stack-scan
-    ↓
-Claude Code loads command from .claude/commands/cm/
-    ↓
-Command references @.cm/stack.md for context
-    ↓
-Agent (cm-stack-profiler) analyzes codebase
-    ↓
-Results returned with project awareness
-```
-
-## Design Principles
-
-### 1. Simplicity First
-- No complex build systems or transpilation
-- Vanilla JavaScript with minimal dependencies
-- File-based operations using proven libraries
-
-### 2. Project Awareness
-- All commands understand project context automatically
-- Consistent knowledge across Claude Code sessions
-- Zero configuration required from users
-
-### 3. Template-Based Architecture
-- Pre-written, tested commands and agents
-- Version control for all extensions
-- Easy maintenance and updates
-
-### 4. Minimal Dependencies
-- **commander**: ^12.0.0 (CLI framework)
-- **fs-extra**: ^11.2.0 (Enhanced file operations)
-- No build dependencies or complex toolchain
-
-## File System Layout
+### Installation Process
 
 ```
-context-monkey/
-├── bin/
-│   └── context-monkey.js           # CLI entry point
-├── lib/
-│   └── commands/
-│       ├── install.js              # Installation logic
-│       ├── upgrade.js              # Upgrade logic
-│       └── uninstall.js            # Uninstall logic
-├── templates/
-│   ├── commands/                   # Claude Code slash commands
-│   │   ├── stack-scan.md
-│   │   ├── explain-repo.md
-│   │   ├── review-code.md
-│   │   ├── deep-dive.md
-│   │   ├── plan.md
-│   │   ├── security-assessment.md
-│   │   ├── onboard-project.md
-│   │   ├── docs.md
-│   │   ├── add-rule.md
-│   │   ├── edit-rule.md
-│   │   └── list-rules.md
-│   └── agents/                     # AI subagent definitions
-│       ├── cm-stack-profiler.md
-│       ├── cm-repo-explainer.md
-│       ├── cm-reviewer.md
-│       ├── cm-researcher.md
-│       ├── cm-planner.md
-│       ├── cm-security-auditor.md
-│       ├── cm-dependency-manager.md
-│       └── cm-doc-generator.md
-└── package.json                    # Project metadata
+1. User runs `context-monkey install`
+2. CLI validates target directory (~/.claude or ./.claude)
+3. Resource files are copied with validation
+4. Notification hooks are optionally installed
+5. Claude Code discovers new commands and agents
 ```
 
-## Target Installation Layout
+### Command Execution
 
-### Local Installation (`./.claude/`)
 ```
-project-root/
-├── .claude/
-│   ├── commands/
-│   │   └── monkey/
-│   │       ├── stack-scan.md
-│   │       ├── explain-repo.md
-│   │       └── [other commands...]
-│   └── agents/
-│       ├── cm-stack-profiler.md
-│       ├── cm-repo-explainer.md
-│       └── [other agents...]
-└── .cm/
-    ├── stack.md                    # Technology stack documentation
-    └── rules.md                    # Project development rules
+1. User types `/cm:command` in Claude Code
+2. Claude Code loads command template from ~/.claude/commands/cm/
+3. Template references project context (@.cm/stack.md, @.cm/rules.md)
+4. Command may delegate to specialized agent for processing
+5. Agent processes request with full project context
 ```
 
-### Global Installation (`~/.claude/`)
-```
-~/.claude/
-├── commands/
-│   └── monkey/
-│       ├── stack-scan.md
-│       ├── explain-repo.md
-│       └── [other commands...]
-└── agents/
-    ├── cm-stack-profiler.md
-    ├── cm-repo-explainer.md
-    └── [other agents...]
-```
+### Project Context Integration
+
+Context Monkey maintains project awareness through:
+
+- **Stack Documentation** (`@.cm/stack.md`) - Technology choices and configurations
+- **Development Rules** (`@.cm/rules.md`) - Coding standards and patterns
+- **Automatic Reference** - All commands include these files in their context
+
+## Design Decisions
+
+### TypeScript + ES Modules
+
+- **Rationale**: Type safety and modern JavaScript features
+- **Trade-offs**: Build step required, but improved development experience
+- **Implementation**: Full ES module support with `import.meta.dirname`
+
+### Resource-Based Architecture
+
+- **Rationale**: Separation of logic from content, easy customization
+- **Trade-offs**: More files to manage, but flexible and maintainable
+- **Implementation**: Markdown templates with YAML frontmatter
+
+### Global vs Local Installation
+
+- **Rationale**: Support both team-wide and project-specific workflows
+- **Trade-offs**: Path complexity, but flexible deployment options
+- **Implementation**: Dynamic path resolution based on `--local` flag
+
+### Commander.js for CLI
+
+- **Rationale**: Mature, well-documented CLI framework
+- **Trade-offs**: Additional dependency, but robust argument parsing
+- **Implementation**: Subcommand architecture with typed options
+
+## Technology Stack
+
+### Core Dependencies
+
+- **Node.js 16+** - Runtime environment
+- **TypeScript 5.3+** - Type system and compilation
+- **Commander.js 12** - CLI argument parsing and command routing
+- **fs-extra 11** - Enhanced file system operations
+
+### Development Tools
+
+- **Bun** - Fast package manager and test runner
+- **ESLint + Prettier** - Code quality and formatting
+- **Husky + lint-staged** - Git hooks for code quality
+- **TypeScript Compiler** - ES module compilation
+
+### Platform Integration
+
+- **Claude Code CLI** - Host environment for commands and agents
+- **terminal-notifier (macOS)** - Desktop notifications
+- **Cross-platform file operations** - Windows, macOS, Linux support
+
+## Extension Points
+
+### Adding New Commands
+
+1. Create new `.md` file in `resources/commands/`
+2. Add YAML frontmatter with description and allowed tools
+3. Write command logic in Markdown format
+4. Commands are automatically discovered on next install
+
+### Adding New Agents
+
+1. Create new `cm-*.md` file in `resources/agents/`
+2. Define agent capabilities in YAML frontmatter
+3. Write agent prompt and instructions
+4. Agents are automatically available to commands
+
+### Custom Project Rules
+
+- Use `/cm:add-rule` to define project-specific patterns
+- Rules are stored in `@.cm/rules.md` and referenced by all commands
+- Supports custom coding standards, architectural decisions, and workflows
 
 ## Security Considerations
 
-### 1. File System Security
-- All file operations use `fs-extra` with proper error handling
-- Path traversal prevention through directory validation
-- No arbitrary code execution or eval statements
-
-### 2. Template Security
-- Templates are static markdown files
-- No dynamic code generation or execution
-- Version-controlled and auditable content
-
-### 3. Dependency Security
-- Minimal dependency surface area
-- Well-maintained, popular packages only
-- Regular security scanning via GitHub Actions
+- **File System Access**: Limited to Claude Code directories (`~/.claude`, `./.claude`)
+- **Resource Validation**: Files are validated before copying during installation
+- **Safe Cleanup**: Uninstall only removes Context Monkey prefixed files (`cm-*`)
+- **No Network Access**: Core functionality works entirely offline
+- **Permission Model**: Inherits Claude Code's security model and tool restrictions
 
 ## Performance Characteristics
 
-### Installation Performance
-- **Fast**: Simple file copying operations
-- **Lightweight**: ~20 template files (~100KB total)
-- **Efficient**: No compilation or build steps
+- **Installation**: O(n) where n = number of resource files (~20 files typical)
+- **Command Loading**: Instant - templates loaded by Claude Code as needed
+- **Memory Usage**: Minimal - CLI exits after operation, templates loaded on-demand
+- **Disk Usage**: ~100KB for all templates and agents
 
-### Runtime Performance
-- **Zero overhead**: No runtime performance impact
-- **Native speed**: Claude Code executes templates directly
-- **Minimal memory**: Templates loaded on-demand by Claude Code
-
-## Extensibility
-
-### Adding New Commands
-1. Create command template in `templates/commands/`
-2. Reference project context via `@.cm/stack.md` and `@.cm/rules.md`
-3. Specify appropriate subagent in command metadata
-4. Test via local installation
-
-### Adding New Agents
-1. Create agent definition in `templates/agents/`
-2. Define specialized capabilities and tool access
-3. Reference in command templates as needed
-4. Update documentation
-
-## Error Handling
-
-### Installation Errors
-- Directory permission issues handled gracefully
-- Existing file conflicts detected and reported
-- Partial installation rollback on failures
-
-### Runtime Errors
-- Template loading failures logged and reported
-- Project context file missing scenarios handled
-- Graceful degradation when context unavailable
-
-## Future Architecture Considerations
-
-### Planned Enhancements
-- Plugin system for third-party extensions
-- Configuration file support for advanced users
-- Template versioning and migration system
-- Performance analytics and usage tracking
-
-### Scalability
-- Current architecture scales to 100+ commands/agents
-- File-based approach suitable for individual developer use
-- Consider database storage for enterprise scenarios
-
----
-
-*This architecture document reflects the current implementation as of version 0.6.0. The design prioritizes simplicity, reliability, and ease of maintenance while providing powerful project-aware development tools.*
+The architecture prioritizes simplicity, safety, and extensibility while providing powerful project-aware capabilities to Claude Code.

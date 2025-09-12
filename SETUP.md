@@ -1,61 +1,32 @@
-# Context Monkey Development Setup
+# Development Setup
 
-> **Generated**: 2025-09-09  
-> **Version**: 0.6.0  
-> **Repository**: context-monkey
-
-Complete guide for setting up Context Monkey for development, testing, and contribution.
+Complete guide for setting up the Context Monkey development environment.
 
 ## Prerequisites
 
-### System Requirements
+### Required Tools
 
-#### Option 1: Node.js (traditional)
-- **Node.js**: Version 16.0.0 or higher
-- **npm**: Version 7.0.0 or higher (included with Node.js 16+)
-- **Git**: For version control and repository management
-- **Claude Code**: For testing installed extensions
+- **Node.js** 16.0.0 or higher
+- **Bun** (recommended) or **npm** for package management
+- **TypeScript** 5.3+ (installed via dev dependencies)
+- **Git** for version control
 
-#### Option 2: Bun
-- **Bun**: Version 1.0.0 or higher
-- **Git**: For version control and repository management  
-- **Claude Code**: For testing installed extensions
+### Recommended Tools
 
-### Verify Prerequisites
+- **Claude Code CLI** - For testing commands and agents
+- **VS Code** or similar editor with TypeScript support
+- **terminal-notifier** (macOS only) - For notification hooks testing
 
-#### Node.js Setup
-```bash
-# Check Node.js version
-node --version  # Should be >= 16.0.0
+### Platform Support
 
-# Check npm version  
-npm --version   # Should be >= 7.0.0
+- **macOS** - Full support including notifications
+- **Linux** - Core functionality supported
+- **Windows** - Core functionality supported
 
-# Check Git installation
-git --version
-
-# Verify Claude Code is available
-claude --version  # Optional but recommended for testing
-```
-
-#### Bun Setup  
-```bash
-# Install Bun (if not already installed)
-curl -fsSL https://bun.sh/install | bash
-
-# Check Bun version
-bun --version   # Should be >= 1.0.0
-
-# Check Git installation
-git --version
-
-# Verify Claude Code is available  
-claude --version  # Optional but recommended for testing
-```
-
-## Quick Start
+## Installation
 
 ### 1. Clone Repository
+
 ```bash
 git clone https://github.com/richhaase/context-monkey.git
 cd context-monkey
@@ -63,388 +34,282 @@ cd context-monkey
 
 ### 2. Install Dependencies
 
-#### Using Node.js
 ```bash
+# Using Bun (recommended)
+bun install
+
+# Using npm (alternative)
 npm install
 ```
 
-#### Using Bun
+### 3. Build Project
+
 ```bash
-bun install
+# Build once
+bun run build
+
+# Watch mode for development
+bun run dev
 ```
 
-### 3. Verify Installation
+### 4. Verify Installation
 
-#### Using Node.js
 ```bash
-# Test CLI help
-node bin/context-monkey.js --help
+# Check version
+node dist/bin/context-monkey.js --version
 
-# Test local installation
-npx context-monkey install --local
+# Test installation
+node dist/bin/context-monkey.js install --local
 ```
-
-#### Using Bun  
-```bash
-# Test CLI help
-bun bin/context-monkey.js --help
-
-# Test local installation
-bunx context-monkey install --local
-
-# Verify commands installed  
-ls .claude/commands/
-ls .claude/agents/
-```
-
-## Development Environment
-
-### Project Structure
-```
-context-monkey/
-├── bin/
-│   └── context-monkey.js           # CLI entry point
-├── lib/
-│   └── commands/                   # Core command implementations
-│       ├── install.js
-│       ├── upgrade.js
-│       └── uninstall.js
-├── templates/
-│   ├── commands/                   # Claude Code slash commands
-│   └── agents/                     # AI subagent definitions
-├── .cm/                        # Project context (generated)
-│   ├── stack.md
-│   └── rules.md
-├── package.json                    # Project metadata
-├── package-lock.json               # Dependency lock file
-└── README.md                       # Project documentation
-```
-
-### Key Files to Understand
-
-#### Entry Point (`bin/context-monkey.js`)
-- CLI interface using Commander.js
-- Routes commands to handlers in `lib/commands/`
-- Handles global options and help
-
-#### Command Implementations (`lib/commands/`)
-- **install.js**: Core installation logic
-- **upgrade.js**: Update existing installations  
-- **uninstall.js**: Clean removal of extensions
-
-#### Templates (`templates/`)
-- Pre-written Claude Code commands and agents
-- Static markdown files with embedded YAML metadata
-- Project-aware via `@.cm/` file references
 
 ## Development Workflow
 
-### Local Development
-```bash
-# Install dependencies
-npm install
+### Build Commands
 
-# Test CLI commands
-node bin/context-monkey.js --help
-node bin/context-monkey.js install
-node bin/context-monkey.js upgrade
-node bin/context-monkey.js uninstall
+| Command         | Purpose                          |
+| --------------- | -------------------------------- |
+| `bun run build` | Compile TypeScript to JavaScript |
+| `bun run dev`   | Watch mode compilation           |
+| `bun run clean` | Remove build artifacts           |
 
-# Link for global testing
-npm link
-context-monkey --help
+### Code Quality Commands
+
+| Command                | Purpose                   |
+| ---------------------- | ------------------------- |
+| `bun run lint`         | Run ESLint on source code |
+| `bun run lint:fix`     | Auto-fix ESLint issues    |
+| `bun run format`       | Format code with Prettier |
+| `bun run format:check` | Check code formatting     |
+
+### Testing Commands
+
+| Command              | Purpose            |
+| -------------------- | ------------------ |
+| `bun test`           | Run test suite     |
+| `bun run test:watch` | Watch mode testing |
+
+## Project Structure
+
+```
+context-monkey/
+├── src/                     # TypeScript source code
+│   ├── bin/                # CLI entry points
+│   ├── commands/           # Installation commands
+│   ├── config/             # Configuration management
+│   ├── types/              # TypeScript type definitions
+│   └── utils/              # Utility functions
+├── resources/              # Command and agent templates
+│   ├── commands/           # Slash commands for Claude Code
+│   └── agents/             # AI subagent definitions
+├── dist/                   # Compiled JavaScript (generated)
+├── tests/                  # Test files (if any)
+└── node_modules/           # Dependencies
 ```
 
-### Testing Changes
+## Configuration Files
 
-#### 1. Template Development
+### TypeScript Configuration
+
+- **`tsconfig.json`** - TypeScript compiler settings
+  - Target: ES2022
+  - Module: ES2022
+  - Output: `dist/` directory
+  - Source maps enabled for debugging
+
+### Code Quality
+
+- **`eslint.config.js`** - ESLint configuration
+  - TypeScript support
+  - Prettier integration
+  - Node.js environment rules
+- **`.prettierrc`** - Code formatting rules
+- **`lint-staged` config** - Pre-commit hooks in `package.json`
+
+### Git Hooks
+
+- **Husky** - Git hooks management
+- **Pre-commit**: Runs linting and formatting
+- **Pre-push**: Runs tests (when available)
+
+## Development Guidelines
+
+### Code Standards
+
+- **TypeScript**: All new code must be TypeScript
+- **ES Modules**: Use `import/export`, not `require()`
+- **Error Handling**: Use proper error types and handling
+- **File Naming**: kebab-case for files, PascalCase for types
+
+### Resource Development
+
+- **Commands**: Use `.md` files with YAML frontmatter
+- **Agents**: Follow `cm-*.md` naming pattern
+- **Testing**: Test commands locally before committing
+- **Documentation**: Update docs for new commands/agents
+
+### Git Workflow
+
 ```bash
-# Edit templates in templates/commands/ or templates/agents/
-# Test by installing locally
-node bin/context-monkey.js install
+# Create feature branch
+git checkout -b feature/new-command
 
-# Test the installed commands in Claude Code
-# Example: /cm:stack-scan
+# Make changes and commit
+git add .
+git commit -m "feat: add new command for X"
+
+# Push and create PR
+git push origin feature/new-command
 ```
 
-#### 2. Core Logic Changes
+## Testing Your Changes
+
+### Local Testing
+
+1. **Build the project**:
+
+   ```bash
+   bun run build
+   ```
+
+2. **Install locally**:
+
+   ```bash
+   node dist/bin/context-monkey.js install --local
+   ```
+
+3. **Test in Claude Code**:
+
+   ```bash
+   claude
+   /cm:intro  # Verify installation
+   ```
+
+4. **Test specific commands**:
+   ```bash
+   /cm:stack-scan  # Test your changes
+   ```
+
+### Cleanup After Testing
+
 ```bash
-# Modify files in lib/commands/
-# Test installation/upgrade/uninstall flows
-node bin/context-monkey.js install
-node bin/context-monkey.js upgrade  
-node bin/context-monkey.js uninstall
-```
-
-#### 3. CLI Interface Changes
-```bash
-# Modify bin/context-monkey.js
-# Test help and argument parsing
-node bin/context-monkey.js --help
-node bin/context-monkey.js --version
-```
-
-### Manual Testing Checklist
-
-#### Installation Testing
-- [ ] Local installation (`install`)
-- [ ] Global installation (`install --global`) 
-- [ ] Installation with existing `.claude/` directory
-- [ ] Installation with permission issues
-- [ ] Installation in clean directory
-
-#### Upgrade Testing  
-- [ ] Local upgrade from previous version
-- [ ] Global upgrade from previous version
-- [ ] Upgrade with modified templates
-- [ ] Upgrade with missing source files
-
-#### Uninstall Testing
-- [ ] Local uninstall (preserves `.cm/`)
-- [ ] Global uninstall  
-- [ ] Uninstall with partial installation
-- [ ] Uninstall with modified files
-
-#### Command Testing (in Claude Code)
-- [ ] `/cm:stack-scan` generates accurate stack.md
-- [ ] `/cm:explain-repo` analyzes repository structure
-- [ ] `/cm:review-code` provides project-aware feedback
-- [ ] `/cm:plan` creates detailed implementation plans
-- [ ] `/cm:deep-dive` performs thorough code analysis
-- [ ] Context files (`@.cm/stack.md`, `@.cm/rules.md`) load correctly
-
-## Environment Setup
-
-### Local Development
-```bash
-# Clone and setup
-git clone https://github.com/richhaase/context-monkey.git
-cd context-monkey
-npm install
-
-# Create test environment
-mkdir test-project
-cd test-project
-npm init -y
-
-# Test local installation
-node ../bin/context-monkey.js install
-```
-
-### Global Development  
-```bash
-# Link for global access
-npm link
-
-# Test globally
-cd /tmp
-mkdir global-test
-cd global-test
-context-monkey install --global
-```
-
-### Testing with Different Projects
-```bash
-# Test with React project
-npx create-react-app test-react
-cd test-react
-context-monkey install
-# Test: /cm:stack-scan should detect React
-
-# Test with Node.js project  
-mkdir test-node
-cd test-node
-npm init -y
-npm install express
-context-monkey install
-# Test: /cm:stack-scan should detect Node.js + Express
+# Remove local installation
+node dist/bin/context-monkey.js uninstall --local
 ```
 
 ## Debugging
 
 ### Common Issues
 
-#### Permission Errors
-```bash
-# Check directory permissions
-ls -la ~/.claude/
-ls -la .claude/
+**Build Errors**:
 
-# Fix permissions if needed
-chmod -R 755 ~/.claude/
-chmod -R 755 .claude/
+```bash
+# Clear node_modules and reinstall
+rm -rf node_modules dist
+bun install
+bun run build
 ```
 
-#### Template Not Found
-```bash
-# Verify template structure
-ls templates/commands/
-ls templates/agents/
+**Import/Export Issues**:
 
-# Check file contents
-cat templates/commands/stack-scan.md
+- Ensure all imports use `.js` extensions (even for `.ts` files)
+- Check `tsconfig.json` module resolution settings
+- Use `import.meta.dirname` instead of `__dirname`
+
+**File Path Issues**:
+
+- Use `path.join()` for cross-platform compatibility
+- Test on different operating systems if possible
+- Check file permissions in target directories
+
+### Debug Mode
+
+```bash
+# Enable verbose logging (if implemented)
+DEBUG=1 node dist/bin/context-monkey.js install
+
+# Check file operations
+node -e "console.log(require('os').homedir())"
 ```
 
-#### Installation Failures
+## Adding New Features
+
+### New Slash Command
+
+1. Create `resources/commands/new-command.md`
+2. Add YAML frontmatter with metadata
+3. Write command instructions in Markdown
+4. Test installation and functionality
+
+### New Subagent
+
+1. Create `resources/agents/cm-new-agent.md`
+2. Define agent capabilities and tools
+3. Write agent prompt and behavior
+4. Test agent integration with commands
+
+### New CLI Command
+
+1. Add command handler in `src/commands/`
+2. Register in `src/bin/context-monkey.ts`
+3. Add TypeScript types in `src/types/`
+4. Update help text and documentation
+
+## Release Process
+
+### Version Bumping
+
 ```bash
-# Enable verbose logging (modify code temporarily)
-# Add console.log statements in lib/commands/install.js
+# Update package.json version
+npm version patch  # or minor, major
 
-# Check target directories exist
-ls -la .claude/
-ls -la ~/.claude/
-```
+# Build and test
+bun run build
+bun test
 
-### Debug Commands
-```bash
-# Show installation paths
-node -e "console.log('Global:', require('os').homedir() + '/.claude')"
-node -e "console.log('Local:', process.cwd() + '/.claude')"
-
-# List installed files
-find .claude/ -type f 2>/dev/null || echo "No local installation"
-find ~/.claude/ -name "monkey_*" 2>/dev/null || echo "No global installation"
-```
-
-## Contributing
-
-### Development Setup for Contributors
-```bash
-# Fork the repository on GitHub
-# Clone your fork
-git clone https://github.com/YOUR_USERNAME/context-monkey.git
-cd context-monkey
-
-# Add upstream remote
-git remote add upstream https://github.com/richhaase/context-monkey.git
-
-# Install dependencies
-npm install
-
-# Create feature branch
-git checkout -b feature/your-feature-name
-
-# Make changes and test
-# ... development work ...
-
-# Test thoroughly
-node bin/context-monkey.js install
-# Test all commands in Claude Code
-
-# Commit and push
+# Commit and tag
 git add .
-git commit -m "Add your feature description"
-git push origin feature/your-feature-name
-
-# Create pull request on GitHub
+git commit -m "chore: bump version to X.X.X"
+git tag vX.X.X
 ```
 
-### Code Standards
-- Use vanilla JavaScript (ES6+)
-- Follow existing code style and patterns
-- Add comments for complex logic
-- Test all changes manually
-- Update documentation when needed
+### Publishing
 
-### Template Guidelines
-- Commands should reference `@.cm/stack.md` and `@.cm/rules.md`
-- Include proper YAML frontmatter with metadata
-- Write clear descriptions and usage examples
-- Test with multiple project types
-
-## Publishing (Maintainers Only)
-
-### Release Process
 ```bash
-# Ensure clean working directory
-git status
+# Clean build
+bun run clean
+bun run build
 
-# Update version
-npm version patch  # or minor/major
-# This creates a git tag automatically
-
-# Push changes and tags
-git push origin main
-git push origin --tags
-
-# GitHub Actions will automatically publish to NPM
-```
-
-### Manual Publishing (if needed)
-```bash
-# Build is not required (vanilla JavaScript)
-# Ensure correct files in package.json "files" array
-
-# Login to NPM
-npm login
-
-# Publish
+# Publish (if configured)
 npm publish
 ```
 
-## Performance Testing
+## Environment Variables
 
-### Installation Speed
-```bash
-# Time local installation
-time node bin/context-monkey.js install
+Currently Context Monkey doesn't use environment variables, but if needed:
 
-# Time global installation  
-time node bin/context-monkey.js install --global
-
-# Time upgrade
-time node bin/context-monkey.js upgrade
-```
-
-### Memory Usage
-```bash
-# Monitor memory during installation
-/usr/bin/time -v node bin/context-monkey.js install
-```
-
-### File Size Analysis
-```bash
-# Check template sizes
-du -sh templates/
-find templates/ -name "*.md" -exec wc -c {} +
-
-# Check total package size
-npm pack
-ls -lh context-monkey-*.tgz
-rm context-monkey-*.tgz
-```
+| Variable          | Purpose                   | Default    |
+| ----------------- | ------------------------- | ---------- |
+| `DEBUG`           | Enable debug logging      | `false`    |
+| `CM_INSTALL_PATH` | Override install location | OS default |
 
 ## Troubleshooting
 
-### Reset Development Environment
-```bash
-# Remove all installations
-node bin/context-monkey.js uninstall
-node bin/context-monkey.js uninstall --global
+### Build Issues
 
-# Clean npm
-rm -rf node_modules package-lock.json
-npm install
+- Check Node.js version compatibility
+- Clear `node_modules` and reinstall dependencies
+- Verify TypeScript configuration
 
-# Verify clean state
-ls .claude/ 2>/dev/null || echo "Local: Clean"
-ls ~/.claude/monkey_* 2>/dev/null || echo "Global: Clean"
-```
+### Installation Issues
 
-### Test Different Node.js Versions
-```bash
-# Using nvm (if installed)
-nvm install 16
-nvm use 16
-npm install
-node bin/context-monkey.js --help
+- Check Claude Code directory permissions
+- Verify target directory exists
+- Test with `--local` flag first
 
-nvm install 18  
-nvm use 18
-npm install
-node bin/context-monkey.js --help
-```
+### Agent/Command Issues
 
----
+- Validate YAML frontmatter syntax
+- Check Markdown formatting
+- Test command registration in Claude Code
 
-*This setup guide covers all aspects of Context Monkey development. For questions or issues, please check the [GitHub Issues](https://github.com/richhaase/context-monkey/issues) or create a new issue.*
+For additional support, check the [issues page](https://github.com/richhaase/context-monkey/issues) or create a new issue with detailed information about your problem.

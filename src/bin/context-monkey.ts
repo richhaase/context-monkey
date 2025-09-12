@@ -5,7 +5,8 @@ import { install } from '../commands/install.js';
 import { uninstall } from '../commands/uninstall.js';
 import { InstallOptions, UninstallOptions } from '../types/index.js';
 
-const packageJson = require('../../package.json');
+import packageJsonData from '../../package.json' with { type: 'json' };
+const packageJson = packageJsonData;
 
 program
   .name('context-monkey')
@@ -17,11 +18,11 @@ program
   .description('Install or upgrade Context Monkey (global: ~/.claude/ or local: .claude/)')
   .option('-l, --local', 'Install to ./.claude instead of ~/.claude')
   .option('-y, --yes', 'Skip confirmation prompt')
-  .action(async (options) => {
+  .action(async options => {
     try {
-      const installOptions: InstallOptions = { 
-        local: options.local, 
-        assumeYes: options.yes 
+      const installOptions: InstallOptions = {
+        local: options.local,
+        assumeYes: options.yes,
       };
       await install(installOptions);
     } catch (error) {
@@ -36,11 +37,11 @@ program
   .description('Remove Context Monkey (global: ~/.claude/ or local: .claude/)')
   .option('-l, --local', 'Uninstall from ./.claude instead of ~/.claude')
   .option('-y, --yes', 'Skip confirmation prompt')
-  .action(async (options) => {
+  .action(async options => {
     try {
-      const uninstallOptions: UninstallOptions = { 
-        local: options.local, 
-        assumeYes: options.yes 
+      const uninstallOptions: UninstallOptions = {
+        local: options.local,
+        assumeYes: options.yes,
       };
       await uninstall(uninstallOptions);
     } catch (error) {

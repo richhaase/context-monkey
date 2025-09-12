@@ -1,5 +1,11 @@
 import { test, expect, describe } from 'bun:test';
-import { HOOK_CONFIGS, CONTEXT_MONKEY_MARKER, generateHooks, createTerminalNotifierHook, isContextMonkeyHook } from '../../src/config/hooks';
+import {
+  HOOK_CONFIGS,
+  CONTEXT_MONKEY_MARKER,
+  generateHooks,
+  createTerminalNotifierHook,
+  isContextMonkeyHook,
+} from '../../src/config/hooks';
 import type { HookConfig, HookDefinition } from '../../src/types/index';
 
 describe('hooks configuration', () => {
@@ -27,7 +33,7 @@ describe('hooks configuration', () => {
       const config: HookConfig = {
         title: 'Test Title',
         message: 'Test message in {dir}',
-        sound: 'TestSound'
+        sound: 'TestSound',
       };
 
       const hook = createTerminalNotifierHook(config);
@@ -37,7 +43,7 @@ describe('hooks configuration', () => {
       expect(hook.matcher).toBe('');
       expect(Array.isArray(hook.hooks)).toBe(true);
       expect(hook.hooks).toHaveLength(1);
-      
+
       const hookItem = hook.hooks[0];
       expect(hookItem.type).toBe('command');
       expect(hookItem.timeout).toBe(10);
@@ -49,7 +55,7 @@ describe('hooks configuration', () => {
       const config: HookConfig = {
         title: 'Test',
         message: 'Finished in {dir}',
-        sound: 'Sound'
+        sound: 'Sound',
       };
 
       const hook = createTerminalNotifierHook(config);
@@ -65,7 +71,7 @@ describe('hooks configuration', () => {
       expect(hooks).toHaveProperty('Stop');
       expect(hooks).toHaveProperty('SubagentStop');
       expect(hooks).toHaveProperty('Notification');
-      
+
       expect(Array.isArray(hooks.Stop)).toBe(true);
       expect(Array.isArray(hooks.SubagentStop)).toBe(true);
       expect(Array.isArray(hooks.Notification)).toBe(true);
@@ -88,12 +94,14 @@ describe('hooks configuration', () => {
     test('returns true for Context Monkey hooks', () => {
       const contextMonkeyHook: HookDefinition = {
         matcher: '',
-        hooks: [{
-          type: 'command',
-          command: 'test',
-          timeout: 10,
-          [CONTEXT_MONKEY_MARKER]: true
-        }]
+        hooks: [
+          {
+            type: 'command',
+            command: 'test',
+            timeout: 10,
+            [CONTEXT_MONKEY_MARKER]: true,
+          },
+        ],
       };
 
       expect(isContextMonkeyHook(contextMonkeyHook)).toBe(true);
@@ -102,11 +110,13 @@ describe('hooks configuration', () => {
     test('returns false for non-Context Monkey hooks', () => {
       const regularHook: HookDefinition = {
         matcher: '',
-        hooks: [{
-          type: 'command',
-          command: 'test',
-          timeout: 10
-        }]
+        hooks: [
+          {
+            type: 'command',
+            command: 'test',
+            timeout: 10,
+          },
+        ],
       };
 
       expect(isContextMonkeyHook(regularHook)).toBe(false);
@@ -115,7 +125,7 @@ describe('hooks configuration', () => {
     test('returns false for empty hooks array', () => {
       const emptyHook: HookDefinition = {
         matcher: '',
-        hooks: []
+        hooks: [],
       };
 
       expect(isContextMonkeyHook(emptyHook)).toBe(false);

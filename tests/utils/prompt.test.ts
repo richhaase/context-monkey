@@ -9,7 +9,7 @@ describe('prompt utilities', () => {
         platform: 'Windows',
         supportsNotifications: false,
         requirements: 'Not currently supported',
-        notificationMethod: null
+        notificationMethod: null,
       };
 
       const result = await confirmHooksInstallation(windowsPlatform);
@@ -21,7 +21,7 @@ describe('prompt utilities', () => {
         platform: 'Linux',
         supportsNotifications: false,
         requirements: 'Not currently supported',
-        notificationMethod: null
+        notificationMethod: null,
       };
 
       const result = await confirmHooksInstallation(linuxPlatform);
@@ -33,13 +33,16 @@ describe('prompt utilities', () => {
         platform: 'macOS',
         supportsNotifications: true,
         requirements: 'terminal-notifier (install via: brew install terminal-notifier)',
-        notificationMethod: 'terminal-notifier'
+        notificationMethod: 'terminal-notifier',
       };
 
       expect(typeof validPlatform.platform).toBe('string');
       expect(typeof validPlatform.supportsNotifications).toBe('boolean');
       expect(typeof validPlatform.requirements).toBe('string');
-      expect(validPlatform.notificationMethod === null || typeof validPlatform.notificationMethod === 'string').toBe(true);
+      expect(
+        validPlatform.notificationMethod === null ||
+          typeof validPlatform.notificationMethod === 'string'
+      ).toBe(true);
     });
   });
 });

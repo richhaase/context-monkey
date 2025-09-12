@@ -16,38 +16,38 @@ export function isMacOS(): boolean {
  */
 export function getPlatformInfo(): PlatformInfo {
   const platform = os.platform();
-  
+
   switch (platform) {
     case 'darwin':
       return {
         platform: 'macOS',
         supportsNotifications: true,
         requirements: 'terminal-notifier (install via: brew install terminal-notifier)',
-        notificationMethod: 'terminal-notifier'
+        notificationMethod: 'terminal-notifier',
       };
-    
+
     case 'win32':
       return {
         platform: 'Windows',
         supportsNotifications: false,
         requirements: 'Not currently supported',
-        notificationMethod: null
+        notificationMethod: null,
       };
-    
+
     case 'linux':
       return {
         platform: 'Linux',
         supportsNotifications: false,
         requirements: 'Not currently supported',
-        notificationMethod: null
+        notificationMethod: null,
       };
-    
+
     default:
       return {
         platform: platform,
         supportsNotifications: false,
         requirements: 'Not currently supported',
-        notificationMethod: null
+        notificationMethod: null,
       };
   }
 }
@@ -60,18 +60,18 @@ export async function checkTerminalNotifierAvailable(): Promise<boolean> {
   if (!isMacOS()) {
     return false;
   }
-  
+
   try {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       const child = spawn('which', ['terminal-notifier'], { stdio: 'ignore' });
-      child.on('close', (code) => {
+      child.on('close', code => {
         resolve(code === 0);
       });
       child.on('error', () => {
         resolve(false);
       });
     });
-  } catch (error) {
+  } catch {
     return false;
   }
 }

@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Run lint-staged to lint and format only staged files
+bunx lint-staged
+
+# Run tests to make sure nothing is broken
+bun test

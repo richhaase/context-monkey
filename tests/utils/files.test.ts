@@ -22,7 +22,7 @@ describe('files utilities', () => {
     test('returns true when path is within allowed directory', () => {
       const allowedDir = '/tmp/test';
       const filePath = '/tmp/test/subdir/file.txt';
-      
+
       const result = validatePath(filePath, allowedDir);
       expect(result).toBe(true);
     });
@@ -30,7 +30,7 @@ describe('files utilities', () => {
     test('returns false when path is outside allowed directory', () => {
       const allowedDir = '/tmp/test';
       const filePath = '/tmp/other/file.txt';
-      
+
       const result = validatePath(filePath, allowedDir);
       expect(result).toBe(false);
     });
@@ -38,7 +38,7 @@ describe('files utilities', () => {
     test('handles relative paths correctly', () => {
       const allowedDir = process.cwd();
       const filePath = './test/file.txt';
-      
+
       const result = validatePath(filePath, allowedDir);
       expect(result).toBe(true);
     });
@@ -46,7 +46,7 @@ describe('files utilities', () => {
     test('prevents path traversal attacks', () => {
       const allowedDir = '/tmp/test';
       const filePath = '/tmp/test/../../../etc/passwd';
-      
+
       const result = validatePath(filePath, allowedDir);
       expect(result).toBe(false);
     });

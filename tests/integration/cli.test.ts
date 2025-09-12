@@ -1,5 +1,4 @@
 import { test, expect, describe } from 'bun:test';
-import { spawn } from 'child_process';
 import { promisify } from 'util';
 import path from 'path';
 
@@ -42,10 +41,11 @@ describe('CLI integration', () => {
   test('handles unknown commands gracefully', async () => {
     try {
       await execAsync(`node ${cliPath} unknown-command`);
-    } catch (error: any) {
-      expect(error.stderr).toContain('Unknown command');
-      expect(error.stdout).toContain('Available commands');
-      expect(error.code).toBe(1);
+    } catch (error: unknown) {
+      const execError = error as { stderr: string; stdout: string; code: number };
+      expect(execError.stderr).toContain('Unknown command');
+      expect(execError.stdout).toContain('Available commands');
+      expect(execError.code).toBe(1);
     }
   });
 
@@ -53,7 +53,7 @@ describe('CLI integration', () => {
     // Test the compiled CLI file structure
     const fs = require('fs');
     const cliContent = fs.readFileSync(cliPath, 'utf8');
-    
+
     expect(cliContent).toContain('#!/usr/bin/env node');
     expect(cliContent).toContain('commander');
     expect(cliContent).toContain('install');

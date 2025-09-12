@@ -13,18 +13,20 @@ describe('platform utilities', () => {
   describe('getPlatformInfo', () => {
     test('returns valid platform info object', () => {
       const info = getPlatformInfo();
-      
+
       // Test that required properties exist
       expect(info).toHaveProperty('platform');
       expect(info).toHaveProperty('supportsNotifications');
       expect(info).toHaveProperty('requirements');
       expect(info).toHaveProperty('notificationMethod');
-      
+
       // Test property types
       expect(typeof info.platform).toBe('string');
       expect(typeof info.supportsNotifications).toBe('boolean');
       expect(typeof info.requirements).toBe('string');
-      expect(info.notificationMethod === null || typeof info.notificationMethod === 'string').toBe(true);
+      expect(info.notificationMethod === null || typeof info.notificationMethod === 'string').toBe(
+        true
+      );
     });
 
     test('returns macOS info when on darwin platform', () => {
@@ -50,7 +52,7 @@ describe('platform utilities', () => {
     test('maps platform names correctly', () => {
       const info = getPlatformInfo();
       const platform = os.platform();
-      
+
       switch (platform) {
         case 'darwin':
           expect(info.platform).toBe('macOS');

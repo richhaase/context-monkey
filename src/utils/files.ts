@@ -11,7 +11,7 @@ export function getInstallPath(isGlobal = false): string {
   if (!isGlobal) {
     return '.claude'; // Local installation
   }
-  
+
   // Global installation to user's home directory
   const homeDir = os.homedir();
   return path.join(homeDir, '.claude');
@@ -67,7 +67,7 @@ export async function copyFileWithValidation(src: string, dest: string): Promise
   if (!validatePath(src, resourcesDir)) {
     throw new Error(`Invalid source path: ${src} is outside allowed resources directory`);
   }
-  
+
   // Validate destination path is within allowed directories
   const cwd = process.cwd();
   const homeClaudeDir = path.join(os.homedir(), '.claude');
@@ -75,7 +75,7 @@ export async function copyFileWithValidation(src: string, dest: string): Promise
   if (!isValidDest) {
     throw new Error(`Invalid destination path: ${dest} is outside allowed directories`);
   }
-  
+
   await fs.ensureDir(path.dirname(dest));
   await fs.copy(src, dest);
 }

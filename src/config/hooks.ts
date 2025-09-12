@@ -7,18 +7,18 @@ export const HOOK_CONFIGS: Record<string, HookConfig> = {
   stop: {
     title: '🤖 Claude Code',
     message: '✅ Agent finished in {dir}',
-    sound: 'Hero'
+    sound: 'Hero',
   },
   subagentStop: {
-    title: '🔧 Claude Code', 
+    title: '🔧 Claude Code',
     message: '🎯 Subagent finished in {dir}',
-    sound: 'Ping'
+    sound: 'Ping',
   },
   notification: {
     title: '⚠️ Claude Code',
     message: '💬 Attention needed in {dir}',
-    sound: 'Glass'
-  }
+    sound: 'Glass',
+  },
 };
 
 /**
@@ -35,9 +35,9 @@ export function generateHooks(
   hookConfigs: Record<string, HookConfig> = HOOK_CONFIGS
 ): Record<string, HookDefinition[]> {
   return {
-    "Stop": [createTerminalNotifierHook(hookConfigs.stop)],
-    "SubagentStop": [createTerminalNotifierHook(hookConfigs.subagentStop)],
-    "Notification": [createTerminalNotifierHook(hookConfigs.notification)]
+    Stop: [createTerminalNotifierHook(hookConfigs.stop)],
+    SubagentStop: [createTerminalNotifierHook(hookConfigs.subagentStop)],
+    Notification: [createTerminalNotifierHook(hookConfigs.notification)],
   };
 }
 
@@ -48,15 +48,17 @@ export function generateHooks(
  */
 export function createTerminalNotifierHook(config: HookConfig): HookDefinition {
   const command = `dir=$(basename "$CLAUDE_PROJECT_DIR"); terminal-notifier -title '${config.title}' -message "${config.message.replace('{dir}', '$dir')}" -sound ${config.sound}`;
-  
+
   return {
-    matcher: "",
-    hooks: [{
-      type: "command",
-      command: command,
-      timeout: 10,
-      [CONTEXT_MONKEY_MARKER]: true  // Mark as Context Monkey hook
-    }]
+    matcher: '',
+    hooks: [
+      {
+        type: 'command',
+        command: command,
+        timeout: 10,
+        [CONTEXT_MONKEY_MARKER]: true, // Mark as Context Monkey hook
+      },
+    ],
   };
 }
 

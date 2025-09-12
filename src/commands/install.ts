@@ -4,15 +4,21 @@ import { getInstallPath, copyFileWithValidation, exists, remove } from '../utils
 import { confirmInstallation, confirmHooksInstallation } from '../utils/prompt.js';
 import { isMacOS, getPlatformInfo, checkTerminalNotifierAvailable } from '../utils/platform.js';
 import { generateHooks } from '../config/hooks.js';
-import { loadSettings, mergeHooks, saveSettings, countContextMonkeyHooks } from '../utils/settings.js';
+import {
+  loadSettings,
+  mergeHooks,
+  saveSettings,
+  countContextMonkeyHooks,
+} from '../utils/settings.js';
 import { InstallOptions, PlatformInfo } from '../types/index.js';
 
 // Get version from package.json
-const packageJson = require('../../package.json');
+import packageJsonData from '../../package.json' with { type: 'json' };
+const packageJson = packageJsonData;
 
 export async function install(options: InstallOptions = {}): Promise<void> {
   const { local = false, _skipExistingCheck = false, assumeYes = false } = options;
-  
+
   const installPath = getInstallPath(!local);
   const installType = local ? 'local' : 'global';
   const displayPath = local ? '.claude' : '~/.claude';
@@ -20,26 +26,34 @@ export async function install(options: InstallOptions = {}): Promise<void> {
   // Check for existing installation
   const existingPath = path.join(installPath, 'commands', 'cm');
   const isUpgrade = exists(existingPath);
-  
+
   console.log(`Context Monkey v${packageJson.version} ${isUpgrade ? 'Upgrade' : 'Installation'}`);
-  
+
   // If this is called internally (like from upgrade command), skip this check
   if (_skipExistingCheck) {
     // This is an internal call, proceed without additional checks
   }
 
   const resourcesDir = path.join(__dirname, '../../resources');
-  
+
   // Count files to be installed
   const commandsDir = path.join(resourcesDir, 'commands');
   const commandFiles = fs.readdirSync(commandsDir).filter(file => file.endsWith('.md'));
-  
+
   const agentsDir = path.join(resourcesDir, 'agents');
-  const agentFiles = fs.existsSync(agentsDir) ? fs.readdirSync(agentsDir).filter(file => file.endsWith('.md')) : [];
-  
+  const agentFiles = fs.existsSync(agentsDir)
+    ? fs.readdirSync(agentsDir).filter(file => file.endsWith('.md'))
+    : [];
+
   // Show summary and ask for confirmation (unless this is called internally or --yes is used)
   if (!_skipExistingCheck && !assumeYes) {
-    const confirmed = await confirmInstallation(installType, displayPath, commandFiles.length, agentFiles.length, isUpgrade);
+    const confirmed = await confirmInstallation(
+      installType,
+      displayPath,
+      commandFiles.length,
+      agentFiles.length,
+      isUpgrade
+    );
     if (!confirmed) {
       console.log(`${isUpgrade ? 'Upgrade' : 'Installation'} cancelled.`);
       return;
@@ -50,26 +64,28 @@ export async function install(options: InstallOptions = {}): Promise<void> {
     // If this is an upgrade, clean up existing files first
     if (isUpgrade) {
       console.log('🗑️  Removing existing Context Monkey files...');
-      
+
       // Remove all commands (safe - our subdirectory)
       const commandsPath = path.join(installPath, 'commands', 'cm');
       if (exists(commandsPath)) {
         await remove(commandsPath);
         console.log('   Removed /commands/cm/');
       }
-      
+
       // Remove all cm-prefixed agents (safe - our prefix)
       const agentsPath = path.join(installPath, 'agents');
       if (exists(agentsPath)) {
-        const existingAgentFiles = fs.readdirSync(agentsPath).filter(file => file.startsWith('cm-') && file.endsWith('.md'));
-        
+        const existingAgentFiles = fs
+          .readdirSync(agentsPath)
+          .filter(file => file.startsWith('cm-') && file.endsWith('.md'));
+
         for (const agentFile of existingAgentFiles) {
           const agentPath = path.join(agentsPath, agentFile);
           if (exists(agentPath)) {
             await remove(agentPath);
           }
         }
-        
+
         if (existingAgentFiles.length > 0) {
           console.log(`   Removed ${existingAgentFiles.length} Context Monkey agents`);
         }
@@ -94,7 +110,7 @@ export async function install(options: InstallOptions = {}): Promise<void> {
           path.join(installPath, 'agents', file)
         );
       }
-      
+
       console.log(`  ${displayPath}/agents/              - Subagents (${agentFiles.length} files)`);
     }
 
@@ -104,14 +120,17 @@ export async function install(options: InstallOptions = {}): Promise<void> {
     }
 
     console.log('');
-    console.log(`✅ Context Monkey v${packageJson.version} ${isUpgrade ? 'upgraded' : 'installed'} successfully!`);
+    console.log(
+      `✅ Context Monkey v${packageJson.version} ${isUpgrade ? 'upgraded' : 'installed'} successfully!`
+    );
     console.log('');
     console.log('Next steps:');
-    console.log('• Run \'/cm:intro\' in Claude Code to see all available commands and get started');
+    console.log("• Run '/cm:intro' in Claude Code to see all available commands and get started");
     console.log('');
     console.log('Files installed:');
-    console.log(`  ${displayPath}/commands/cm/     - Slash commands (${commandFiles.length} files)`);
-
+    console.log(
+      `  ${displayPath}/commands/cm/     - Slash commands (${commandFiles.length} files)`
+    );
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error(`${isUpgrade ? 'Upgrade' : 'Installation'} failed:`, errorMessage);
@@ -125,9 +144,13 @@ export async function install(options: InstallOptions = {}): Promise<void> {
  * @param displayPath - Display path for user feedback
  * @param assumeYes - Skip prompts if true
  */
-async function handleHooksInstallation(installPath: string, displayPath: string, assumeYes: boolean): Promise<void> {
+async function handleHooksInstallation(
+  installPath: string,
+  displayPath: string,
+  assumeYes: boolean
+): Promise<void> {
   const platformInfo: PlatformInfo = getPlatformInfo();
-  
+
   // Only proceed if platform supports notifications
   if (!platformInfo.supportsNotifications) {
     console.log('');
@@ -135,7 +158,7 @@ async function handleHooksInstallation(installPath: string, displayPath: string,
     console.log('   Continuing without hooks installation');
     return;
   }
-  
+
   // Check if user wants to install hooks (unless --yes is used)
   if (!assumeYes) {
     const wantsHooks = await confirmHooksInstallation(platformInfo);
@@ -144,7 +167,7 @@ async function handleHooksInstallation(installPath: string, displayPath: string,
       return;
     }
   }
-  
+
   try {
     // Check if terminal-notifier is available on macOS
     if (isMacOS()) {
@@ -153,26 +176,27 @@ async function handleHooksInstallation(installPath: string, displayPath: string,
         console.log('');
         console.log('⚠️  Warning: terminal-notifier is not installed');
         console.log('   Install it with: brew install terminal-notifier');
-        console.log('   Hooks will be installed but won\'t work until terminal-notifier is available');
+        console.log(
+          "   Hooks will be installed but won't work until terminal-notifier is available"
+        );
       }
     }
-    
+
     // Load existing settings
     console.log('📬 Installing notification hooks...');
     const existingSettings = loadSettings(installPath);
     const existingHookCount = countContextMonkeyHooks(existingSettings);
-    
+
     // Generate and merge hooks
     const contextMonkeyHooks = generateHooks();
     const mergedSettings = mergeHooks(existingSettings, contextMonkeyHooks);
-    
+
     // Save merged settings
     saveSettings(installPath, mergedSettings);
-    
+
     const action = existingHookCount > 0 ? 'updated' : 'installed';
     console.log(`   ${action} notification hooks in ${displayPath}/settings.json`);
-    console.log('   You\'ll receive notifications when Claude Code agents finish or need attention');
-    
+    console.log("   You'll receive notifications when Claude Code agents finish or need attention");
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.warn(`Warning: Could not install hooks: ${errorMessage}`);

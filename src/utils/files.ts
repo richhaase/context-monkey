@@ -63,7 +63,7 @@ export function validatePath(filePath: string, allowedDirectory: string): boolea
  */
 export async function copyFileWithValidation(src: string, dest: string): Promise<void> {
   // Validate source path is within project template directory
-  const resourcesDir = path.join(__dirname, '../../resources');
+  const resourcesDir = path.join(import.meta.dirname, '../../resources');
   if (!validatePath(src, resourcesDir)) {
     throw new Error(`Invalid source path: ${src} is outside allowed resources directory`);
   }

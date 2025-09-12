@@ -34,7 +34,7 @@ export async function install(options: InstallOptions = {}): Promise<void> {
     // This is an internal call, proceed without additional checks
   }
 
-  const resourcesDir = path.join(__dirname, '../../resources');
+  const resourcesDir = path.join(import.meta.dirname, '../../resources');
 
   // Count files to be installed
   const commandsDir = path.join(resourcesDir, 'commands');

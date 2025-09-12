@@ -1,6 +1,6 @@
 {
   "name": "context-monkey",
-  "version": "0.10.2",
+  "version": "0.10.3",
   "type": "module",
   "description": "Prompt engineering framework for Claude Code using specialized subagents",
   "main": "dist/bin/context-monkey.js",

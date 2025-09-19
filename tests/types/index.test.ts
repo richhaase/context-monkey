@@ -1,7 +1,5 @@
 import { test, expect, describe } from 'bun:test';
 import type {
-  InstallOptions,
-  UninstallOptions,
   PlatformInfo,
   HookConfig,
   ClaudeSettings,
@@ -10,32 +8,6 @@ import type {
 } from '../../src/types/index';
 
 describe('TypeScript type definitions', () => {
-  test('InstallOptions interface works correctly', () => {
-    const validOptions: InstallOptions = {
-      local: true,
-      assumeYes: false,
-      _skipExistingCheck: true,
-    };
-
-    expect(typeof validOptions.local).toBe('boolean');
-    expect(typeof validOptions.assumeYes).toBe('boolean');
-    expect(typeof validOptions._skipExistingCheck).toBe('boolean');
-
-    // All properties are optional
-    const emptyOptions: InstallOptions = {};
-    expect(typeof emptyOptions).toBe('object');
-  });
-
-  test('UninstallOptions interface works correctly', () => {
-    const validOptions: UninstallOptions = {
-      local: false,
-      assumeYes: true,
-    };
-
-    expect(typeof validOptions.local).toBe('boolean');
-    expect(typeof validOptions.assumeYes).toBe('boolean');
-  });
-
   test('PlatformInfo interface works correctly', () => {
     const validPlatform: PlatformInfo = {
       platform: 'macOS',

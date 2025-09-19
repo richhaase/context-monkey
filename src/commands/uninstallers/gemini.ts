@@ -1,21 +1,18 @@
 import os from 'os';
 import path from 'path';
 import fs from 'fs-extra';
-import type { UninstallOptions } from '../../types/index.js';
 
 const COMMAND_NAMESPACE = 'cm';
 const LEGACY_COMMAND_NAMESPACES = ['context-monkey'];
 const EXTENSION_NAME = 'cm';
 const LEGACY_EXTENSION_NAMES = ['context-monkey'];
 
-export async function uninstallGemini(options: UninstallOptions = {}): Promise<void> {
-  const baseDir = resolveGeminiBaseDir(Boolean(options.local));
+export async function uninstallGemini(): Promise<void> {
+  const baseDir = resolveGeminiBaseDir();
   const commandsDir = path.join(baseDir, 'commands', COMMAND_NAMESPACE);
   const extensionDir = path.join(baseDir, 'extensions', EXTENSION_NAME);
 
-  console.log(
-    `Removing Context Monkey resources from Gemini CLI (${options.local ? 'workspace' : 'user'} scope)...`
-  );
+  console.log('Removing Context Monkey resources from Gemini CLI...');
 
   await removeDirIfExists(commandsDir, '🗑️  Removed Gemini custom commands');
   await removeDirIfExists(extensionDir, '🗑️  Removed Gemini extension metadata');
@@ -40,10 +37,7 @@ export async function uninstallGemini(options: UninstallOptions = {}): Promise<v
   console.log('✅ Gemini CLI resources removed');
 }
 
-function resolveGeminiBaseDir(isLocal: boolean): string {
-  if (isLocal) {
-    return path.join(process.cwd(), '.gemini');
-  }
+function resolveGeminiBaseDir(): string {
   return path.join(os.homedir(), '.gemini');
 }
 

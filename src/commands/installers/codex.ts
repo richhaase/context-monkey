@@ -1,7 +1,6 @@
 import os from 'os';
 import path from 'path';
 import fs from 'fs-extra';
-import type { InstallOptions } from '../../types/index.js';
 import { loadCommandTemplates } from '../../utils/resources.js';
 import { renderCommandForTarget } from '../../templates/index.js';
 import {
@@ -15,11 +14,7 @@ import { TargetAgent } from '../../types/index.js';
 import packageJsonData from '../../../package.json' with { type: 'json' };
 const packageJson = packageJsonData;
 
-type CodexInstallOptions = Pick<InstallOptions, 'assumeYes'>;
-
-export async function installCodex(options: CodexInstallOptions): Promise<void> {
-  const { assumeYes } = options;
-  void assumeYes; // reserved for future use (Codex currently has no prompts to confirm)
+export async function installCodex(): Promise<void> {
   const homeDir = os.homedir();
   const codexDir = path.join(homeDir, '.codex');
   const promptsDir = path.join(codexDir, 'prompts');

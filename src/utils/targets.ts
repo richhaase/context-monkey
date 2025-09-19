@@ -1,70 +1,132 @@
-import { TargetAgent, DEFAULT_TARGET_AGENT, TargetDescriptor } from '../types/index.js';
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
+import { spawnSync } from 'child_process';
 
-export const TARGET_DESCRIPTORS: Record<TargetAgent, TargetDescriptor> = {
-  [TargetAgent.CLAUDE_CODE]: {
-    id: TargetAgent.CLAUDE_CODE,
-    label: 'Claude Code',
-    supportsLocalInstall: true,
-    supportsHooks: true,
-  },
-  [TargetAgent.CODEX_CLI]: {
-    id: TargetAgent.CODEX_CLI,
-    label: 'Codex CLI',
-    supportsLocalInstall: false,
-    supportsHooks: false,
-  },
-  [TargetAgent.GEMINI_CLI]: {
-    id: TargetAgent.GEMINI_CLI,
-    label: 'Gemini CLI',
-    supportsLocalInstall: true,
-    supportsHooks: false,
-  },
+import { TargetAgent } from '../types/index.js';
+import { CODEX_LEGACY_PROMPT_PREFIXES } from './codex.js';
+
+export interface AgentStatus {
+  agent: TargetAgent;
+  label: string;
+  available: boolean;
+  installed: boolean;
+  details: string[];
+}
+
+const TARGET_LABELS: Record<TargetAgent, string> = {
+  [TargetAgent.CLAUDE_CODE]: 'Claude Code',
+  [TargetAgent.CODEX_CLI]: 'Codex CLI',
+  [TargetAgent.GEMINI_CLI]: 'Gemini CLI',
 };
 
-export function parseTargetAgent(value: string): TargetAgent {
-  const normalized = value.trim().toLowerCase();
-  switch (normalized) {
-    case 'claude':
-    case 'claude-code':
-    case 'claude_code':
-      return TargetAgent.CLAUDE_CODE;
-    case 'codex':
-    case 'codex-cli':
-    case 'codex_cli':
-      return TargetAgent.CODEX_CLI;
-    case 'gemini':
-    case 'gemini-cli':
-    case 'gemini_cli':
-      return TargetAgent.GEMINI_CLI;
-    default:
-      throw new Error(`Unknown target agent: ${value}`);
-  }
-}
-
-export function resolveTargets(
-  requestedTargets: TargetAgent[] | undefined,
-  includeAllTargets: boolean
-): TargetAgent[] {
-  if (includeAllTargets) {
-    return Object.values(TargetAgent);
-  }
-
-  if (!requestedTargets || requestedTargets.length === 0) {
-    return [DEFAULT_TARGET_AGENT];
-  }
-
-  // Deduplicate while preserving order
-  const seen = new Set<TargetAgent>();
-  const resolved: TargetAgent[] = [];
-  requestedTargets.forEach(target => {
-    if (!seen.has(target)) {
-      seen.add(target);
-      resolved.push(target);
-    }
-  });
-  return resolved;
-}
-
 export function getTargetLabel(target: TargetAgent): string {
-  return TARGET_DESCRIPTORS[target]?.label ?? target;
+  return TARGET_LABELS[target] ?? target;
+}
+
+export function detectAgentStatuses(): AgentStatus[] {
+  return [detectClaudeStatus(), detectCodexStatus(), detectGeminiStatus()];
+}
+
+function detectClaudeStatus(): AgentStatus {
+  const globalCommandsDir = path.join(os.homedir(), '.claude', 'commands', 'cm');
+  const installed = directoryHasFiles(globalCommandsDir);
+
+  const details: string[] = [];
+  if (installed) {
+    details.push(`Commands: ${shortenPath(globalCommandsDir)}`);
+  }
+
+  return {
+    agent: TargetAgent.CLAUDE_CODE,
+    label: TARGET_LABELS[TargetAgent.CLAUDE_CODE],
+    available: true,
+    installed,
+    details,
+  };
+}
+
+function detectCodexStatus(): AgentStatus {
+  const promptsDir = path.join(os.homedir(), '.codex', 'prompts');
+  const available = commandExists('codex');
+  const promptFiles = listFiles(promptsDir).filter(file =>
+    CODEX_LEGACY_PROMPT_PREFIXES.some(prefix => file.startsWith(prefix))
+  );
+  const installed = promptFiles.length > 0;
+
+  const details: string[] = [];
+  if (installed) {
+    details.push(`Prompts: ${shortenPath(promptsDir)}`);
+  } else if (available) {
+    details.push('No Context Monkey prompts detected');
+  }
+
+  return {
+    agent: TargetAgent.CODEX_CLI,
+    label: TARGET_LABELS[TargetAgent.CODEX_CLI],
+    available,
+    installed,
+    details,
+  };
+}
+
+function detectGeminiStatus(): AgentStatus {
+  const baseDir = path.join(os.homedir(), '.gemini');
+  const commandsDir = path.join(baseDir, 'commands');
+  const cmCommandsDir = path.join(commandsDir, 'cm');
+  const extensionDir = path.join(baseDir, 'extensions', 'cm');
+
+  const available = commandExists('gemini');
+  const installed = directoryHasFiles(cmCommandsDir) || directoryHasFiles(extensionDir);
+
+  const details: string[] = [];
+  if (installed) {
+    details.push(`Commands: ${shortenPath(cmCommandsDir)}`);
+    if (fs.existsSync(extensionDir)) {
+      details.push(`Extension: ${shortenPath(extensionDir)}`);
+    }
+  } else if (available) {
+    details.push('No Context Monkey commands detected');
+  }
+
+  return {
+    agent: TargetAgent.GEMINI_CLI,
+    label: TARGET_LABELS[TargetAgent.GEMINI_CLI],
+    available,
+    installed,
+    details,
+  };
+}
+
+function commandExists(command: string): boolean {
+  const which = process.platform === 'win32' ? 'where' : 'which';
+  const result = spawnSync(which, [command], { stdio: 'ignore' });
+  return result.status === 0;
+}
+
+function directoryHasFiles(dir: string): boolean {
+  if (!fs.existsSync(dir)) {
+    return false;
+  }
+  try {
+    const entries = fs.readdirSync(dir);
+    return entries.length > 0;
+  } catch {
+    return false;
+  }
+}
+
+function listFiles(dir: string): string[] {
+  if (!fs.existsSync(dir)) {
+    return [];
+  }
+  try {
+    return fs.readdirSync(dir);
+  } catch {
+    return [];
+  }
+}
+
+function shortenPath(p: string): string {
+  return p.replace(os.homedir(), '~');
 }

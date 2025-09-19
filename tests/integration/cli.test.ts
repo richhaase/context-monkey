@@ -26,16 +26,12 @@ describe('CLI integration', () => {
 
   test('shows help for install command', async () => {
     const { stdout } = await execAsync(`node ${cliPath} install --help`);
-    expect(stdout).toContain('Install or upgrade Context Monkey');
-    expect(stdout).toContain('--local');
-    expect(stdout).toContain('--yes');
+    expect(stdout).toContain('Interactively install or upgrade Context Monkey');
   });
 
   test('shows help for uninstall command', async () => {
     const { stdout } = await execAsync(`node ${cliPath} uninstall --help`);
-    expect(stdout).toContain('Remove Context Monkey');
-    expect(stdout).toContain('--local');
-    expect(stdout).toContain('--yes');
+    expect(stdout).toContain('Interactively remove Context Monkey');
   });
 
   test('handles unknown commands gracefully', async () => {

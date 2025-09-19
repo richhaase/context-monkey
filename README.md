@@ -27,33 +27,13 @@ Then in Claude Code:
 ```bash
 bunx context-monkey install
 ```
-Installs to `~/.claude/` for all projects
-
-### Local Installation
-```bash
-bunx context-monkey install --local
-```
-Installs to `./.claude/` for current project only
-
-### Other Agents (Codex CLI / Gemini CLI)
-```bash
-# Install prompts for Codex CLI
-bunx context-monkey install --target codex
-
-# Install commands for Gemini CLI
-bunx context-monkey install --target gemini
-
-# Install everywhere
-bunx context-monkey install --all-targets
-```
-Use `--target` multiple times to select specific combinations (e.g. `--target claude --target gemini`).
-Codex prompts are registered as slash commands like `/cm-intro`; Gemini commands live under the `context-monkey:` namespace.
+The installer detects Claude Code, Codex CLI, and Gemini CLI automatically and guides you through installing or updating Context Monkey for each environment.
 
 ### Uninstall
 ```bash
 bunx context-monkey uninstall
 ```
-Add `--target codex` or `--target gemini` (repeatable) to remove resources from other agents.
+Removes Context Monkey from the agents you select during the interactive prompt.
 
 ## Project Context
 

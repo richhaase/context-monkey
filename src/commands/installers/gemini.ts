@@ -1,7 +1,6 @@
 import os from 'os';
 import path from 'path';
 import fs from 'fs-extra';
-import type { InstallOptions } from '../../types/index.js';
 import { loadCommandTemplates } from '../../utils/resources.js';
 import { renderCommandForTarget } from '../../templates/index.js';
 import { TargetAgent } from '../../types/index.js';
@@ -9,16 +8,14 @@ import { TargetAgent } from '../../types/index.js';
 import packageJsonData from '../../../package.json' with { type: 'json' };
 const packageJson = packageJsonData;
 
-type GeminiInstallOptions = Pick<InstallOptions, 'assumeYes' | 'local'>;
-
 const COMMAND_NAMESPACE = 'cm';
 const LEGACY_COMMAND_NAMESPACES = ['context-monkey'];
 const EXTENSION_NAME = 'cm';
 const LEGACY_EXTENSION_NAMES = ['context-monkey'];
 const GEMINI_CONTEXT_FILE = 'GEMINI.md';
 
-export async function installGemini(options: GeminiInstallOptions): Promise<void> {
-  const baseDir = resolveGeminiBaseDir(Boolean(options.local));
+export async function installGemini(): Promise<void> {
+  const baseDir = resolveGeminiBaseDir();
   const commandsDir = path.join(baseDir, 'commands', COMMAND_NAMESPACE);
   const extensionDir = path.join(baseDir, 'extensions', EXTENSION_NAME);
 
@@ -30,9 +27,7 @@ export async function installGemini(options: GeminiInstallOptions): Promise<void
     renderCommandForTarget(template, TargetAgent.GEMINI_CLI)
   );
 
-  console.log(
-    `Installing Context Monkey commands for Gemini CLI (${options.local ? 'workspace' : 'user'} scope)...`
-  );
+  console.log('Installing Context Monkey commands for Gemini CLI...');
 
   // Remove legacy namespace directories if they exist
   for (const legacyNamespace of LEGACY_COMMAND_NAMESPACES) {
@@ -96,10 +91,7 @@ export async function installGemini(options: GeminiInstallOptions): Promise<void
   console.log('✅ Gemini CLI resources installed');
 }
 
-function resolveGeminiBaseDir(isLocal: boolean): string {
-  if (isLocal) {
-    return path.join(process.cwd(), '.gemini');
-  }
+function resolveGeminiBaseDir(): string {
   return path.join(os.homedir(), '.gemini');
 }
 

@@ -1,31 +1,18 @@
 import path from 'path';
 import fs from 'fs';
 import { getInstallPath, remove, exists } from '../../utils/files.js';
-import { askQuestion, confirmUninstall, confirmHooksRemoval } from '../../utils/prompt.js';
+import { confirmHooksRemoval } from '../../utils/prompt.js';
 import {
   loadSettings,
   removeContextMonkeyHooks,
   saveSettings,
   countContextMonkeyHooks,
 } from '../../utils/settings.js';
-import type { UninstallOptions } from '../../types/index.js';
+export async function uninstallClaude(): Promise<void> {
+  const installPath = getInstallPath(true);
+  const displayPath = '~/.claude';
 
-export async function uninstallClaude(options: UninstallOptions = {}): Promise<void> {
-  const { local = false, assumeYes = false } = options;
-
-  const installPath = getInstallPath(!local);
-  const installType = local ? 'local' : 'global';
-  const displayPath = local ? '.claude' : '~/.claude';
-
-  console.log(`Context Monkey Claude uninstall`);
-
-  if (!assumeYes) {
-    const confirmed = await confirmUninstall(installType, displayPath);
-    if (!confirmed) {
-      console.log('Uninstall cancelled.');
-      return;
-    }
-  }
+  console.log('Context Monkey Claude uninstall');
 
   try {
     const commandsPath = path.join(installPath, 'commands', 'cm');
@@ -69,19 +56,7 @@ export async function uninstallClaude(options: UninstallOptions = {}): Promise<v
       }
     }
 
-    await handleHooksRemoval(installPath, displayPath, assumeYes);
-
-    if (local && exists('.cm')) {
-      const answer = await askQuestion(
-        'Remove .cm/ directory? This contains your project stack and rules. [y/N] '
-      );
-      if (answer === 'y' || answer === 'yes') {
-        await remove('.cm');
-        console.log('🗑️  Removed .cm/ directory');
-      } else {
-        console.log('📋 Kept .cm/ directory (contains project context)');
-      }
-    }
+    await handleHooksRemoval(installPath, displayPath);
 
     console.log('');
     console.log('✅ Context Monkey uninstalled from Claude!');
@@ -93,11 +68,7 @@ export async function uninstallClaude(options: UninstallOptions = {}): Promise<v
   }
 }
 
-async function handleHooksRemoval(
-  installPath: string,
-  displayPath: string,
-  assumeYes: boolean
-): Promise<void> {
+async function handleHooksRemoval(installPath: string, displayPath: string): Promise<void> {
   try {
     const existingSettings = loadSettings(installPath);
     const hookCount = countContextMonkeyHooks(existingSettings);
@@ -106,12 +77,10 @@ async function handleHooksRemoval(
       return;
     }
 
-    if (!assumeYes) {
-      const removeHooks = await confirmHooksRemoval(hookCount);
-      if (!removeHooks) {
-        console.log('   Keeping notification hooks');
-        return;
-      }
+    const removeHooks = await confirmHooksRemoval(hookCount);
+    if (!removeHooks) {
+      console.log('   Keeping notification hooks');
+      return;
     }
 
     console.log('🗑️  Removing notification hooks...');

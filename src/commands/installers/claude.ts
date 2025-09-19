@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs';
 import { getInstallPath, copyFileWithValidation, exists, remove } from '../../utils/files.js';
-import { confirmInstallation, confirmHooksInstallation } from '../../utils/prompt.js';
+import { confirmHooksInstallation } from '../../utils/prompt.js';
 import { isMacOS, getPlatformInfo, checkTerminalNotifierAvailable } from '../../utils/platform.js';
 import { generateHooks } from '../../config/hooks.js';
 import {
@@ -12,22 +12,15 @@ import {
 } from '../../utils/settings.js';
 import { loadCommandTemplates } from '../../utils/resources.js';
 import { renderCommandForTarget } from '../../templates/index.js';
-import type { InstallOptions, PlatformInfo } from '../../types/index.js';
+import type { PlatformInfo } from '../../types/index.js';
 import { TargetAgent } from '../../types/index.js';
 
 import packageJsonData from '../../../package.json' with { type: 'json' };
 const packageJson = packageJsonData;
 
-interface ClaudeInstallOptions extends Pick<InstallOptions, 'local' | 'assumeYes'> {
-  skipChecks?: boolean;
-}
-
-export async function installClaude(options: ClaudeInstallOptions): Promise<void> {
-  const { local = false, assumeYes = false, skipChecks = false } = options;
-
-  const installPath = getInstallPath(!local);
-  const installType = local ? 'local' : 'global';
-  const displayPath = local ? '.claude' : '~/.claude';
+export async function installClaude(): Promise<void> {
+  const installPath = getInstallPath(true);
+  const displayPath = '~/.claude';
 
   const existingPath = path.join(installPath, 'commands', 'cm');
   const isUpgrade = exists(existingPath);
@@ -43,20 +36,6 @@ export async function installClaude(options: ClaudeInstallOptions): Promise<void
   const agentFiles = fs.existsSync(agentsDir)
     ? fs.readdirSync(agentsDir).filter(file => file.endsWith('.md'))
     : [];
-
-  if (!skipChecks && !assumeYes) {
-    const confirmed = await confirmInstallation(
-      installType,
-      displayPath,
-      commandTemplates.length,
-      agentFiles.length,
-      isUpgrade
-    );
-    if (!confirmed) {
-      console.log(`${isUpgrade ? 'Upgrade' : 'Installation'} cancelled.`);
-      return;
-    }
-  }
 
   try {
     if (isUpgrade) {
@@ -106,9 +85,7 @@ export async function installClaude(options: ClaudeInstallOptions): Promise<void
       console.log(`  ${displayPath}/agents/              - Subagents (${agentFiles.length} files)`);
     }
 
-    if (!skipChecks) {
-      await handleHooksInstallation(installPath, displayPath, assumeYes);
-    }
+    await handleHooksInstallation(installPath, displayPath);
 
     console.log('');
     console.log(
@@ -131,11 +108,7 @@ export async function installClaude(options: ClaudeInstallOptions): Promise<void
   }
 }
 
-async function handleHooksInstallation(
-  installPath: string,
-  displayPath: string,
-  assumeYes: boolean
-): Promise<void> {
+async function handleHooksInstallation(installPath: string, displayPath: string): Promise<void> {
   const platformInfo: PlatformInfo = getPlatformInfo();
 
   if (!platformInfo.supportsNotifications) {
@@ -145,12 +118,10 @@ async function handleHooksInstallation(
     return;
   }
 
-  if (!assumeYes) {
-    const wantsHooks = await confirmHooksInstallation(platformInfo);
-    if (!wantsHooks) {
-      console.log('   Skipping hooks installation');
-      return;
-    }
+  const wantsHooks = await confirmHooksInstallation(platformInfo);
+  if (!wantsHooks) {
+    console.log('   Skipping hooks installation');
+    return;
   }
 
   try {

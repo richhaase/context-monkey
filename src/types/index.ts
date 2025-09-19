@@ -1,12 +1,22 @@
 // Core type definitions for Context Monkey
 
+export enum TargetAgent {
+  CLAUDE_CODE = 'claude-code',
+  CODEX_CLI = 'codex-cli',
+  GEMINI_CLI = 'gemini-cli',
+}
+
+export const DEFAULT_TARGET_AGENT = TargetAgent.CLAUDE_CODE;
+
 export interface InstallOptions {
+  targets?: TargetAgent[];
   local?: boolean;
   assumeYes?: boolean;
   _skipExistingCheck?: boolean;
 }
 
 export interface UninstallOptions {
+  targets?: TargetAgent[];
   local?: boolean;
   assumeYes?: boolean;
 }
@@ -56,4 +66,11 @@ export interface FileStats {
 export interface ValidationResult {
   isValid: boolean;
   issues: string[];
+}
+
+export interface TargetDescriptor {
+  id: TargetAgent;
+  label: string;
+  supportsLocalInstall: boolean;
+  supportsHooks: boolean;
 }

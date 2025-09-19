@@ -95,7 +95,8 @@ export async function installClaude(): Promise<void> {
     );
     console.log('');
     console.log('Next steps:');
-    console.log("• Run '/cm:intro' in Claude Code to see all available commands and get started");
+    console.log("• Use '/cm:stack-scan' to document your technology stack");
+    console.log("• Explore commands like '/cm:plan', '/cm:explain-repo', and '/cm:review-code'");
     console.log('');
     console.log('Files installed:');
     console.log(

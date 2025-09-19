@@ -206,7 +206,7 @@ node dist/bin/context-monkey.js install --local
 
 # 3. Test in Claude Code
 claude
-/cm:intro  # Verify installation works
+    /cm:stack-scan  # Verify installation works
 /cm:your-new-command  # Test your specific changes
 
 # 4. Clean up after testing

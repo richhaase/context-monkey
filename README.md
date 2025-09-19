@@ -8,11 +8,6 @@ Prompt engineering framework for Claude Code using specialized subagents
 bunx context-monkey install
 ```
 
-Then in Claude Code:
-```
-/cm:intro
-```
-
 ## Key Commands
 
 - **`/cm:stack-scan`** - Auto-detect and document your technology stack

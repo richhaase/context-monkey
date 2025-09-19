@@ -181,7 +181,7 @@ git push origin feature/new-command
 
    ```bash
    claude
-   /cm:intro  # Verify installation
+   /cm:stack-scan  # Verify installation
    ```
 
 4. **Test specific commands**:

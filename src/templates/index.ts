@@ -10,6 +10,7 @@ import type { Heading, Root } from 'mdast';
 import type { MarkdownTemplate } from '../utils/resources.js';
 import { TargetAgent } from '../types/index.js';
 import { CODEX_PROMPT_PREFIX } from '../utils/codex.js';
+import { AGENT_RENDER_RULES, type AgentRenderRule } from '../config/agents.js';
 
 export interface RenderedCommand {
   targetRelativePath: string;
@@ -111,7 +112,7 @@ function transformCodexMarkdown(template: MarkdownTemplate): string {
   let result = processor.stringify(tree).trim();
 
   const blueprints = template.agentRefs
-    .map(agent => renderAgentBlueprintMarkdown(template, agent, TargetAgent.CODEX_CLI))
+    .map(agent => renderAgentBlueprintMarkdown(template, agent, TargetAgent.CODEX_CLI, 2))
     .filter((section): section is string => Boolean(section));
 
   if (blueprints.length > 0) {
@@ -141,7 +142,7 @@ function transformGeminiPrompt(template: MarkdownTemplate): string {
   let result = processor.stringify(tree).trim();
 
   const blueprints = template.agentRefs
-    .map(agent => renderAgentBlueprintMarkdown(template, agent, TargetAgent.GEMINI_CLI, '###'))
+    .map(agent => renderAgentBlueprintMarkdown(template, agent, TargetAgent.GEMINI_CLI, 3))
     .filter((section): section is string => Boolean(section));
 
   if (blueprints.length > 0) {
@@ -205,19 +206,25 @@ function renderAgentBlueprintMarkdown(
   template: MarkdownTemplate,
   agentName: string,
   target: TargetAgent,
-  heading: string = '##'
+  baseHeadingDepth: number
 ): string | null {
   const agentPath = path.join(template.resourcesRoot, 'agents', `${agentName}.md`);
   if (!fs.existsSync(agentPath)) {
     return null;
   }
 
+  const rule = AGENT_RENDER_RULES[target];
+  if (!rule || rule.mode === 'skip') {
+    return null;
+  }
+
   const raw = fs.readFileSync(agentPath, 'utf8');
   const { data, content } = matter(raw);
 
-  const body = sanitizeAgentContent(content.trim(), target);
+  const body = transformAgentBody(content, rule, baseHeadingDepth);
 
   const displayName = formatAgentDisplayName(agentName);
+  const heading = '#'.repeat(baseHeadingDepth);
   const lines: string[] = [`${heading} Agent Blueprint: ${displayName}`];
 
   if (typeof data.description === 'string') {
@@ -233,24 +240,13 @@ function renderAgentBlueprintMarkdown(
     lines.push('', body);
   }
 
-  return lines.join('\n');
-}
+  let output = lines.join('\n');
 
-function sanitizeAgentContent(content: string, target: TargetAgent): string {
-  if (target === TargetAgent.CLAUDE_CODE) {
-    return content;
+  for (const replacement of rule.replacements ?? []) {
+    output = output.replace(replacement.pattern, replacement.replace);
   }
 
-  let result = content
-    .replace(/@\.cm\/[\w\-.]+/g, 'project documentation')
-    .replace(/\bsubagent(s)?\b/gi, 'assistant workflow$1')
-    .replace(/Task tool/gi, 'workspace tools')
-    .replace(/Use Bash tool/gi, 'Run shell commands');
-
-  // Remove execution sections instructing to invoke cm-* subagents directly
-  result = result.replace(/## Execution[\s\S]*?(?=\n## |$)/gi, '').trim();
-
-  return result;
+  return output;
 }
 
 function formatAgentDisplayName(agentName: string): string {
@@ -259,4 +255,40 @@ function formatAgentDisplayName(agentName: string): string {
     .split('-')
     .map(part => part.charAt(0).toUpperCase() + part.slice(1))
     .join(' ');
+}
+
+function transformAgentBody(markdown: string, rule: AgentRenderRule, baseDepth: number): string {
+  const processor = unified().use(remarkParse).use(remarkStringify, {
+    fence: '`',
+    fences: true,
+    bullet: '-',
+    listItemIndent: 'one',
+  });
+
+  const tree = processor.parse(markdown) as Root;
+
+  (rule.dropHeadings ?? []).forEach(pattern => {
+    removeSection(tree, heading => pattern.test(getHeadingText(heading)));
+  });
+
+  const minDepth = findMinimumHeadingDepth(tree);
+  if (minDepth !== null) {
+    visit(tree, 'heading', node => {
+      const relative = node.depth - minDepth;
+      const newDepth = Math.max(1, Math.min(6, baseDepth + relative)) as 1 | 2 | 3 | 4 | 5 | 6;
+      node.depth = newDepth;
+    });
+  }
+
+  return processor.stringify(tree).trim();
+}
+
+function findMinimumHeadingDepth(tree: Root): number | null {
+  let min: number | null = null;
+  visit(tree, 'heading', node => {
+    if (min === null || node.depth < min) {
+      min = node.depth;
+    }
+  });
+  return min;
 }

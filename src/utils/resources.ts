@@ -8,6 +8,8 @@ export interface MarkdownTemplate {
   fileName: string;
   frontmatter: Record<string, string>;
   body: string;
+  resourcesRoot: string;
+  agentRefs: string[];
 }
 
 function parseFrontmatter(content: string): { frontmatter: Record<string, string>; body: string } {
@@ -41,18 +43,28 @@ function collectMarkdownTemplates(rootDir: string): MarkdownTemplate[] {
       } else if (entry.isFile() && entry.name.endsWith('.md')) {
         const raw = fs.readFileSync(entryPath, 'utf8');
         const { frontmatter, body } = parseFrontmatter(raw);
+        const resourcesRoot = path.dirname(rootDir);
+        const agentRefs = extractAgentReferences(raw);
         templates.push({
           filePath: entryPath,
           relativePath: entryRelative,
           fileName: entry.name,
           frontmatter,
           body,
+          resourcesRoot,
+          agentRefs,
         });
       }
     }
   }
 
   return templates;
+}
+
+function extractAgentReferences(content: string): string[] {
+  const matches = content.match(/cm-[a-z0-9-]+/gi) ?? [];
+  const unique = Array.from(new Set(matches.map(name => name.toLowerCase())));
+  return unique;
 }
 
 export function loadCommandTemplates(resourcesDir: string): MarkdownTemplate[] {

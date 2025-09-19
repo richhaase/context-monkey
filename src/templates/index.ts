@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 import { unified } from 'unified';
 import remarkParse from 'remark-parse';
 import remarkStringify from 'remark-stringify';
@@ -44,7 +46,7 @@ function renderForClaude(template: MarkdownTemplate): RenderedCommand {
 
 function renderForCodex(template: MarkdownTemplate): RenderedCommand {
   const slug = createCodexPromptSlug(template.relativePath);
-  const content = transformCodexMarkdown(template.body);
+  const content = transformCodexMarkdown(template);
   return {
     targetRelativePath: `${slug}.md`,
     format: 'markdown',
@@ -56,11 +58,11 @@ function renderForCodex(template: MarkdownTemplate): RenderedCommand {
 function renderForGemini(template: MarkdownTemplate): RenderedCommand {
   const description = template.frontmatter.description ?? 'Context Monkey command';
   const targetRelativePath = template.relativePath.replace(/\.md$/i, '.toml');
-  const prompt = transformGeminiPrompt(template.body);
+  const prompt = transformGeminiPrompt(template);
   const toml = [
     `description = "${escapeTomlString(description)}"`,
     'prompt = """',
-    prompt,
+    escapeTripleQuotes(prompt),
     '"""',
     '',
   ].join('\n');
@@ -81,7 +83,7 @@ function createCodexPromptSlug(relativePath: string): string {
   return `${CODEX_PROMPT_PREFIX}${trimmed}`.toLowerCase();
 }
 
-function transformCodexMarkdown(markdown: string): string {
+function transformCodexMarkdown(template: MarkdownTemplate): string {
   const processor = unified().use(remarkParse).use(remarkStringify, {
     fence: '`',
     fences: true,
@@ -89,7 +91,7 @@ function transformCodexMarkdown(markdown: string): string {
     listItemIndent: 'one',
   });
 
-  const tree = processor.parse(markdown) as Root;
+  const tree = processor.parse(template.body) as Root;
 
   visit(tree, 'text', node => {
     if (typeof node.value !== 'string') {
@@ -106,11 +108,20 @@ function transformCodexMarkdown(markdown: string): string {
 
   removeSection(tree, heading => /when this command runs/i.test(getHeadingText(heading)));
 
-  const result = processor.stringify(tree);
-  return result.trim();
+  let result = processor.stringify(tree).trim();
+
+  const blueprints = template.agentRefs
+    .map(agent => renderAgentBlueprintMarkdown(template, agent))
+    .filter((section): section is string => Boolean(section));
+
+  if (blueprints.length > 0) {
+    result = `${result}\n\n---\n\n${blueprints.join('\n\n---\n\n')}`;
+  }
+
+  return result;
 }
 
-function transformGeminiPrompt(markdown: string): string {
+function transformGeminiPrompt(template: MarkdownTemplate): string {
   const processor = unified().use(remarkParse).use(remarkStringify, {
     fence: '`',
     fences: true,
@@ -118,7 +129,7 @@ function transformGeminiPrompt(markdown: string): string {
     listItemIndent: 'one',
   });
 
-  const tree = processor.parse(markdown) as Root;
+  const tree = processor.parse(template.body) as Root;
 
   visit(tree, 'text', node => {
     if (typeof node.value !== 'string') {
@@ -127,8 +138,17 @@ function transformGeminiPrompt(markdown: string): string {
     node.value = node.value.replace(/@\.cm\/[\w\-.]+/g, 'project documentation');
   });
 
-  const result = processor.stringify(tree);
-  return result.trim();
+  let result = processor.stringify(tree).trim();
+
+  const blueprints = template.agentRefs
+    .map(agent => renderAgentBlueprintMarkdown(template, agent, '###'))
+    .filter((section): section is string => Boolean(section));
+
+  if (blueprints.length > 0) {
+    result = `${result}\n\n---\n\n${blueprints.join('\n\n---\n\n')}`;
+  }
+
+  return result;
 }
 
 function removeSection(tree: Root, predicate: (heading: Heading) => boolean): void {
@@ -175,4 +195,49 @@ function escapeTomlString(value: string): string {
 
 function normalizeTrailingNewline(value: string): string {
   return value.endsWith('\n') ? value : `${value}\n`;
+}
+
+function escapeTripleQuotes(value: string): string {
+  return value.replace(/"""/g, '\\"\\"\\"');
+}
+
+function renderAgentBlueprintMarkdown(
+  template: MarkdownTemplate,
+  agentName: string,
+  heading: string = '##'
+): string | null {
+  const agentPath = path.join(template.resourcesRoot, 'agents', `${agentName}.md`);
+  if (!fs.existsSync(agentPath)) {
+    return null;
+  }
+
+  const raw = fs.readFileSync(agentPath, 'utf8');
+  const { data, content } = matter(raw);
+
+  const displayName = formatAgentDisplayName(agentName);
+  const lines: string[] = [`${heading} Agent Blueprint: ${displayName}`];
+
+  if (typeof data.description === 'string') {
+    lines.push('', `**Description:** ${data.description}`);
+  }
+
+  if (data.tools) {
+    const tools = Array.isArray(data.tools) ? data.tools.join(', ') : String(data.tools);
+    lines.push(`**Tools:** ${tools}`);
+  }
+
+  const body = content.trim();
+  if (body.length > 0) {
+    lines.push('', body);
+  }
+
+  return lines.join('\n');
+}
+
+function formatAgentDisplayName(agentName: string): string {
+  return agentName
+    .replace(/^cm-/, '')
+    .split('-')
+    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
 }

@@ -31,6 +31,7 @@ _Implementation status: initial cross-agent support landed via CLI `--target` fl
   - Codex: Markdown prompts under `prompts/` plus snippets appended to `AGENTS.md`.
   - Gemini: TOML command files and optional extension metadata/context Markdown.
 - Build a small generator layer that can render each command/agent into the correct target format (Markdown→TOML conversion, description truncation, namespace mapping).
+- Leverage a Markdown AST pipeline (e.g., `remark-parse`/`remark-stringify` via Unified plus `gray-matter` for frontmatter) so per-target word substitutions and section pruning stay maintainable.
 - Capture command naming collisions rules (Gemini: colon-separated namespaces; Codex: prompt filenames) to avoid conflicts.
 
 ## 4. CLI UX Enhancements

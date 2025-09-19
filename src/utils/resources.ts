@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import matter from 'gray-matter';
 
 export interface MarkdownTemplate {
   filePath: string;
@@ -10,31 +11,17 @@ export interface MarkdownTemplate {
 }
 
 function parseFrontmatter(content: string): { frontmatter: Record<string, string>; body: string } {
-  if (!content.startsWith('---')) {
-    return { frontmatter: {}, body: content.trim() };
-  }
-
-  const endIndex = content.indexOf('\n---', 3);
-  if (endIndex === -1) {
-    return { frontmatter: {}, body: content.trim() };
-  }
-
-  const frontmatterBlock = content.slice(3, endIndex).trim();
-  const body = content.slice(endIndex + 4).trim();
-  const lines = frontmatterBlock.split(/\r?\n/);
+  const parsed = matter(content);
   const frontmatter: Record<string, string> = {};
-  for (const line of lines) {
-    const separatorIndex = line.indexOf(':');
-    if (separatorIndex === -1) {
-      continue;
+  Object.entries(parsed.data ?? {}).forEach(([key, value]) => {
+    const normalizedKey = key.toLowerCase();
+    if (typeof value === 'string') {
+      frontmatter[normalizedKey] = value;
+    } else {
+      frontmatter[normalizedKey] = JSON.stringify(value);
     }
-    const key = line.slice(0, separatorIndex).trim().toLowerCase();
-    const value = line.slice(separatorIndex + 1).trim();
-    if (key.length > 0) {
-      frontmatter[key] = value.replace(/^"|"$/g, '');
-    }
-  }
-  return { frontmatter, body };
+  });
+  return { frontmatter, body: parsed.content.trim() };
 }
 
 function collectMarkdownTemplates(rootDir: string): MarkdownTemplate[] {

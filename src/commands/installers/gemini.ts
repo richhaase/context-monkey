@@ -3,6 +3,8 @@ import path from 'path';
 import fs from 'fs-extra';
 import type { InstallOptions } from '../../types/index.js';
 import { loadCommandTemplates } from '../../utils/resources.js';
+import { renderCommandForTarget } from '../../templates/index.js';
+import { TargetAgent } from '../../types/index.js';
 
 import packageJsonData from '../../../package.json' with { type: 'json' };
 const packageJson = packageJsonData;
@@ -21,6 +23,9 @@ export async function installGemini(options: GeminiInstallOptions): Promise<void
 
   const resourcesDir = path.join(import.meta.dirname, '../../../resources');
   const commandTemplates = loadCommandTemplates(resourcesDir);
+  const renderedCommands = commandTemplates.map(template =>
+    renderCommandForTarget(template, TargetAgent.GEMINI_CLI)
+  );
 
   console.log(
     `Installing Context Monkey commands for Gemini CLI (${options.local ? 'workspace' : 'user'} scope)...`
@@ -33,11 +38,10 @@ export async function installGemini(options: GeminiInstallOptions): Promise<void
   }
   await fs.ensureDir(commandsDir);
 
-  for (const template of commandTemplates) {
-    const targetPath = path.join(commandsDir, template.relativePath.replace(/\.md$/i, '.toml'));
+  for (const rendered of renderedCommands) {
+    const targetPath = path.join(commandsDir, rendered.targetRelativePath);
     await fs.ensureDir(path.dirname(targetPath));
-    const toml = renderGeminiToml(template.frontmatter.description, template.body);
-    await fs.writeFile(targetPath, toml, 'utf8');
+    await fs.writeFile(targetPath, rendered.content, 'utf8');
   }
 
   await fs.ensureDir(extensionDir);
@@ -57,7 +61,7 @@ export async function installGemini(options: GeminiInstallOptions): Promise<void
 
   await fs.writeFile(
     path.join(extensionDir, GEMINI_CONTEXT_FILE),
-    buildGeminiContextSummary(commandTemplates.length),
+    buildGeminiContextSummary(renderedCommands.length),
     'utf8'
   );
 
@@ -71,14 +75,6 @@ function resolveGeminiBaseDir(isLocal: boolean): string {
     return path.join(process.cwd(), '.gemini');
   }
   return path.join(os.homedir(), '.gemini');
-}
-
-function renderGeminiToml(description: string | undefined, body: string): string {
-  const safeDescription = (description ?? 'Context Monkey command').replace(/"/g, '\\"');
-  const promptContent = body.replace(/"""/g, '\\"\\"\\"');
-  return [`description = "${safeDescription}"`, 'prompt = """', promptContent, '"""', ''].join(
-    '\n'
-  );
 }
 
 function buildGeminiContextSummary(commandCount: number): string {

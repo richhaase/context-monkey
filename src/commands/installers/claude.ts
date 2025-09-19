@@ -10,7 +10,10 @@ import {
   saveSettings,
   countContextMonkeyHooks,
 } from '../../utils/settings.js';
+import { loadCommandTemplates } from '../../utils/resources.js';
+import { renderCommandForTarget } from '../../templates/index.js';
 import type { InstallOptions, PlatformInfo } from '../../types/index.js';
+import { TargetAgent } from '../../types/index.js';
 
 import packageJsonData from '../../../package.json' with { type: 'json' };
 const packageJson = packageJsonData;
@@ -34,8 +37,7 @@ export async function installClaude(options: ClaudeInstallOptions): Promise<void
   );
 
   const resourcesDir = path.join(import.meta.dirname, '../../../resources');
-  const commandsDir = path.join(resourcesDir, 'commands');
-  const commandFiles = fs.readdirSync(commandsDir).filter(file => file.endsWith('.md'));
+  const commandTemplates = loadCommandTemplates(resourcesDir);
 
   const agentsDir = path.join(resourcesDir, 'agents');
   const agentFiles = fs.existsSync(agentsDir)
@@ -46,7 +48,7 @@ export async function installClaude(options: ClaudeInstallOptions): Promise<void
     const confirmed = await confirmInstallation(
       installType,
       displayPath,
-      commandFiles.length,
+      commandTemplates.length,
       agentFiles.length,
       isUpgrade
     );
@@ -85,11 +87,12 @@ export async function installClaude(options: ClaudeInstallOptions): Promise<void
     }
 
     console.log(`🔧 ${isUpgrade ? 'Updating' : 'Installing'} Claude commands...`);
-    for (const file of commandFiles) {
-      await copyFileWithValidation(
-        path.join(commandsDir, file),
-        path.join(installPath, 'commands', 'cm', file)
-      );
+
+    for (const template of commandTemplates) {
+      const rendered = renderCommandForTarget(template, TargetAgent.CLAUDE_CODE);
+      const destination = path.join(installPath, 'commands', 'cm', rendered.targetRelativePath);
+      await fs.promises.mkdir(path.dirname(destination), { recursive: true });
+      await fs.promises.writeFile(destination, rendered.content, 'utf8');
     }
 
     if (agentFiles.length > 0) {
@@ -119,7 +122,7 @@ export async function installClaude(options: ClaudeInstallOptions): Promise<void
     console.log('');
     console.log('Files installed:');
     console.log(
-      `  ${displayPath}/commands/cm/     - Slash commands (${commandFiles.length} files)`
+      `  ${displayPath}/commands/cm/     - Slash commands (${commandTemplates.length} files)`
     );
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';

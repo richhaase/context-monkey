@@ -111,7 +111,7 @@ function transformCodexMarkdown(template: MarkdownTemplate): string {
   let result = processor.stringify(tree).trim();
 
   const blueprints = template.agentRefs
-    .map(agent => renderAgentBlueprintMarkdown(template, agent))
+    .map(agent => renderAgentBlueprintMarkdown(template, agent, TargetAgent.CODEX_CLI))
     .filter((section): section is string => Boolean(section));
 
   if (blueprints.length > 0) {
@@ -141,7 +141,7 @@ function transformGeminiPrompt(template: MarkdownTemplate): string {
   let result = processor.stringify(tree).trim();
 
   const blueprints = template.agentRefs
-    .map(agent => renderAgentBlueprintMarkdown(template, agent, '###'))
+    .map(agent => renderAgentBlueprintMarkdown(template, agent, TargetAgent.GEMINI_CLI, '###'))
     .filter((section): section is string => Boolean(section));
 
   if (blueprints.length > 0) {
@@ -204,6 +204,7 @@ function escapeTripleQuotes(value: string): string {
 function renderAgentBlueprintMarkdown(
   template: MarkdownTemplate,
   agentName: string,
+  target: TargetAgent,
   heading: string = '##'
 ): string | null {
   const agentPath = path.join(template.resourcesRoot, 'agents', `${agentName}.md`);
@@ -213,6 +214,8 @@ function renderAgentBlueprintMarkdown(
 
   const raw = fs.readFileSync(agentPath, 'utf8');
   const { data, content } = matter(raw);
+
+  const body = sanitizeAgentContent(content.trim(), target);
 
   const displayName = formatAgentDisplayName(agentName);
   const lines: string[] = [`${heading} Agent Blueprint: ${displayName}`];
@@ -226,12 +229,28 @@ function renderAgentBlueprintMarkdown(
     lines.push(`**Tools:** ${tools}`);
   }
 
-  const body = content.trim();
   if (body.length > 0) {
     lines.push('', body);
   }
 
   return lines.join('\n');
+}
+
+function sanitizeAgentContent(content: string, target: TargetAgent): string {
+  if (target === TargetAgent.CLAUDE_CODE) {
+    return content;
+  }
+
+  let result = content
+    .replace(/@\.cm\/[\w\-.]+/g, 'project documentation')
+    .replace(/\bsubagent(s)?\b/gi, 'assistant workflow$1')
+    .replace(/Task tool/gi, 'workspace tools')
+    .replace(/Use Bash tool/gi, 'Run shell commands');
+
+  // Remove execution sections instructing to invoke cm-* subagents directly
+  result = result.replace(/## Execution[\s\S]*?(?=\n## |$)/gi, '').trim();
+
+  return result;
 }
 
 function formatAgentDisplayName(agentName: string): string {

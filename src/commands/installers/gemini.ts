@@ -11,13 +11,16 @@ const packageJson = packageJsonData;
 
 type GeminiInstallOptions = Pick<InstallOptions, 'assumeYes' | 'local'>;
 
-const COMMAND_NAMESPACE = 'context-monkey';
+const COMMAND_NAMESPACE = 'cm';
+const LEGACY_COMMAND_NAMESPACES = ['context-monkey'];
+const EXTENSION_NAME = 'cm';
+const LEGACY_EXTENSION_NAMES = ['context-monkey'];
 const GEMINI_CONTEXT_FILE = 'GEMINI.md';
 
 export async function installGemini(options: GeminiInstallOptions): Promise<void> {
   const baseDir = resolveGeminiBaseDir(Boolean(options.local));
   const commandsDir = path.join(baseDir, 'commands', COMMAND_NAMESPACE);
-  const extensionDir = path.join(baseDir, 'extensions', COMMAND_NAMESPACE);
+  const extensionDir = path.join(baseDir, 'extensions', EXTENSION_NAME);
 
   await fs.ensureDir(baseDir);
 
@@ -30,6 +33,29 @@ export async function installGemini(options: GeminiInstallOptions): Promise<void
   console.log(
     `Installing Context Monkey commands for Gemini CLI (${options.local ? 'workspace' : 'user'} scope)...`
   );
+
+  // Remove legacy namespace directories if they exist
+  for (const legacyNamespace of LEGACY_COMMAND_NAMESPACES) {
+    const legacyDir = path.join(baseDir, 'commands', legacyNamespace);
+    if (await fs.pathExists(legacyDir)) {
+      try {
+        await fs.remove(legacyDir);
+      } catch {
+        // ignore cleanup errors
+      }
+    }
+  }
+
+  for (const legacyExtension of LEGACY_EXTENSION_NAMES) {
+    const legacyExtensionDir = path.join(baseDir, 'extensions', legacyExtension);
+    if (await fs.pathExists(legacyExtensionDir)) {
+      try {
+        await fs.remove(legacyExtensionDir);
+      } catch {
+        // ignore cleanup errors
+      }
+    }
+  }
 
   try {
     await fs.remove(commandsDir);
@@ -49,7 +75,7 @@ export async function installGemini(options: GeminiInstallOptions): Promise<void
     path.join(extensionDir, 'gemini-extension.json'),
     JSON.stringify(
       {
-        name: COMMAND_NAMESPACE,
+        name: EXTENSION_NAME,
         version: packageJson.version,
         contextFileName: GEMINI_CONTEXT_FILE,
       },

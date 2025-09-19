@@ -18,8 +18,8 @@ _Implementation status: initial cross-agent support landed via CLI `--target` fl
   - Merge Context Monkey MCP/tool definitions into `~/.codex/config.toml` using a TOML-aware writer (e.g. [`@iarna/toml`]) and tag inserted sections for safe removal on uninstall.
   - Confirm whether any additional plugin mechanism exists beyond prompts/AGENTS; if not, document limitations in release notes.
 - **Gemini CLI**
-  - Primary install path: copy TOML command definitions into `~/.gemini/commands/context-monkey/` (Gemini loads user commands from this directory per [docs/cli/commands.md](https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/commands.md)).
-  - Optional packaging: offer a Gemini extension under `~/.gemini/extensions/context-monkey/` with a generated `gemini-extension.json` (structure described in [docs/extension.md](https://github.com/google-gemini/gemini-cli/blob/main/docs/extension.md)).
+  - Primary install path: copy TOML command definitions into `~/.gemini/commands/cm/` (Gemini loads user commands from this directory per [docs/cli/commands.md](https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/commands.md)).
+  - Optional packaging: offer a Gemini extension under `~/.gemini/extensions/cm/` with a generated `gemini-extension.json` (structure described in [docs/extension.md](https://github.com/google-gemini/gemini-cli/blob/main/docs/extension.md)).
   - When installing the extension, include a `GEMINI.md` (or configured `contextFileName`) so commands can reference shared instructions.
   - Merge Context Monkey MCP definitions or include-directories into `.gemini/settings.json`, mirroring existing merge semantics.
   - Respect per-scope installs (`--local` → `<workspace>/.gemini/commands/`), and ensure uninstall cleans up both user and workspace artifacts as appropriate.

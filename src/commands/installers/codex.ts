@@ -10,6 +10,7 @@ import {
   stripCodexAgentsBlock,
 } from '../../utils/codex.js';
 import { TargetAgent } from '../../types/index.js';
+import { printInstallSummary } from '../../utils/installSummary.js';
 
 import packageJsonData from '../../../package.json' with { type: 'json' };
 const packageJson = packageJsonData;
@@ -54,9 +55,20 @@ export async function installCodex(): Promise<void> {
 
   await updateAgentsFile(agentsFile, generatedSlugs);
 
-  console.log('  ~/.codex/prompts/               - Context Monkey prompts installed');
-  console.log('  ~/.codex/AGENTS.md              - Context Monkey guidance inserted');
   console.log('✅ Codex CLI resources installed');
+
+  printInstallSummary('Codex CLI', [
+    {
+      label: 'Slash commands',
+      path: '~/.codex/prompts/',
+      count: renderedCommands.length,
+    },
+    {
+      label: 'Guidance',
+      path: '~/.codex/AGENTS.md',
+      details: 'Context Monkey section updated',
+    },
+  ]);
 }
 
 async function updateAgentsFile(agentsFile: string, slugs: string[]): Promise<void> {

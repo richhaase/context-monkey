@@ -4,6 +4,7 @@ import fs from 'fs-extra';
 import { loadCommandTemplates } from '../../utils/resources.js';
 import { renderCommandForTarget } from '../../templates/index.js';
 import { TargetAgent } from '../../types/index.js';
+import { printInstallSummary } from '../../utils/installSummary.js';
 
 import packageJsonData from '../../../package.json' with { type: 'json' };
 const packageJson = packageJsonData;
@@ -86,9 +87,20 @@ export async function installGemini(): Promise<void> {
     'utf8'
   );
 
-  console.log(`  ${baseDir}/commands/${COMMAND_NAMESPACE}/ - Commands synced`);
-  console.log(`  ${baseDir}/extensions/${COMMAND_NAMESPACE}/ - Extension metadata updated`);
   console.log('✅ Gemini CLI resources installed');
+
+  printInstallSummary('Gemini CLI', [
+    {
+      label: 'Slash commands',
+      path: `${baseDir}/commands/${COMMAND_NAMESPACE}/`,
+      count: renderedCommands.length,
+    },
+    {
+      label: 'Extension metadata',
+      path: `${baseDir}/extensions/${COMMAND_NAMESPACE}/`,
+      details: GEMINI_CONTEXT_FILE,
+    },
+  ]);
 }
 
 function resolveGeminiBaseDir(): string {

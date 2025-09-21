@@ -14,6 +14,7 @@ import { loadCommandTemplates } from '../../utils/resources.js';
 import { renderCommandForTarget } from '../../templates/index.js';
 import type { PlatformInfo } from '../../types/index.js';
 import { TargetAgent } from '../../types/index.js';
+import { printInstallSummary } from '../../utils/installSummary.js';
 
 import packageJsonData from '../../../package.json' with { type: 'json' };
 const packageJson = packageJsonData;
@@ -85,7 +86,7 @@ export async function installClaude(): Promise<void> {
       console.log(`  ${displayPath}/agents/              - Subagents (${agentFiles.length} files)`);
     }
 
-    await handleHooksInstallation(installPath, displayPath);
+    const hookResult = await handleHooksInstallation(installPath, displayPath);
 
     console.log('');
     console.log(
@@ -98,10 +99,24 @@ export async function installClaude(): Promise<void> {
     console.log("• Use '/cm:stack-scan' to document your technology stack");
     console.log("• Explore commands like '/cm:plan', '/cm:explain-repo', and '/cm:review-code'");
     console.log('');
-    console.log('Files installed:');
-    console.log(
-      `  ${displayPath}/commands/cm/     - Slash commands (${commandTemplates.length} files)`
-    );
+    printInstallSummary('Claude Code', [
+      {
+        label: 'Slash commands',
+        path: `${displayPath}/commands/cm/`,
+        count: commandTemplates.length,
+      },
+      {
+        label: 'Subagent blueprints',
+        path: `${displayPath}/agents/`,
+        count: agentFiles.length,
+        details: agentFiles.length > 0 ? 'synced' : 'none',
+      },
+      {
+        label: 'Notification hooks',
+        path: `${displayPath}/settings.json`,
+        details: formatHookSummary(hookResult),
+      },
+    ]);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error(`${isUpgrade ? 'Upgrade' : 'Installation'} failed:`, errorMessage);
@@ -109,20 +124,30 @@ export async function installClaude(): Promise<void> {
   }
 }
 
-async function handleHooksInstallation(installPath: string, displayPath: string): Promise<void> {
+type HookInstallStatus =
+  | { status: 'unsupported' }
+  | { status: 'skipped' }
+  | { status: 'installed'; count: number }
+  | { status: 'updated'; count: number }
+  | { status: 'failed'; reason: string };
+
+async function handleHooksInstallation(
+  installPath: string,
+  displayPath: string
+): Promise<HookInstallStatus> {
   const platformInfo: PlatformInfo = getPlatformInfo();
 
   if (!platformInfo.supportsNotifications) {
     console.log('');
     console.log('📬 Notification hooks are not supported on this platform');
     console.log('   Continuing without hooks installation');
-    return;
+    return { status: 'unsupported' };
   }
 
   const wantsHooks = await confirmHooksInstallation(platformInfo);
   if (!wantsHooks) {
     console.log('   Skipping hooks installation');
-    return;
+    return { status: 'skipped' };
   }
 
   try {
@@ -150,9 +175,29 @@ async function handleHooksInstallation(installPath: string, displayPath: string)
     const action = existingHookCount > 0 ? 'updated' : 'installed';
     console.log(`   ${action} notification hooks in ${displayPath}/settings.json`);
     console.log("   You'll receive notifications when Claude Code agents finish or need attention");
+    const newCount = countContextMonkeyHooks(mergedSettings);
+    return { status: action === 'updated' ? 'updated' : 'installed', count: newCount };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.warn(`Warning: Could not install hooks: ${errorMessage}`);
     console.log('   Continuing without hooks installation');
+    return { status: 'failed', reason: errorMessage };
+  }
+}
+
+function formatHookSummary(result: HookInstallStatus): string {
+  switch (result.status) {
+    case 'unsupported':
+      return 'unsupported';
+    case 'skipped':
+      return 'skipped';
+    case 'installed':
+      return `installed (${result.count})`;
+    case 'updated':
+      return `updated (${result.count})`;
+    case 'failed':
+      return `failed (${result.reason})`;
+    default:
+      return 'n/a';
   }
 }

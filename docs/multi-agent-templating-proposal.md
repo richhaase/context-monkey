@@ -77,10 +77,10 @@ Phase 3 — Determinism & Validation ✅ Completed
 - Resource validation script checks required frontmatter, partial usage, and agent references.
 - Templates already normalize Markdown/TOML output via shared renderers for consistent snapshots later.
 
-Phase 4 — Specialized Installs
+Phase 4 — Specialized Installs ✅ Completed
 
-- Keep current installers; wire them to the new rendered outputs only.
-- Claude retains optional hooks/subagents; other agents remain minimal.
+- Installers now emit consistent summaries while writing only generated assets.
+- Claude retains optional hooks/subagents with status reporting; Codex/Gemini stay minimal.
 
 Phase 5 — Documentation
 

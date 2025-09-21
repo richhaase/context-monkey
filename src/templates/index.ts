@@ -11,6 +11,11 @@ import type { MarkdownTemplate } from '../utils/resources.js';
 import { TargetAgent } from '../types/index.js';
 import { CODEX_PROMPT_PREFIX } from '../utils/codex.js';
 import { AGENT_RENDER_RULES, type AgentRenderRule } from '../config/agents.js';
+import {
+  buildTemplateContext,
+  getHandlebarsEnvironment,
+  type AgentTemplateContext,
+} from './handlebars.js';
 
 export interface RenderedCommand {
   targetRelativePath: string;
@@ -35,8 +40,35 @@ export function renderCommandForTarget(
   }
 }
 
+const AGENT_CONTEXTS: Record<TargetAgent, AgentTemplateContext> = {
+  [TargetAgent.CLAUDE_CODE]: {
+    id: TargetAgent.CLAUDE_CODE,
+    name: 'Claude Code',
+    supportsSubagents: true,
+  },
+  [TargetAgent.CODEX_CLI]: {
+    id: TargetAgent.CODEX_CLI,
+    name: 'Codex CLI',
+    supportsSubagents: false,
+  },
+  [TargetAgent.GEMINI_CLI]: {
+    id: TargetAgent.GEMINI_CLI,
+    name: 'Gemini CLI',
+    supportsSubagents: false,
+  },
+};
+
+function getAgentContext(target: TargetAgent): AgentTemplateContext {
+  const context = AGENT_CONTEXTS[target];
+  if (!context) {
+    throw new Error(`Unsupported agent context: ${target}`);
+  }
+  return context;
+}
+
 function renderForClaude(template: MarkdownTemplate): RenderedCommand {
-  const raw = matter.stringify(template.body, template.frontmatter);
+  const body = renderTemplateBody(template, TargetAgent.CLAUDE_CODE);
+  const raw = matter.stringify(body, template.frontmatter);
   return {
     targetRelativePath: template.relativePath,
     format: 'markdown',
@@ -46,8 +78,9 @@ function renderForClaude(template: MarkdownTemplate): RenderedCommand {
 }
 
 function renderForCodex(template: MarkdownTemplate): RenderedCommand {
+  const body = renderTemplateBody(template, TargetAgent.CODEX_CLI);
   const slug = createCodexPromptSlug(template.relativePath);
-  const content = transformCodexMarkdown(template);
+  const content = transformCodexMarkdown(template, body);
   return {
     targetRelativePath: `${slug}.md`,
     format: 'markdown',
@@ -59,7 +92,8 @@ function renderForCodex(template: MarkdownTemplate): RenderedCommand {
 function renderForGemini(template: MarkdownTemplate): RenderedCommand {
   const description = template.frontmatter.description ?? 'Context Monkey command';
   const targetRelativePath = template.relativePath.replace(/\.md$/i, '.toml');
-  const prompt = transformGeminiPrompt(template);
+  const body = renderTemplateBody(template, TargetAgent.GEMINI_CLI);
+  const prompt = transformGeminiPrompt(template, body);
   const toml = [
     `description = "${escapeTomlString(description)}"`,
     'prompt = """',
@@ -76,6 +110,21 @@ function renderForGemini(template: MarkdownTemplate): RenderedCommand {
   };
 }
 
+function renderTemplateBody(template: MarkdownTemplate, target: TargetAgent): string {
+  if (!template.isHandlebars) {
+    return template.body;
+  }
+
+  const environment = getHandlebarsEnvironment(template.resourcesRoot);
+  const context = buildTemplateContext({
+    agent: getAgentContext(target),
+    relativePath: template.relativePath,
+  });
+
+  const compiled = environment.compile(template.body, { noEscape: true });
+  return compiled(context);
+}
+
 function createCodexPromptSlug(relativePath: string): string {
   const withoutExt = relativePath.replace(/\.md$/i, '');
   const normalized = withoutExt.replace(/[\\/]+/g, '-');
@@ -84,7 +133,7 @@ function createCodexPromptSlug(relativePath: string): string {
   return `${CODEX_PROMPT_PREFIX}${trimmed}`.toLowerCase();
 }
 
-function transformCodexMarkdown(template: MarkdownTemplate): string {
+function transformCodexMarkdown(template: MarkdownTemplate, markdown: string): string {
   const processor = unified().use(remarkParse).use(remarkStringify, {
     fence: '`',
     fences: true,
@@ -92,7 +141,7 @@ function transformCodexMarkdown(template: MarkdownTemplate): string {
     listItemIndent: 'one',
   });
 
-  const tree = processor.parse(template.body) as Root;
+  const tree = processor.parse(markdown) as Root;
 
   visit(tree, 'text', node => {
     if (typeof node.value !== 'string') {
@@ -122,7 +171,7 @@ function transformCodexMarkdown(template: MarkdownTemplate): string {
   return result;
 }
 
-function transformGeminiPrompt(template: MarkdownTemplate): string {
+function transformGeminiPrompt(template: MarkdownTemplate, markdown: string): string {
   const processor = unified().use(remarkParse).use(remarkStringify, {
     fence: '`',
     fences: true,
@@ -130,7 +179,7 @@ function transformGeminiPrompt(template: MarkdownTemplate): string {
     listItemIndent: 'one',
   });
 
-  const tree = processor.parse(template.body) as Root;
+  const tree = processor.parse(markdown) as Root;
 
   visit(tree, 'text', node => {
     if (typeof node.value !== 'string') {

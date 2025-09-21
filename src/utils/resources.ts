@@ -4,12 +4,17 @@ import matter from 'gray-matter';
 
 export interface MarkdownTemplate {
   filePath: string;
+  /** Relative path without Handlebars suffix (e.g., stack-scan.md). */
   relativePath: string;
+  /** Relative path including the original extension (e.g., stack-scan.md.hbs). */
+  sourceRelativePath: string;
   fileName: string;
   frontmatter: Record<string, string>;
+  /** Raw template body (may include Handlebars expressions). */
   body: string;
   resourcesRoot: string;
   agentRefs: string[];
+  isHandlebars: boolean;
 }
 
 function parseFrontmatter(content: string): { frontmatter: Record<string, string>; body: string } {
@@ -26,7 +31,7 @@ function parseFrontmatter(content: string): { frontmatter: Record<string, string
   return { frontmatter, body: parsed.content.trim() };
 }
 
-function collectMarkdownTemplates(rootDir: string): MarkdownTemplate[] {
+function collectMarkdownTemplates(rootDir: string, extensions: string[]): MarkdownTemplate[] {
   const templates: MarkdownTemplate[] = [];
 
   const stack: string[] = [''];
@@ -40,19 +45,22 @@ function collectMarkdownTemplates(rootDir: string): MarkdownTemplate[] {
       const entryPath = path.join(rootDir, entryRelative);
       if (entry.isDirectory()) {
         stack.push(entryRelative);
-      } else if (entry.isFile() && entry.name.endsWith('.md')) {
+      } else if (entry.isFile() && extensions.some(ext => entry.name.endsWith(ext))) {
         const raw = fs.readFileSync(entryPath, 'utf8');
         const { frontmatter, body } = parseFrontmatter(raw);
         const resourcesRoot = path.dirname(rootDir);
         const agentRefs = extractAgentReferences(raw);
+        const normalizedRelative = entryRelative.replace(/\.hbs$/i, '');
         templates.push({
           filePath: entryPath,
-          relativePath: entryRelative,
+          relativePath: normalizedRelative,
+          sourceRelativePath: entryRelative,
           fileName: entry.name,
           frontmatter,
           body,
           resourcesRoot,
           agentRefs,
+          isHandlebars: entry.name.toLowerCase().endsWith('.hbs'),
         });
       }
     }
@@ -72,7 +80,7 @@ export function loadCommandTemplates(resourcesDir: string): MarkdownTemplate[] {
   if (!fs.existsSync(commandsDir)) {
     return [];
   }
-  return collectMarkdownTemplates(commandsDir);
+  return collectMarkdownTemplates(commandsDir, ['.md', '.md.hbs']);
 }
 
 export function loadAgentTemplates(resourcesDir: string): MarkdownTemplate[] {
@@ -80,5 +88,5 @@ export function loadAgentTemplates(resourcesDir: string): MarkdownTemplate[] {
   if (!fs.existsSync(agentsDir)) {
     return [];
   }
-  return collectMarkdownTemplates(agentsDir);
+  return collectMarkdownTemplates(agentsDir, ['.md']);
 }

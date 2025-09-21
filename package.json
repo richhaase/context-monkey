@@ -40,6 +40,7 @@
     "commander": "^12.0.0",
     "fs-extra": "^11.2.0",
     "gray-matter": "^4.0.3",
+    "handlebars": "^4.7.8",
     "remark-parse": "^11.0.0",
     "remark-stringify": "^11.0.0",
     "unified": "^11.0.5",

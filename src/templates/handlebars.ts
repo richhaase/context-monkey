@@ -37,6 +37,7 @@ export function getHandlebarsEnvironment(resourcesRoot: string): typeof Handleba
 function registerHelpers(instance: typeof Handlebars): void {
   // Placeholder for future helpers. Keeps API explicit.
   instance.registerHelper('noop', value => value);
+  instance.registerHelper('eq', (a, b) => a === b);
 }
 
 function registerPartials(instance: typeof Handlebars, partialsDir: string): void {

@@ -67,10 +67,10 @@ Phase 1 — Introduce Handlebars ✅ Completed
 - Converted all commands to `.md.hbs` templates with minimal structural changes.
 - Created shared insertion partial stubs (`insert.*`) ready for per-agent adapters.
 
-Phase 2 — Agent Adapters
+Phase 2 — Agent Adapters ✅ Completed
 
-- Implement insertion expansions for Claude (outsourcing), Codex (inline), Gemini (inline→TOML).
-- Ensure outputs are parallel in structure and tone across agents.
+- Implemented insertion expansions so Claude delegates to subagents while other agents perform inline workflows.
+- Updated templates to reference `{{agent.name}}` and shared insertions for consistent tone across agents.
 
 Phase 3 — Determinism & Validation
 
@@ -115,8 +115,8 @@ Phase 5 — Documentation
 
 ## Action Plan (Summary)
 
-- Convert commands to base `.md.hbs` templates with shared partials.
-- Implement generic insertions and per‑agent adapter expansions.
+- Convert commands to base `.md.hbs` templates with shared partials. ✅
+- Implement generic insertions and per-agent adapter expansions. ✅
 - Keep installers interactive; add no new CLI flags.
 - Add snapshot tests and resource validation.
 - Keep Claude‑specific features behind the Claude adapter/install only.

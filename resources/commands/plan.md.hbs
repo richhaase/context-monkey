@@ -24,12 +24,9 @@ Delegate implementation planning to the specialized cm-planner subagent for deep
 
 # Execution
 
-When this command runs, Claude Code will:
+When this command runs, {{agent.name}} will:
 
-1. Use Task tool to invoke the cm-planner subagent with:
-   - subagent_type: "cm-planner"
-   - prompt: Pass the planning goal from $ARGUMENTS
-   - description: "Create implementation plan"
+{{{> insert.delegateTo step="1" id="cm-planner" label="cm-planner" purpose="implementation planner" prompt="Pass the planning goal from $ARGUMENTS" description="Create implementation plan"}}}
 
 The cm-planner subagent specializes in:
 - Breaking down complex tasks
@@ -39,4 +36,3 @@ The cm-planner subagent specializes in:
 - Defining clear success criteria
 
 The planner remains read-only during analysis and produces a comprehensive plan that can be saved to `docs/plans/` if desired.
-

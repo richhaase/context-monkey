@@ -28,12 +28,9 @@ Delegate code review to the specialized cm-reviewer subagent for comprehensive a
 
 # Execution
 
-When this command runs, Claude Code will:
+When this command runs, {{agent.name}} will:
 
 1. Use Bash tool to get the appropriate git diff based on $ARGUMENTS
-2. Use Task tool to invoke the cm-reviewer subagent with:
-   - subagent_type: "cm-reviewer"
-   - prompt: Include the diff output and request for code review
-   - description: "Code review of changes"
+{{{> insert.delegateTo step="2" id="cm-reviewer" label="cm-reviewer" purpose="code reviewer" prompt="Include the diff output and request for code review" description="Code review of changes"}}}
 
 The cm-reviewer subagent will analyze the changes with senior engineer expertise, checking for correctness, design, security, performance, and style issues.

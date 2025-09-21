@@ -25,12 +25,9 @@ Delegate repository analysis to the specialized cm-repo-explainer subagent for c
 
 # Execution
 
-When this command runs, Claude Code will:
+When this command runs, {{agent.name}} will:
 
-1. Use Task tool to invoke the cm-repo-explainer subagent with:
-   - subagent_type: "cm-repo-explainer"
-   - prompt: Request repository analysis with optional focus from $ARGUMENTS
-   - description: "Analyze repository architecture"
+{{{> insert.delegateTo step="1" id="cm-repo-explainer" label="cm-repo-explainer" purpose="repository explainer" prompt="Request repository analysis with optional focus from $ARGUMENTS" description="Analyze repository architecture"}}}
 
 The cm-repo-explainer subagent specializes in:
 - Understanding complex codebases

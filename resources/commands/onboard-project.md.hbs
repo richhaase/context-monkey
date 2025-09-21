@@ -24,10 +24,11 @@ The workflow adapts based on the analysis mode argument:
 
 # Execution
 
-When this command runs, Claude Code will:
+When this command runs, {{agent.name}} will:
 
 ## Phase 1: Technology Stack Analysis
 
+{{#if agent.supportsSubagents}}
 Use Task tool to invoke the cm-stack-profiler subagent:
 - **subagent_type**: "cm-stack-profiler"
 - **description**: "Analyze technology stack for project onboarding"
@@ -45,9 +46,20 @@ Use Task tool to invoke the cm-stack-profiler subagent:
   
   Format for onboarding context - prioritize actionable information.
   ```
+{{else}}
+Perform the technology stack analysis directly:
+- Note the selected mode (quick, standard, deep) based on $ARGUMENTS.
+- Identify key technologies and versions in use.
+- List essential build, run, and test commands.
+- Describe the development environment setup requirements.
+- Highlight entry points and hot paths developers should know.
+{{> insert.useWorkspaceTools}}
+{{> insert.referenceProjectDocs}}
+{{/if}}
 
 ## Phase 2: Repository Architecture Overview
 
+{{#if agent.supportsSubagents}}
 Use Task tool to invoke the cm-repo-explainer subagent:
 - **subagent_type**: "cm-repo-explainer"
 - **description**: "Explain repository architecture for onboarding"
@@ -66,11 +78,22 @@ Use Task tool to invoke the cm-repo-explainer subagent:
   Assume the reader has the technology stack context from previous analysis.
   Format for onboarding - emphasize practical understanding.
   ```
+{{else}}
+Explain the repository architecture directly:
+- Summarize the project's purpose and primary goals.
+- Map the directory structure and how code is organized.
+- Describe key modules and their relationships.
+- Call out critical code paths and hot spots.
+- Identify quick win opportunities for new contributors.
+{{> insert.useWorkspaceTools}}
+{{> insert.referenceProjectDocs}}
+{{/if}}
 
 ## Phase 3: Implementation Planning Guidance
 
+{{#if agent.supportsSubagents}}
 Use Task tool to invoke the cm-planner subagent:
-- **subagent_type**: "cm-planner"  
+- **subagent_type**: "cm-planner"
 - **description**: "Provide implementation planning guidance for onboarding"
 - **prompt**:
   ```
@@ -88,6 +111,16 @@ Use Task tool to invoke the cm-planner subagent:
   stack analysis and architecture overview into actionable guidance.
   Mode: [quick|standard|deep based on $ARGUMENTS]
   ```
+{{else}}
+Deliver implementation planning guidance directly:
+- Recommend first tasks and areas to explore based on prior analysis.
+- Outline the development workflow and best practices for the project.
+- Call out common gotchas and how to avoid them.
+- Suggest a learning path for reaching project mastery.
+- Explain how to contribute effectively from day one.
+{{> insert.useWorkspaceTools}}
+{{> insert.referenceProjectDocs}}
+{{/if}}
 
 ## Workflow Integration
 

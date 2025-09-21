@@ -26,16 +26,13 @@ Delegate stack analysis to the specialized cm-stack-profiler subagent for compre
 
 # Execution
 
-When this command runs, Claude Code will:
+When this command runs, {{agent.name}} will:
 
 1. Check if .cm/stack.md exists:
    - **If exists**: Read and provide a concise summary of the current stack
    - **If missing**: Use Task tool to invoke the cm-stack-profiler subagent
 
-2. For new stack analysis, use Task tool to invoke the cm-stack-profiler subagent with:
-   - subagent_type: "cm-stack-profiler"
-   - prompt: Request stack analysis with action from $ARGUMENTS
-   - description: "Analyze technology stack"
+{{{> insert.delegateTo step="2" id="cm-stack-profiler" label="cm-stack-profiler" purpose="stack profiler" prompt="Request stack analysis with action from $ARGUMENTS" description="Analyze technology stack"}}}
 
 3. Handle .cm/stack.md file (only when rescanning):
    - No file exists: Create with detected stack profile

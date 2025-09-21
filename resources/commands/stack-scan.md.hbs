@@ -32,7 +32,7 @@ When this command runs, {{agent.name}} will:
    - **If exists**: Read and provide a concise summary of the current stack
    - **If missing**: Use Task tool to invoke the cm-stack-profiler subagent
 
-{{{> insert.delegateTo step="2" id="cm-stack-profiler" label="cm-stack-profiler" purpose="stack profiler" prompt="Request stack analysis with action from $ARGUMENTS" description="Analyze technology stack"}}}
+{{> insert.delegateTo step="2" id="cm-stack-profiler" label="cm-stack-profiler" purpose="stack profiler" prompt="Request stack analysis with action from $ARGUMENTS" description="Analyze technology stack"}}
 
 3. Handle .cm/stack.md file (only when rescanning):
    - No file exists: Create with detected stack profile

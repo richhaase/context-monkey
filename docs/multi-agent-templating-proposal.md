@@ -1,172 +1,127 @@
-# Multi-Agent Command Templating Proposal
+# Multi‑Agent Templating Proposal
 
-## Context
+A concise plan to keep Context Monkey simple, flexible, and focused on deploying standard agent commands across native agent CLIs (Claude Code, Codex, Gemini), while improving test coverage.
 
-Context Monkey's command set was authored first for Claude Code, where rich features such as subagents, Task tool invocations, and notification hooks are available. As we extend support to Codex CLI, Gemini CLI, and future assistants, we need an architecture that:
+## Goals
 
-- **Keeps the shared baseline useful everywhere** – Commands should behave sensibly in the lowest-common-denominator environment without assuming Claude-specific capabilities.
-- **Adds enhancements when agents support them** – Claude (and any future agent with similar power) should get subagent orchestration, extra tooling, or richer context injection as additive behavior layered on top of the generic version.
-- **Remains template/config driven** – Adding a new agent or feature should mostly involve editing configuration or supplying an override snippet, not duplicating whole commands.
+- Single source of truth for command content and subagent blueprints.
+- Minimal, composable renderers per target agent (no over‑engineering).
+- Idempotent, transparent installers/uninstallers with clear output.
+- High confidence via fast, focused tests (unit + golden snapshots).
+- Avoid vendor lock‑in by keeping resources human‑readable (Markdown, TOML).
 
-## Requirements
+## Principles
 
-1. **Generic first** – The default template for every command should be platform-neutral: clear intent, step-by-step instructions, and generic tool usage (read files, run shell commands, etc.).
-2. **Optional Specialization** – Agents advertise capabilities (e.g., `supportsSubagents`, `supportsHooks`), and the renderer conditionally merges in extra sections only when the agent can use them.
-3. **Reusable Blueprint Data** – Subagent prompts and contextual files remain in `resources/agents/` and `@.cm/*`; the renderer decides whether to inline or reference them depending on the target agent.
-4. **Config-Driven Overrides** – Per-agent enhancements live in configuration (e.g., `agents.ts`) or optional template snippets (`command.claude.md`, `<!-- agent:claude -->` blocks).
-5. **Future Agent Friendly** – A new assistant that only supports basic text prompts should work immediately by consuming the generic template. Extra capabilities can be added later by updating configuration.
+- Keep resources plain: Markdown with YAML frontmatter; TOML for Gemini prompts.
+- Push target‑specific logic into thin adapters; avoid content duplication.
+- Zero runtime dependencies in installed artifacts; pre‑render during install.
+- Make every file write explicit and reversible; prefer additive changes.
+- Small surface area: a few well‑named functions and clear contracts.
 
-## Command Template Hierarchy
+## Current State Summary
 
-### File layout
+- Resources live under `resources/commands` and `resources/agents` (good baseline).
+- Renderers exist for Claude, Codex, Gemini with basic transformations.
+- Installers write files to agent‑specific locations and handle some cleanup.
+- Tests exist for utils, hooks, CLI shape; renderer/resource tests are light.
 
-- **Base template**: `resources/commands/<name>.md`
-  - Must contain the generic workflow text that any agent can execute.
-- **Agent override file (optional)**: `resources/commands/<name>.<agent>.md`
-  - `<agent>` is the lowercased identifier from `TargetAgent` (`claude`, `codex`, `gemini`, etc.).
-  - When present, this file is merged on top of the base template for that agent.
-- **Inline conditional blocks (optional)** inside the base template:
+## Proposed Architecture
 
-  ```md
-  <!-- agent:claude -->
+1. Templates and Blueprints
 
-  Claude-specific subagent instructions.
+- Commands: Markdown files with YAML frontmatter keys: `description`, `argument-hint`, `allowed-tools`, `plan_mode`.
+- Agents: `resources/agents/cm-*.md` used as optional blueprints embedded into commands.
+- Reference detection: simple `cm-*` anchor scan; keep extraction deterministic and case‑insensitive.
 
-  <!-- /agent -->
+2. Target Renderers (adapters)
 
-  <!-- agent:codex -->
+- Claude: pass‑through Markdown + frontmatter; no extra sections.
+- Codex: Markdown transform with small, explicit rules: wording changes, section drop, blueprint append, slug generation `cm-<normalized-path>.md`.
+- Gemini: Build TOML `{ description, prompt }` where `prompt` is transformed Markdown; include blueprints at heading level 3.
+- Rules live in `config/agents.ts` to remain declarative and testable.
 
-  Codex-specific tweaks.
+3. Deterministic Rendering
 
-  <!-- /agent -->
+- Normalize output (trailing newline, fenced code style, bullet style) to enable snapshot testing.
+- Keep replacements minimal and listed; avoid regex that can over‑match.
 
-  <!-- agent:default -->
+4. Install/Uninstall Flows
 
-  Generic fallback (optional; defaults to base content).
+- Idempotent writes with a version banner at the top of generated files.
+- Pre‑clean only our own artifacts by prefix/markers; never touch user files.
+- For Codex, wrap `AGENTS.md` section in begin/end markers to allow clean removal.
+- For Gemini, keep extension metadata minimal and stable.
 
-  <!-- /agent -->
-  ```
+5. Extensibility
 
-  - Blocks can appear multiple times. The renderer includes only those whose agent tag matches the current agent or `default`.
-  - Nested blocks are not supported; blocks must be well formed (matching closing tag on the same indentation level).
-  - When both an override file and inline block exist, the override file takes precedence (renderer loads override file content and then processes inline blocks inside it).
+- New agent support adds a renderer and install target only; resource files remain unchanged.
+- Optional per‑command overrides (frontmatter flags) to tweak rendering without new code.
 
-### Agent capability flags
+## Implementation Plan (Phased)
 
-Define capabilities in `src/config/agents.ts`:
+Phase 1 — Stabilize Rendering (MVP hardening)
 
-```ts
-export interface AgentCapabilities {
-  subagents: boolean;
-  notificationHooks: boolean;
-  contextFiles: boolean; // expects @.cm/ behaviour
-  blueprintMode: 'skip' | 'inline';
-  blueprintHeadingDepth: number; // base heading level when inlining
-  blueprintDrops: RegExp[]; // headings to remove when inlining
-  blueprintReplacements: Array<{ pattern: RegExp; replace: string }>;
-}
-```
+- Tighten renderers to be purely functional and deterministic.
+- Add snapshot tests for: slug creation, Markdown→Markdown (Codex), Markdown→TOML (Gemini), blueprint insertion.
+- Document frontmatter schema and supported overrides.
 
-Example entries:
+Phase 2 — Installation UX
 
-```ts
-export const AGENT_CONFIG: Record<TargetAgent, AgentCapabilities> = {
-  [TargetAgent.CLAUDE_CODE]: {
-    subagents: true,
-    notificationHooks: true,
-    contextFiles: true,
-    blueprintMode: 'skip', // do not inline agent blueprint (delegates to subagent)
-    blueprintHeadingDepth: 2, // unused when skip
-    blueprintDrops: [],
-    blueprintReplacements: [],
-  },
-  [TargetAgent.CODEX_CLI]: {
-    subagents: false,
-    notificationHooks: false,
-    contextFiles: false,
-    blueprintMode: 'inline',
-    blueprintHeadingDepth: 2,
-    blueprintDrops: [/^Execution/i],
-    blueprintReplacements: [
-      { pattern: /@\.cm\/[\w\-.]+/g, replace: 'project documentation' },
-      { pattern: /\bsubagent(s)?\b/gi, replace: 'assistant workflow$1' },
-    ],
-  },
-  [TargetAgent.GEMINI_CLI]: {
-    subagents: false,
-    notificationHooks: false,
-    contextFiles: false,
-    blueprintMode: 'inline',
-    blueprintHeadingDepth: 3,
-    blueprintDrops: [/^Execution/i],
-    blueprintReplacements: [
-      { pattern: /@\.cm\/[\w\-.]+/g, replace: 'project documentation' },
-      { pattern: /\bsubagent(s)?\b/gi, replace: 'assistant workflow$1' },
-    ],
-  },
-};
-```
+- Add non‑interactive flags and dry‑run mode: `--yes`, `--dry-run`, `--verbose`.
+- Improve logs: show source→target mapping and counts; print a one‑line summary.
+- Guardrails: refuse to overwrite unknown files; only touch prefixed/marked files.
 
-## Blueprint Injection Rules
+Phase 3 — Resource Hygiene
 
-- The renderer parses `resources/agents/cm-*.md` via gray-matter into `{ metadata, sections }`.
-- When a command references an agent (detected during template load), the renderer uses the capability config:
-  - If `blueprintMode === 'skip'` → no inline content (Claude delegates to subagents).
-  - If `inline` →
-    1. Drop any headings matching `blueprintDrops` (e.g., "Execution").
-    2. Normalize heading depth so the top-level heading becomes `blueprintHeadingDepth`.
-    3. Apply `blueprintReplacements` to text (remove `@.cm/...`, rename "Task tool", etc.).
-    4. Prepend a heading `#{depth} Agent Blueprint: ${displayName}` and include metadata (description/tools) before the transformed body.
-- The inline block is appended at the end of the rendered prompt under a horizontal rule (`---`).
-- Future agents can set `blueprintMode` to another value (e.g., `reference`) if they prefer linking instead of inlining.
+- Add a validation script to lint resources (frontmatter keys, anchor references, filename patterns).
+- Optional: prepublish check to ensure renderers still produce canonical output.
 
-## Renderer Workflow (Implementation Checklist)
+Phase 4 — Observability & Safety
 
-1. **Template selection**
-   - Load base template; if `<command>.<agent>.md` exists, use that as the starting content.
-   - Process inline `<!-- agent:... -->` blocks, including those whose tag matches the target agent or the literal `default`.
-2. **Agent reference tracking**
-   - During template load, record occurrences of `cm-<name>` in frontmatter or body to know which blueprints to inline.
-3. **Blueprint injection**
-   - For each referenced agent:
-     - Fetch capability config.
-     - If `inline`, use the rules above to generate the injected section.
-4. **Generic replacements**
-   - Apply per-agent replacements (already handled today – e.g., `/cm:` → `/cm-` for Codex).
-5. **Output formatting**
-   - Claude/Codex: write Markdown.
-   - Gemini: convert to TOML command with triple-quoted prompt (sanitize `"""`).
+- Structured logs for installs; elapsed time and file counts.
+- Soft‑fail and continue on non‑critical steps with a final summary of warnings.
 
-## Command Categories & To-Do
+Phase 5 — Documentation
 
-| Command         | Status                                                                                                                                                              | Notes |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- |
-| add-rule        | Base template OK; ensure references to `@.cm/rules.md` explain manual steps                                                                                         |
-| edit-rule       | Same as above                                                                                                                                                       |
-| list-rules      | Same as above                                                                                                                                                       |
-| deep-dive       | Needs generic prompt + Claude override                                                                                                                              |
-| docs            | Needs generic prompt; current version causes Gemini to scaffold the CLI. Create generic instructions, then guard Claude subagent block with `<!-- agent:claude -->` |
-| explain-repo    | Needs generic rewrite                                                                                                                                               |
-| onboard-project | Should work generically; verify                                                                                                                                     |
-| plan            | Needs generic rewrite                                                                                                                                               |
-| review-code     | Needs generic rewrite                                                                                                                                               |
-| stack-scan      | Needs generic rewrite                                                                                                                                               |
+- Author a short “Authoring Templates” guide: examples, frontmatter reference, preview tips.
+- “Troubleshooting Installs” guide: common paths, how to clean, how to re‑install.
 
-## Acceptance Criteria
+## Test Coverage Plan
 
-After implementation:
+- Renderers
+  - Unit: slug generation, text replacements, heading drops, blueprint heading normalization.
+  - Snapshots: golden files for 2–3 representative commands per target.
 
-- **Claude**: commands still delegate to subagents and behave as today.
-- **Codex**: running `/cm:<command>` executes the generic instructions without referencing subagents or creating Context Monkey files.
-- **Gemini**: no command writes into `resources/` or `src/`; prompts explain what to analyze and generate.
-- **Future agent onboarding**: To add a new agent, define its `AgentCapabilities` entry, create optional override blocks, and ensure the generic template already produces sensible results.
+- Resources
+  - Loaders: frontmatter parsing and agent reference extraction.
+  - Validation: a lint step that fails on missing blueprints or bad anchors.
 
-## Migration Plan
+- Installers
+  - Dry‑run tests using temp directories; assert created paths, banners, and counts.
+  - Round‑trip: install → uninstall leaves no residue (only our prefixes/markers).
 
-1. Implement renderer support for conditional blocks, override files, and capability-driven merging.
-2. Refactor Tier-1 commands to provide generic content + Claude override blocks.
-3. Update agent configs for Codex/Gemini to inline the appropriate blueprint sections.
-4. Validate rendered output for all commands across agents (manual QA + snapshot tests).
-5. Document the process in the README/SETUP for maintainers adding new commands or agents.
+- Platform utilities
+  - Keep fast and deterministic; avoid spawning external tools in unit tests.
 
-With this structure, generic prompts become the foundation, and richer agents like Claude attach specialized behavior declaratively through configuration and targeted overrides.
+## Risks & Mitigations
+
+- Over‑aggressive regex replacements → Keep rule list short, add snapshot tests, and document each rule.
+- Installer cleanup removing user content → Restrict to our prefixes/markers only; never wildcard delete.
+- Drift between resources and renderers → Add prepublish validation and CI snapshots.
+
+## Milestones
+
+1. Rendering hardening + snapshots (1–2 days)
+2. Installer UX flags + dry‑run (1 day)
+3. Resource validation tooling (0.5–1 day)
+4. Docs (0.5 day)
+
+## Summarized Action Plan
+
+- Add golden snapshot tests for Codex and Gemini renderers.
+- Normalize rendering output (newlines, lists, fences) for stable diffs.
+- Implement `--dry-run` and `--yes` across installers; enhance logging.
+- Add a resource linter (frontmatter + references) and run in CI/prepublish.
+- Document authoring and troubleshooting; keep examples small and copy‑pasteable.
+
+— End of proposal —

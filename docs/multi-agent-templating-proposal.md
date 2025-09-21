@@ -1,127 +1,122 @@
-# Multi‑Agent Templating Proposal
+# Multi‑Agent Templating Plan (Handlebars)
 
-A concise plan to keep Context Monkey simple, flexible, and focused on deploying standard agent commands across native agent CLIs (Claude Code, Codex, Gemini), while improving test coverage.
+A focused plan to ensure Context Monkey behaves consistently across Claude Code, Codex CLI, and Gemini CLI while enabling per‑agent specializations where they add clear value. No additional CLI features are introduced.
+
+## What Should Happen
+
+- Base Handlebars templates for all commands.
+- Insertions per agent: either direct inline content, or outsourcing to subagents where supported (Claude Code). Keep insertions generic so other agents can adopt similar features later without changing templates.
+- Specialized custom feature install on a per‑agent basis (e.g., Claude notification hooks), isolated to that agent’s installer.
 
 ## Goals
 
-- Single source of truth for command content and subagent blueprints.
-- Minimal, composable renderers per target agent (no over‑engineering).
-- Idempotent, transparent installers/uninstallers with clear output.
-- High confidence via fast, focused tests (unit + golden snapshots).
-- Avoid vendor lock‑in by keeping resources human‑readable (Markdown, TOML).
+- Single source of truth for every command (Handlebars templates).
+- Cross‑agent parity in tone, structure, and expected behavior.
+- Agent adapters expand the same template to each target without duplicating content.
+- Keep installed artifacts simple (Markdown/TOML) with no runtime dependencies.
+- Improve confidence via unit and snapshot tests.
 
 ## Principles
 
-- Keep resources plain: Markdown with YAML frontmatter; TOML for Gemini prompts.
-- Push target‑specific logic into thin adapters; avoid content duplication.
-- Zero runtime dependencies in installed artifacts; pre‑render during install.
-- Make every file write explicit and reversible; prefer additive changes.
-- Small surface area: a few well‑named functions and clear contracts.
+- Templates first: Handlebars is the only templating mechanism.
+- Adapters, not forks: small per‑agent expansions from the same base template.
+- Subagents only when natively supported (Claude Code today; others later).
+- Keep installers interactive and minimal; no new CLI flags.
+- Idempotent writes; only touch our own artifacts.
 
-## Current State Summary
+## Architecture
 
-- Resources live under `resources/commands` and `resources/agents` (good baseline).
-- Renderers exist for Claude, Codex, Gemini with basic transformations.
-- Installers write files to agent‑specific locations and handle some cleanup.
-- Tests exist for utils, hooks, CLI shape; renderer/resource tests are light.
+1. Base Templates (canonical source)
 
-## Proposed Architecture
+- Location: `resources/commands/*.md.hbs` for command bodies; optional YAML frontmatter for metadata (e.g., description).
+- Shared partials: `resources/partials/` for reusable sections (e.g., “context usage”, “review checklist”).
+- Data passed to templates: `{ agent, command, project, features }` where `agent` encodes capabilities like `supportsSubagents`.
 
-1. Templates and Blueprints
+2. Insertions (generic intents)
 
-- Commands: Markdown files with YAML frontmatter keys: `description`, `argument-hint`, `allowed-tools`, `plan_mode`.
-- Agents: `resources/agents/cm-*.md` used as optional blueprints embedded into commands.
-- Reference detection: simple `cm-*` anchor scan; keep extraction deterministic and case‑insensitive.
+- Define generic insertion partials/helpers:
+  - `{{> insert.delegateTo name="cm-reviewer" purpose="Code review"}}`
+  - `{{> insert.useWorkspaceTools}}`
+  - `{{> insert.referenceProjectDocs}}`
+- Per‑agent adapter maps these insertions:
+  - Claude Code: “delegateTo” emits subagent/Task‑based outsourcing; others inline concise instructions.
+  - Codex CLI: expand to direct inline instructions (no subagent calls).
+  - Gemini CLI: expand inline inside TOML prompt text.
 
-2. Target Renderers (adapters)
+3. Target Renderers (adapters)
 
-- Claude: pass‑through Markdown + frontmatter; no extra sections.
-- Codex: Markdown transform with small, explicit rules: wording changes, section drop, blueprint append, slug generation `cm-<normalized-path>.md`.
-- Gemini: Build TOML `{ description, prompt }` where `prompt` is transformed Markdown; include blueprints at heading level 3.
-- Rules live in `config/agents.ts` to remain declarative and testable.
+- Claude Code: compile `.md.hbs` → `.md` with Claude insertions; may append agent blueprint summaries.
+- Codex CLI: compile `.md.hbs` → `.md` with Codex phrasing and `cm-<normalized-path>.md` slug.
+- Gemini CLI: compile `.md.hbs` to Markdown, then wrap in a small `.toml.hbs` to populate `description` and `prompt`.
 
-3. Deterministic Rendering
+4. Specialized Per‑Agent Install
 
-- Normalize output (trailing newline, fenced code style, bullet style) to enable snapshot testing.
-- Keep replacements minimal and listed; avoid regex that can over‑match.
+- Claude Code: install commands, optional notification hooks, and sync subagents (outsourced agents live under `~/.claude/agents`).
+- Codex CLI: install prompts and inject/remove a marked Context Monkey section in `~/.codex/AGENTS.md`.
+- Gemini CLI: install under a namespace with minimal extension metadata.
 
-4. Install/Uninstall Flows
+5. Determinism
 
-- Idempotent writes with a version banner at the top of generated files.
-- Pre‑clean only our own artifacts by prefix/markers; never touch user files.
-- For Codex, wrap `AGENTS.md` section in begin/end markers to allow clean removal.
-- For Gemini, keep extension metadata minimal and stable.
+- Normalize output (trailing newlines, bullets, fences) for stable diffs/snapshots.
 
-5. Extensibility
+## Implementation Plan
 
-- New agent support adds a renderer and install target only; resource files remain unchanged.
-- Optional per‑command overrides (frontmatter flags) to tweak rendering without new code.
+Phase 1 — Introduce Handlebars
 
-## Implementation Plan (Phased)
+- Add Handlebars runtime to build/install paths.
+- Convert commands to `.md.hbs` with minimal structural changes.
+- Create shared partials and the `insert.*` partials API.
 
-Phase 1 — Stabilize Rendering (MVP hardening)
+Phase 2 — Agent Adapters
 
-- Tighten renderers to be purely functional and deterministic.
-- Add snapshot tests for: slug creation, Markdown→Markdown (Codex), Markdown→TOML (Gemini), blueprint insertion.
-- Document frontmatter schema and supported overrides.
+- Implement insertion expansions for Claude (outsourcing), Codex (inline), Gemini (inline→TOML).
+- Ensure outputs are parallel in structure and tone across agents.
 
-Phase 2 — Installation UX
+Phase 3 — Determinism & Validation
 
-- Add non‑interactive flags and dry‑run mode: `--yes`, `--dry-run`, `--verbose`.
-- Improve logs: show source→target mapping and counts; print a one‑line summary.
-- Guardrails: refuse to overwrite unknown files; only touch prefixed/marked files.
+- Normalize formatting for deterministic rendering.
+- Add a resource validator (frontmatter keys, missing partials/refs, naming patterns).
 
-Phase 3 — Resource Hygiene
+Phase 4 — Specialized Installs
 
-- Add a validation script to lint resources (frontmatter keys, anchor references, filename patterns).
-- Optional: prepublish check to ensure renderers still produce canonical output.
-
-Phase 4 — Observability & Safety
-
-- Structured logs for installs; elapsed time and file counts.
-- Soft‑fail and continue on non‑critical steps with a final summary of warnings.
+- Keep current installers; wire them to the new rendered outputs only.
+- Claude retains optional hooks/subagents; other agents remain minimal.
 
 Phase 5 — Documentation
 
-- Author a short “Authoring Templates” guide: examples, frontmatter reference, preview tips.
-- “Troubleshooting Installs” guide: common paths, how to clean, how to re‑install.
+- Short authoring guide for `.md.hbs`, partials, and insertions.
+- Troubleshooting notes per agent.
 
-## Test Coverage Plan
+## Test Coverage
 
-- Renderers
-  - Unit: slug generation, text replacements, heading drops, blueprint heading normalization.
-  - Snapshots: golden files for 2–3 representative commands per target.
+- Templates & Adapters
+  - Snapshot compiled outputs for each command across each agent.
+  - Unit tests for insertion expansions (`delegateTo`, `useWorkspaceTools`, `referenceProjectDocs`).
 
 - Resources
-  - Loaders: frontmatter parsing and agent reference extraction.
-  - Validation: a lint step that fails on missing blueprints or bad anchors.
+  - Validation tests: frontmatter, partial resolution, anchor integrity.
 
-- Installers
-  - Dry‑run tests using temp directories; assert created paths, banners, and counts.
-  - Round‑trip: install → uninstall leaves no residue (only our prefixes/markers).
-
-- Platform utilities
-  - Keep fast and deterministic; avoid spawning external tools in unit tests.
+- Installers (side‑effect free)
+  - Use temporary directories or an injectable filesystem to assert created paths and markers.
+  - Round‑trip: install → uninstall removes only our artifacts.
 
 ## Risks & Mitigations
 
-- Over‑aggressive regex replacements → Keep rule list short, add snapshot tests, and document each rule.
-- Installer cleanup removing user content → Restrict to our prefixes/markers only; never wildcard delete.
-- Drift between resources and renderers → Add prepublish validation and CI snapshots.
+- Over‑aggressive expansions: keep insertion set small; snapshot outputs; document each mapping.
+- Cleanup scope: limit to our prefixes/markers; never wildcard delete.
+- Future agent features: the insertion API is generic; adding a new adapter does not change templates.
 
 ## Milestones
 
-1. Rendering hardening + snapshots (1–2 days)
-2. Installer UX flags + dry‑run (1 day)
+1. Handlebars base + partials + initial adapters (1–2 days)
+2. Snapshot tests (1 day)
 3. Resource validation tooling (0.5–1 day)
 4. Docs (0.5 day)
 
-## Summarized Action Plan
+## Action Plan (Summary)
 
-- Add golden snapshot tests for Codex and Gemini renderers.
-- Normalize rendering output (newlines, lists, fences) for stable diffs.
-- Implement `--dry-run` and `--yes` across installers; enhance logging.
-- Add a resource linter (frontmatter + references) and run in CI/prepublish.
-- Document authoring and troubleshooting; keep examples small and copy‑pasteable.
-
-— End of proposal —
+- Convert commands to base `.md.hbs` templates with shared partials.
+- Implement generic insertions and per‑agent adapter expansions.
+- Keep installers interactive; add no new CLI flags.
+- Add snapshot tests and resource validation.
+- Keep Claude‑specific features behind the Claude adapter/install only.

@@ -72,10 +72,10 @@ Phase 2 — Agent Adapters ✅ Completed
 - Implemented insertion expansions so Claude delegates to subagents while other agents perform inline workflows.
 - Updated templates to reference `{{agent.name}}` and shared insertions for consistent tone across agents.
 
-Phase 3 — Determinism & Validation
+Phase 3 — Determinism & Validation ✅ Completed
 
-- Normalize formatting for deterministic rendering.
-- Add a resource validator (frontmatter keys, missing partials/refs, naming patterns).
+- Resource validation script checks required frontmatter, partial usage, and agent references.
+- Templates already normalize Markdown/TOML output via shared renderers for consistent snapshots later.
 
 Phase 4 — Specialized Installs
 

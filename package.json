@@ -69,6 +69,7 @@
     "lint:fix": "eslint src/ tests/ --fix",
     "format": "prettier --write src/ tests/",
     "format:check": "prettier --check src/ tests/",
+    "validate:resources": "node dist/scripts/validateResources.js",
     "prepare": "husky",
     "prepublishOnly": "bun run clean && bun run build"
   }

@@ -61,11 +61,11 @@ A focused plan to ensure Context Monkey behaves consistently across Claude Code,
 
 ## Implementation Plan
 
-Phase 1 — Introduce Handlebars
+Phase 1 — Introduce Handlebars ✅ Completed
 
-- Add Handlebars runtime to build/install paths.
-- Convert commands to `.md.hbs` with minimal structural changes.
-- Create shared partials and the `insert.*` partials API.
+- Added Handlebars runtime to build/install paths.
+- Converted all commands to `.md.hbs` templates with minimal structural changes.
+- Created shared insertion partial stubs (`insert.*`) ready for per-agent adapters.
 
 Phase 2 — Agent Adapters
 

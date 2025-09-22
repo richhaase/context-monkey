@@ -41,7 +41,7 @@ Commit the updated snapshot files with your change. The snapshot tests ensure th
 | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
 | `Unknown escape character` in Gemini CLI | Ensure backslashes are needed; the renderer escapes them, but stray `\` without context often indicate typos. |
 | Missing blueprint section                | Check `resources/agents/cm-*.md` exists and that the command references the correct slug (`cm-something`).    |
-| Codex prompts missing                    | Run `node dist/bin/context-monkey.js install codex` and confirm snapshots contain the desired slug.           |
+| Codex prompts missing                    | Run `context-monkey install` and confirm you selected the Codex CLI when prompted.                            |
 | Snapshot mismatch                        | Re-run `npm run snapshots:generate` after building. Review diffs carefully to confirm intentional changes.    |
 
 ## Adding a New Command

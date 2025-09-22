@@ -4,6 +4,8 @@ Prompt engineering framework for Claude Code using specialized subagents
 
 ## Quick Start
 
+Bun users can install and run directly from npm:
+
 ```bash
 bunx context-monkey install
 ```
@@ -18,17 +20,21 @@ bunx context-monkey install
 
 ## Installation
 
-### Global Installation (Recommended)
+### Interactive Installation
+
 ```bash
-bunx context-monkey install
+context-monkey install
 ```
-The installer detects Claude Code, Codex CLI, and Gemini CLI automatically and guides you through installing or updating Context Monkey for each environment.
+
+The installer detects Claude Code, Codex CLI, and Gemini CLI automatically, then walks you through selecting which agents to configure. If multiple CLIs are available you can install to all of them in a single run. Notification hooks (macOS) remain optional and are confirmed interactively.
 
 ### Uninstall
+
 ```bash
-bunx context-monkey uninstall
+context-monkey uninstall
 ```
-Removes Context Monkey from the agents you select during the interactive prompt.
+
+Select the agents to clean up, and the CLI removes only Context Monkey assets (commands, agents, notification hooks) for those environments.
 
 ## Project Context
 
@@ -55,16 +61,28 @@ Context Monkey includes 8 specialized AI agents that integrate seamlessly with C
 ## Requirements
 
 - Node.js 16.0.0 or higher
-- Claude Code CLI
 - Bun (recommended) or npm
+- Optional CLIs:
+  - Claude Code CLI (macOS)
+  - Codex CLI
+  - Gemini CLI (0.5.5+ recommended)
 
 ## Features
 
-- **Zero Configuration** - Works immediately after installation
-- **Project Awareness** - All commands understand your stack and conventions
-- **Contextual Intelligence** - Maintains project knowledge across sessions
-- **Extensible Rules** - Add custom coding standards and patterns
-- **Notification Hooks** - Optional desktop notifications for long-running tasks
+- **Zero Configuration** – Works immediately after installation
+- **Project Awareness** – All commands understand your stack and conventions
+- **Contextual Intelligence** – Maintains project knowledge across sessions
+- **Extensible Rules** – Add custom coding standards and patterns
+- **Notification Hooks** – Optional macOS desktop notifications via `terminal-notifier`
+- **Multi-Agent Support** – Shared templates render consistently for Claude Code, Codex CLI, and Gemini CLI
+
+## Development & Testing
+
+- Build: `bun run build`
+- Render snapshots: `npm run snapshots:generate`
+- Test suite: `bun test`
+
+Documentation for working on templates lives in [`docs/TEMPLATE_AUTHORING.md`](./docs/TEMPLATE_AUTHORING.md); development setup instructions are in [`SETUP.md`](./SETUP.md).
 
 ## License
 

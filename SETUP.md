@@ -59,7 +59,7 @@ bun run dev
 node dist/bin/context-monkey.js --version
 
 # Test installation
-node dist/bin/context-monkey.js install --local
+node dist/bin/context-monkey.js install
 ```
 
 ## Development Workflow
@@ -171,11 +171,11 @@ git push origin feature/new-command
    bun run build
    ```
 
-2. **Install locally**:
+2. **Install for testing**:
 
-   ```bash
-   node dist/bin/context-monkey.js install --local
-   ```
+```bash
+node dist/bin/context-monkey.js install
+```
 
 3. **Test in Claude Code**:
 
@@ -192,8 +192,8 @@ git push origin feature/new-command
 ### Cleanup After Testing
 
 ```bash
-# Remove local installation
-node dist/bin/context-monkey.js uninstall --local
+# Remove installation
+node dist/bin/context-monkey.js uninstall
 ```
 
 ## Debugging
@@ -304,7 +304,7 @@ Currently Context Monkey doesn't use environment variables, but if needed:
 
 - Check Claude Code directory permissions
 - Verify target directory exists
-- Test with `--local` flag first
+- Capture any installer prompts or messages when debugging issues
 
 ### Agent/Command Issues
 

@@ -49,7 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Merged install and upgrade commands for simplified workflow
-- Changed default installation to global (`~/.claude`) with `--local` flag for project-specific installs
+- Changed default installation to global (`~/.claude`)
 - Enhanced user experience with interactive prompts
 
 ### Improved

@@ -114,12 +114,6 @@ Context Monkey maintains project awareness through:
 - **Trade-offs**: More files to manage, but flexible and maintainable
 - **Implementation**: Markdown templates with YAML frontmatter
 
-### Global vs Local Installation
-
-- **Rationale**: Support both team-wide and project-specific workflows
-- **Trade-offs**: Path complexity, but flexible deployment options
-- **Implementation**: Dynamic path resolution based on `--local` flag
-
 ### Commander.js for CLI
 
 - **Rationale**: Mature, well-documented CLI framework

@@ -180,7 +180,7 @@ Brief description of changes
 
 ## Testing
 
-- [ ] Tested locally with `bun run build && node dist/bin/context-monkey.js install --local`
+- [ ] Tested locally with `bun run build && node dist/bin/context-monkey.js install`
 - [ ] Verified commands work in Claude Code
 - [ ] Ran linting and formatting checks
 
@@ -201,8 +201,8 @@ Any other relevant information
 # 1. Build your changes
 bun run build
 
-# 2. Install locally for testing
-node dist/bin/context-monkey.js install --local
+# 2. Install for testing
+node dist/bin/context-monkey.js install
 
 # 3. Test in Claude Code
 claude
@@ -210,7 +210,7 @@ claude
 /cm:your-new-command  # Test your specific changes
 
 # 4. Clean up after testing
-node dist/bin/context-monkey.js uninstall --local
+node dist/bin/context-monkey.js uninstall
 ```
 
 #### Quality Checks
@@ -349,7 +349,7 @@ git push origin main --tags
 - **Build errors**: Clear node_modules and reinstall dependencies
 - **Import/export issues**: Check file extensions in imports
 - **TypeScript errors**: Ensure proper typing throughout
-- **Installation issues**: Test with `--local` flag first
+- **Installation issues**: Document any prompts or errors from the installer
 
 ### Issue Reporting
 

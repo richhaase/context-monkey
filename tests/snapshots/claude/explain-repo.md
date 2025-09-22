@@ -1,5 +1,7 @@
 ---
-description: Delegate to cm-repo-explainer subagent for comprehensive codebase analysis
+description: >-
+  Provide comprehensive codebase analysis using the repository explainer
+  workflow
 argument-hint: '[focus-area]'
 allowed-tools: Task
 plan_mode: 'true'
@@ -10,9 +12,9 @@ Delegate repository analysis to the specialized cm-repo-explainer subagent for c
 
 # Procedure
 
-1. **Invoke analyst**: Pass any focus area from $ARGUMENTS
-2. **Analyst examines**: Maps structure, identifies patterns, finds opportunities
-3. **Comprehensive output**: Analyst provides:
+1. **Gather focus**: Pass any focus area from $ARGUMENTS
+2. **Analyze structure**: Map directories, identify patterns, find opportunities
+3. **Produce comprehensive output**: Provide:
    - Repository overview and purpose
    - Directory structure mapping
    - Architecture patterns

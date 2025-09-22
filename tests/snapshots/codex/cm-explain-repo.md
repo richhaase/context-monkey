@@ -1,12 +1,12 @@
 # Intent
 
-Delegate repository analysis to the specialized Context Monkey repo-explainer workflow workflow for comprehensive architectural understanding.
+Use the repository explainer workflow to analyze the codebase with full project context.
 
 # Procedure
 
-1. **Invoke analyst**: Pass any focus area from $ARGUMENTS
-2. **Analyst examines**: Maps structure, identifies patterns, finds opportunities
-3. **Comprehensive output**: Analyst provides:
+1. **Gather focus**: Pass any focus area from $ARGUMENTS
+2. **Analyze structure**: Map directories, identify patterns, find opportunities
+3. **Produce comprehensive output**: Provide:
    - Repository overview and purpose
    - Directory structure mapping
    - Architecture patterns
@@ -27,15 +27,13 @@ When this command runs, Codex CLI will:
 - Provide the complete analysis directly in chat since Codex CLI cannot delegate this step yet.
 - Reference project documentation (e.g., project documentation, project documentation) when helpful.
 
-The Context Monkey repo-explainer workflow workflow specializes in:
+Use this analysis checklist to guide your response:
 
-- Understanding complex codebases
-- Identifying architectural patterns
-- Finding improvement opportunities
-- Mapping module dependencies
-- Detecting technical debt
-
-The analyst provides actionable insights for both newcomers and experienced developers.
+- Summarize the repository’s purpose, primary modules, and entry points.
+- Map the directory structure and explain how the code is organized.
+- Call out architectural patterns, hot paths, and key dependencies.
+- Highlight technical debt or improvement opportunities.
+- Suggest quick wins for new contributors based on your findings.
 
 ---
 

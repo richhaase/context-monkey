@@ -7,15 +7,19 @@ plan_mode: true
 
 # Intent
 
-Provide a comprehensive project onboarding experience by orchestrating multiple specialized subagents to deliver complete project understanding. This meta-command chains stack analysis, repository explanation, and planning guidance for new team members or project exploration.
+{{#if agent.supportsSubagents}}
+Provide a comprehensive project onboarding experience by orchestrating specialized subagents to deliver complete project understanding. This meta-command chains stack analysis, repository explanation, and planning guidance for new team members or project exploration.
+{{else}}
+Provide a comprehensive project onboarding experience by guiding the assistant through stack analysis, repository explanation, and planning recommendations for new team members or project exploration.
+{{/if}}
 
 # Procedure
 
-This command implements a **multi-agent workflow** that combines:
+This command implements a workflow that combines:
 
-1. **Technology Stack Analysis** → cm-stack-profiler subagent
-2. **Repository Architecture Overview** → cm-repo-explainer subagent  
-3. **Implementation Planning Guidance** → cm-planner subagent
+1. **Technology Stack Analysis**{{#if agent.supportsSubagents}} → cm-stack-profiler subagent{{/if}}
+2. **Repository Architecture Overview**{{#if agent.supportsSubagents}} → cm-repo-explainer subagent{{/if}}  
+3. **Implementation Planning Guidance**{{#if agent.supportsSubagents}} → cm-planner subagent{{/if}}
 
 The workflow adapts based on the analysis mode argument:
 - **quick**: Essential overview for immediate productivity

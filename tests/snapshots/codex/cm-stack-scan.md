@@ -1,6 +1,6 @@
 # Intent
 
-Delegate stack analysis to the specialized Context Monkey stack-profiler workflow workflow for comprehensive technology profiling.
+Use the stack profiling workflow to capture the project’s technology footprint.
 
 # Procedure
 
@@ -39,15 +39,13 @@ When this command runs, Codex CLI will:
    - `skip`: Show profile in chat only
    - No args: Ask user what to do
 
-The Context Monkey stack-profiler workflow workflow specializes in:
+Use this analysis checklist to guide your response:
 
-- Multi-language ecosystem detection
-- Build tool and dependency analysis
-- Development workflow optimization
-- Service integration identification
-- Performance and tooling recommendations
-
-The detective provides actionable intelligence for immediate productivity.
+- Summarize primary languages, frameworks, and build toolchains.
+- Document package managers and dependency manifests.
+- Identify runtime services, infrastructure, and external APIs.
+- List key development tooling (tests, linters, formatters, CI/CD).
+- Recommend next steps (e.g., update `.cm/stack.md` with findings).
 
 ---
 

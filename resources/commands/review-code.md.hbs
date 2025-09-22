@@ -8,7 +8,11 @@ plan_mode: true
 
 # Intent
 
+{{#if agent.supportsSubagents}}
 Delegate code review to the specialized cm-reviewer subagent for comprehensive analysis of changes.
+{{else}}
+Use the review workflow to analyze code changes with full project context.
+{{/if}}
 
 # Procedure
 
@@ -33,4 +37,13 @@ When this command runs, {{agent.name}} will:
 1. Use Bash tool to get the appropriate git diff based on $ARGUMENTS
 {{> insert.delegateTo step="2" id="cm-reviewer" label="cm-reviewer" purpose="code reviewer" prompt="Include the diff output and request for code review" description="Code review of changes"}}
 
+{{#if agent.supportsSubagents}}
 The cm-reviewer subagent will analyze the changes with senior engineer expertise, checking for correctness, design, security, performance, and style issues.
+{{else}}
+Consider this review checklist:
+- Assess correctness, tests, and edge cases.
+- Evaluate design, modularity, and impact on architecture.
+- Identify maintainability, performance, or security concerns.
+- Highlight strengths, positive patterns, or well-crafted solutions.
+- Provide clear recommendations and next steps for the author.
+{{/if}}

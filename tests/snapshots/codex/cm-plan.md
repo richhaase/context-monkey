@@ -1,6 +1,6 @@
 # Intent
 
-Delegate implementation planning to the specialized Context Monkey planner workflow workflow for deep technical analysis and risk-aware planning.
+Use the planning workflow to break down the goal with full project awareness.
 
 # Procedure
 
@@ -27,15 +27,13 @@ When this command runs, Codex CLI will:
 - Provide the complete analysis directly in chat since Codex CLI cannot delegate this step yet.
 - Reference project documentation (e.g., project documentation, project documentation) when helpful.
 
-The Context Monkey planner workflow workflow specializes in:
+Follow this planning checklist:
 
-- Breaking down complex tasks
-- Evaluating multiple approaches
-- Identifying risks and dependencies
-- Creating actionable implementation steps
-- Defining clear success criteria
-
-The planner remains read-only during analysis and produces a comprehensive plan that can be saved to `docs/plans/` if desired.
+- Clarify the goal, constraints, and acceptance criteria.
+- Analyze the current state of the codebase related to the request.
+- Consider multiple approaches and note trade-offs.
+- Produce a step-by-step implementation plan.
+- Highlight risks, mitigations, and follow-up actions.
 
 ---
 

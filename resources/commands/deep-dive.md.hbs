@@ -8,7 +8,11 @@ plan_mode: true
 
 # Intent
 
+{{#if agent.supportsSubagents}}
 Delegate deep research to the specialized cm-researcher subagent for thorough topic investigation combining codebase analysis with external research.
+{{else}}
+Use the research workflow to analyze the topic with project context and external knowledge as needed.
+{{/if}}
 
 # Procedure
 
@@ -28,6 +32,7 @@ When this command runs, {{agent.name}} will:
 
 {{> insert.delegateTo step="1" id="cm-researcher" label="cm-researcher" purpose="research analyst" prompt="Request deep research on topic from $ARGUMENTS" description="Conduct deep research investigation"}}
 
+{{#if agent.supportsSubagents}}
 The cm-researcher subagent specializes in:
 - Systematic investigation methodology
 - Combining internal and external sources
@@ -37,3 +42,11 @@ The cm-researcher subagent specializes in:
 - Citation and reference management
 
 The researcher provides thorough, well-documented insights that combine local context with broader knowledge.
+{{else}}
+Use this research checklist:
+- Define the research question, scope, and success criteria.
+- Review relevant project code, docs, and artifacts.
+- Pull in external references when necessary (cite sources).
+- Present findings with evidence, analysis, and actionable recommendations.
+- Note open questions or follow-up areas for further investigation.
+{{/if}}

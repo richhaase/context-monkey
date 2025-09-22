@@ -21,9 +21,13 @@ describe('resource validation', () => {
       await fs.ensureDir(commandsDir);
       await fs.ensureDir(partialsDir);
 
-      const badTemplate = ['---', '---', 'Body content', '', '{{> insert.missingPartial}}'].join(
-        '\n'
-      );
+      const badTemplate = [
+        '---',
+        '---',
+        'Body content referencing cm-nonexistent',
+        '',
+        '{{> insert.missingPartial}}',
+      ].join('\n');
       await fs.writeFile(path.join(commandsDir, 'bad.md.hbs'), badTemplate, 'utf8');
 
       const result = validateResources(tempRoot);
@@ -31,6 +35,7 @@ describe('resource validation', () => {
       const messages = result.issues.map(issue => issue.message);
       expect(messages.some(message => message.includes('description'))).toBe(true);
       expect(messages.some(message => message.includes('unknown partial'))).toBe(true);
+      expect(messages.some(message => message.includes('unknown agent blueprint'))).toBe(true);
     } finally {
       await fs.remove(tempRoot);
     }

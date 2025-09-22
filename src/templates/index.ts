@@ -125,7 +125,7 @@ function renderTemplateBody(template: MarkdownTemplate, target: TargetAgent): st
   return compiled(context);
 }
 
-function createCodexPromptSlug(relativePath: string): string {
+export function createCodexPromptSlug(relativePath: string): string {
   const withoutExt = relativePath.replace(/\.md$/i, '');
   const normalized = withoutExt.replace(/[\\/]+/g, '-');
   const sanitized = normalized.replace(/[^a-zA-Z0-9-]/g, '-').replace(/-+/g, '-');
@@ -247,7 +247,7 @@ function normalizeTrailingNewline(value: string): string {
   return value.endsWith('\n') ? value : `${value}\n`;
 }
 
-function escapeTomlMultiline(value: string): string {
+export function escapeTomlMultiline(value: string): string {
   return value.replace(/"""/g, '\\"\\"\\"').replace(/\\/g, '\\\\');
 }
 

@@ -82,10 +82,10 @@ Phase 4 — Specialized Installs ✅ Completed
 - Installers now emit consistent summaries while writing only generated assets.
 - Claude retains optional hooks/subagents with status reporting; Codex/Gemini stay minimal.
 
-Phase 5 — Documentation
+Phase 5 — Documentation ✅ Completed
 
-- Short authoring guide for `.md.hbs`, partials, and insertions.
-- Troubleshooting notes per agent.
+- Authored template/toml troubleshooting guide (`docs/TEMPLATE_AUTHORING.md`).
+- Snapshot tests and installer dry-runs provide guardrails for future edits.
 
 ## Test Coverage
 

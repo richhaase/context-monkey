@@ -72,6 +72,6 @@
     "validate:resources": "node dist/scripts/validateResources.js",
     "snapshots:generate": "node scripts/generateSnapshots.mjs",
     "prepare": "husky",
-    "prepublishOnly": "bun run clean && bun run build"
+    "publishPrep": "bun run clean && bun run build && bun test && npm run validate:resources && node scripts/publishPrepMessage.mjs"
   }
 }

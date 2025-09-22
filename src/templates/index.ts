@@ -97,7 +97,7 @@ function renderForGemini(template: MarkdownTemplate): RenderedCommand {
   const toml = [
     `description = "${escapeTomlString(description)}"`,
     'prompt = """',
-    escapeTripleQuotes(prompt),
+    escapeTomlMultiline(prompt),
     '"""',
     '',
   ].join('\n');
@@ -247,8 +247,8 @@ function normalizeTrailingNewline(value: string): string {
   return value.endsWith('\n') ? value : `${value}\n`;
 }
 
-function escapeTripleQuotes(value: string): string {
-  return value.replace(/"""/g, '\\"\\"\\"');
+function escapeTomlMultiline(value: string): string {
+  return value.replace(/"""/g, '\\"\\"\\"').replace(/\\/g, '\\\\');
 }
 
 function renderAgentBlueprintMarkdown(

@@ -9,9 +9,16 @@ const { loadCommandTemplates } = await import(path.join(distDir, 'utils/resource
 const { renderCommandForTarget } = await import(path.join(distDir, 'templates/index.js'));
 const { TargetAgent } = await import(path.join(distDir, 'types/index.js'));
 
+const templates = loadCommandTemplates(resourcesDir);
+const SNAPSHOT_TEMPLATES = new Set([
+  'docs.md',
+  'stack-scan.md',
+  'plan.md',
+  'explain-repo.md',
+]);
+
 async function main() {
   const outputRoot = path.join(root, 'tests', 'snapshots');
-  const templates = loadCommandTemplates(resourcesDir);
 
   await Promise.all([
     writeAgentSnapshots(outputRoot, 'claude', templates, TargetAgent.CLAUDE_CODE),
@@ -27,6 +34,9 @@ async function writeAgentSnapshots(outputRoot, agentFolder, templates, agent) {
   await fs.ensureDir(agentDir);
 
   for (const template of templates) {
+    if (!SNAPSHOT_TEMPLATES.has(template.relativePath)) {
+      continue;
+    }
     const rendered = renderCommandForTarget(template, agent);
     const outputPath = path.join(agentDir, rendered.targetRelativePath);
     await fs.ensureDir(path.dirname(outputPath));

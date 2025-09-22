@@ -1,10 +1,13 @@
-import { describe, expect, test } from 'bun:test';
+import { describe, expect, test, vi } from 'bun:test';
 import os from 'os';
 import path from 'path';
 import fs from 'fs-extra';
 
 import { installCodex } from '../../src/commands/installers/codex';
 import { installGemini } from '../../src/commands/installers/gemini';
+import { installClaude } from '../../src/commands/installers/claude';
+import * as promptModule from '../../src/utils/prompt';
+import * as platformModule from '../../src/utils/platform';
 
 const realHomedir = os.homedir;
 
@@ -22,6 +25,28 @@ async function withTempHome(run: (home: string) => Promise<void>): Promise<void>
 }
 
 describe('agent installers', () => {
+  test('Claude installer writes commands and agents', async () => {
+    const confirmSpy = vi.spyOn(promptModule, 'confirmHooksInstallation').mockResolvedValue(false);
+    const notifierSpy = vi
+      .spyOn(platformModule, 'checkTerminalNotifierAvailable')
+      .mockResolvedValue(true);
+
+    await withTempHome(async home => {
+      await installClaude();
+
+      const commandsDir = path.join(home, '.claude', 'commands', 'cm');
+      const commandFiles = await fs.readdir(commandsDir);
+      expect(commandFiles.length).toBeGreaterThan(0);
+
+      const agentsDir = path.join(home, '.claude', 'agents');
+      const agentFiles = await fs.readdir(agentsDir);
+      expect(agentFiles.filter(file => file.startsWith('cm-')).length).toBeGreaterThan(0);
+    });
+
+    confirmSpy.mockRestore();
+    notifierSpy.mockRestore();
+  });
+
   test('Codex installer writes prompts and guidance', async () => {
     await withTempHome(async home => {
       await installCodex();

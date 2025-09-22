@@ -1,5 +1,7 @@
 # Context Monkey
 
+ 🚨 Deprecated in favor of installing dotfiles with [plonk](https://github.com/richhaase/plonk) 🚨
+
 Context Monkey installs a project-aware command suite for Claude Code, Codex CLI, and Gemini CLI so you can drive audits, planning, and documentation straight from your editor.
 
 ## Quick Start

@@ -1,6 +1,6 @@
 {
   "name": "context-monkey",
-  "version": "0.10.3",
+  "version": "0.11.0",
   "type": "module",
   "description": "Prompt engineering framework for Claude Code using specialized subagents",
   "main": "dist/bin/context-monkey.js",
@@ -38,7 +38,13 @@
   ],
   "dependencies": {
     "commander": "^12.0.0",
-    "fs-extra": "^11.2.0"
+    "fs-extra": "^11.2.0",
+    "gray-matter": "^4.0.3",
+    "handlebars": "^4.7.8",
+    "remark-parse": "^11.0.0",
+    "remark-stringify": "^11.0.0",
+    "unified": "^11.0.5",
+    "unist-util-visit": "^5.0.0"
   },
   "devDependencies": {
     "@types/fs-extra": "^11.0.0",
@@ -63,7 +69,9 @@
     "lint:fix": "eslint src/ tests/ --fix",
     "format": "prettier --write src/ tests/",
     "format:check": "prettier --check src/ tests/",
+    "validate:resources": "node dist/scripts/validateResources.js",
+    "snapshots:generate": "node scripts/generateSnapshots.mjs",
     "prepare": "husky",
-    "prepublishOnly": "bun run clean && bun run build"
+    "publishPrep": "bun run clean && bun run build && bun test && npm run validate:resources && node scripts/publishPrepMessage.mjs"
   }
 }

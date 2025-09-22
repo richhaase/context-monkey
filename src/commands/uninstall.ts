@@ -1,154 +1,150 @@
-import path from 'path';
-import fs from 'fs';
-import { getInstallPath, remove, exists } from '../utils/files.js';
-import { askQuestion, confirmUninstall, confirmHooksRemoval } from '../utils/prompt.js';
-import {
-  loadSettings,
-  removeContextMonkeyHooks,
-  saveSettings,
-  countContextMonkeyHooks,
-} from '../utils/settings.js';
-import { UninstallOptions } from '../types/index.js';
+import { uninstallClaude } from './uninstallers/claude.js';
+import { uninstallCodex } from './uninstallers/codex.js';
+import { uninstallGemini } from './uninstallers/gemini.js';
+import { askQuestion } from '../utils/prompt.js';
+import { detectAgentStatuses, getTargetLabel, type AgentStatus } from '../utils/targets.js';
+import { TargetAgent } from '../types/index.js';
 
-export async function uninstall(options: UninstallOptions = {}): Promise<void> {
-  const { local = false, assumeYes = false } = options;
+export async function uninstall(): Promise<void> {
+  const statuses = detectAgentStatuses();
+  const installed = statuses.filter(status => status.installed);
 
-  const installPath = getInstallPath(!local);
-  const installType = local ? 'local' : 'global';
-  const displayPath = local ? '.claude' : '~/.claude';
+  if (installed.length === 0) {
+    console.log('Context Monkey is not installed for any supported agent.');
+    return;
+  }
 
-  console.log(`Context Monkey Uninstall`);
+  printAgentOverview(statuses, 'Detected agent environments');
 
-  // Show summary and ask for confirmation (unless --yes is used)
-  if (!assumeYes) {
-    const confirmed = await confirmUninstall(installType, displayPath);
-    if (!confirmed) {
-      console.log('Uninstall cancelled.');
-      return;
+  const selected = await promptAgentSelection(installed, 'uninstall');
+  if (selected.length === 0) {
+    console.log('No agents selected. Aborting uninstall.');
+    return;
+  }
+
+  const confirm = await confirmSelection(selected, 'Remove Context Monkey from');
+  if (!confirm) {
+    console.log('Uninstall cancelled.');
+    return;
+  }
+
+  const errors: Array<{ target: TargetAgent; error: Error }> = [];
+
+  for (const status of selected) {
+    console.log('');
+    console.log(`=== ${getTargetLabel(status.agent)} ===`);
+
+    try {
+      switch (status.agent) {
+        case TargetAgent.CLAUDE_CODE:
+          await uninstallClaude();
+          break;
+        case TargetAgent.CODEX_CLI:
+          await uninstallCodex();
+          break;
+        case TargetAgent.GEMINI_CLI:
+          await uninstallGemini();
+          break;
+        default:
+          throw new Error(`Unsupported agent: ${status.agent}`);
+      }
+    } catch (error) {
+      errors.push({
+        target: status.agent,
+        error: error instanceof Error ? error : new Error(String(error)),
+      });
     }
   }
 
-  try {
-    // Remove command files
-    const commandsPath = path.join(installPath, 'commands', 'cm');
-    if (exists(commandsPath)) {
-      await remove(commandsPath);
-      console.log('🗑️  Removed command files');
+  if (errors.length > 0) {
+    console.error('');
+    console.error('Some agents encountered errors:');
+    errors.forEach(({ target, error }) => {
+      console.error(`- ${getTargetLabel(target)}: ${error.message}`);
+    });
+    throw new Error('Uninstall encountered errors');
+  }
+
+  console.log('');
+  console.log('🧹 Context Monkey removed from selected agents.');
+}
+
+function printAgentOverview(statuses: AgentStatus[], title: string): void {
+  console.log('');
+  console.log(title);
+  statuses.forEach((status, index) => {
+    const availability = status.available ? 'available' : 'not detected';
+    const state = status.available
+      ? status.installed
+        ? 'Context Monkey already installed'
+        : 'Context Monkey not installed'
+      : 'Install the CLI to enable installation';
+
+    console.log(`  [${index + 1}] ${status.label} — ${state} (${availability})`);
+    status.details.forEach(detail => {
+      console.log(`      • ${detail}`);
+    });
+  });
+  console.log('');
+}
+
+async function promptAgentSelection(
+  options: AgentStatus[],
+  actionDescription: string
+): Promise<AgentStatus[]> {
+  if (options.length === 1) {
+    const answer = await askQuestion(`${options[0].label}: ${actionDescription} now? [Y/n] `);
+    if (answer === '' || answer === 'y' || answer === 'yes') {
+      return options;
+    }
+    return [];
+  }
+
+  while (true) {
+    const answer = await askQuestion(
+      `Select agents to ${actionDescription} (numbers separated by commas, 'all' for every match, or press Enter to cancel): `
+    );
+
+    if (answer === '') {
+      return [];
     }
 
-    // Remove subagent files using pattern-based approach
-    const agentsPath = path.join(installPath, 'agents');
-    if (exists(agentsPath)) {
-      let removedCount = 0;
-
-      // Remove cm-prefixed agents (new naming convention)
-      const cmAgentFiles = fs
-        .readdirSync(agentsPath)
-        .filter(file => file.startsWith('cm-') && file.endsWith('.md'));
-      for (const agentFile of cmAgentFiles) {
-        const agentPath = path.join(agentsPath, agentFile);
-        if (exists(agentPath)) {
-          await remove(agentPath);
-          removedCount++;
-        }
-      }
-
-      // Remove legacy agents (old naming convention) for backward compatibility
-      const legacyAgents = [
-        'reviewer.md',
-        'planner.md',
-        'repo-explainer.md',
-        'researcher.md',
-        'stack-profiler.md',
-        'security-auditor.md',
-      ];
-      for (const agentFile of legacyAgents) {
-        const agentPath = path.join(agentsPath, agentFile);
-        if (exists(agentPath)) {
-          await remove(agentPath);
-          removedCount++;
-        }
-      }
-
-      if (removedCount > 0) {
-        console.log(`🗑️  Removed ${removedCount} Context Monkey subagents`);
-      }
+    if (answer === 'all' || answer === '*') {
+      return options;
     }
 
-    // Handle hooks removal
-    await handleHooksRemoval(installPath, displayPath, assumeYes);
+    const parts = answer
+      .split(/[,\s]+/)
+      .map(part => part.trim())
+      .filter(Boolean);
 
-    // Ask about removing .cm directory (contains project context) - only for local uninstalls
-    if (local && exists('.cm')) {
-      const answer = await askQuestion(
-        'Remove .cm/ directory? This contains your project stack and rules. [y/N] '
-      );
-      if (answer === 'y' || answer === 'yes') {
-        await remove('.cm');
-        console.log('🗑️  Removed .cm/ directory');
-      } else {
-        console.log('📋 Kept .cm/ directory (contains project context)');
+    const indices = new Set<number>();
+    let valid = true;
+    for (const part of parts) {
+      const idx = Number.parseInt(part, 10);
+      if (Number.isNaN(idx) || idx < 1 || idx > options.length) {
+        valid = false;
+        break;
       }
+      indices.add(idx - 1);
     }
 
-    console.log('');
-    console.log('✅ Context Monkey uninstalled successfully!');
-    console.log('');
-    console.log('Thanks for using Context Monkey. You can reinstall anytime with:');
-    const installCommand = local
-      ? 'npx context-monkey install --local'
-      : 'npx context-monkey install';
-    console.log(installCommand);
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('Uninstall failed:', errorMessage);
-    throw error;
+    if (!valid || indices.size === 0) {
+      console.log('Please enter valid option numbers. Example: 1,3 or all');
+      continue;
+    }
+
+    return Array.from(indices).map(index => options[index]);
   }
 }
 
-/**
- * Handle hooks removal process
- * @param installPath - Path to Claude Code directory
- * @param displayPath - Display path for user feedback
- * @param assumeYes - Skip prompts if true
- */
-async function handleHooksRemoval(
-  installPath: string,
-  displayPath: string,
-  assumeYes: boolean
-): Promise<void> {
-  try {
-    // Load existing settings to check for Context Monkey hooks
-    const existingSettings = loadSettings(installPath);
-    const hookCount = countContextMonkeyHooks(existingSettings);
-
-    if (hookCount === 0) {
-      return; // No Context Monkey hooks found
-    }
-
-    // Ask user if they want to remove hooks (unless --yes is used)
-    if (!assumeYes) {
-      const removeHooks = await confirmHooksRemoval(hookCount);
-      if (!removeHooks) {
-        console.log('   Keeping notification hooks');
-        return;
-      }
-    }
-
-    // Remove Context Monkey hooks
-    console.log('🗑️  Removing notification hooks...');
-    const cleanedSettings = removeContextMonkeyHooks(existingSettings);
-
-    // Save cleaned settings
-    saveSettings(installPath, cleanedSettings);
-
-    console.log(
-      `   Removed ${hookCount} Context Monkey notification hooks from ${displayPath}/settings.json`
-    );
-    console.log('   Other hooks in your settings have been preserved');
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.warn(`Warning: Could not remove hooks: ${errorMessage}`);
-    console.log('   You may need to manually remove them from your Claude Code settings');
-  }
+async function confirmSelection(statuses: AgentStatus[], action: string): Promise<boolean> {
+  console.log('');
+  console.log(`${action}:`);
+  statuses.forEach(status => {
+    console.log(`  • ${status.label}`);
+  });
+  console.log('');
+  const answer = await askQuestion('Proceed? [Y/n] ');
+  return answer === '' || answer === 'y' || answer === 'yes';
 }

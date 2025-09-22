@@ -7,7 +7,11 @@ allowed-tools: Task
 
 # Intent
 
+{{#if agent.supportsSubagents}}
 Delegate implementation planning to the specialized cm-planner subagent for deep technical analysis and risk-aware planning.
+{{else}}
+Use the planning workflow to break down the goal with full project awareness.
+{{/if}}
 
 # Procedure
 
@@ -24,13 +28,11 @@ Delegate implementation planning to the specialized cm-planner subagent for deep
 
 # Execution
 
-When this command runs, Claude Code will:
+When this command runs, {{agent.name}} will:
 
-1. Use Task tool to invoke the cm-planner subagent with:
-   - subagent_type: "cm-planner"
-   - prompt: Pass the planning goal from $ARGUMENTS
-   - description: "Create implementation plan"
+{{> insert.delegateTo step="1" id="cm-planner" label="cm-planner" purpose="implementation planner" prompt="Pass the planning goal from $ARGUMENTS" description="Create implementation plan"}}
 
+{{#if agent.supportsSubagents}}
 The cm-planner subagent specializes in:
 - Breaking down complex tasks
 - Evaluating multiple approaches
@@ -39,4 +41,11 @@ The cm-planner subagent specializes in:
 - Defining clear success criteria
 
 The planner remains read-only during analysis and produces a comprehensive plan that can be saved to `docs/plans/` if desired.
-
+{{else}}
+Follow this planning checklist:
+- Clarify the goal, constraints, and acceptance criteria.
+- Analyze the current state of the codebase related to the request.
+- Consider multiple approaches and note trade-offs.
+- Produce a step-by-step implementation plan.
+- Highlight risks, mitigations, and follow-up actions.
+{{/if}}

@@ -1,205 +1,152 @@
-import path from 'path';
-import fs from 'fs';
-import { getInstallPath, copyFileWithValidation, exists, remove } from '../utils/files.js';
-import { confirmInstallation, confirmHooksInstallation } from '../utils/prompt.js';
-import { isMacOS, getPlatformInfo, checkTerminalNotifierAvailable } from '../utils/platform.js';
-import { generateHooks } from '../config/hooks.js';
-import {
-  loadSettings,
-  mergeHooks,
-  saveSettings,
-  countContextMonkeyHooks,
-} from '../utils/settings.js';
-import { InstallOptions, PlatformInfo } from '../types/index.js';
+import { installClaude } from './installers/claude.js';
+import { installCodex } from './installers/codex.js';
+import { installGemini } from './installers/gemini.js';
+import { askQuestion } from '../utils/prompt.js';
+import { detectAgentStatuses, getTargetLabel, type AgentStatus } from '../utils/targets.js';
+import { TargetAgent } from '../types/index.js';
 
-// Get version from package.json
-import packageJsonData from '../../package.json' with { type: 'json' };
-const packageJson = packageJsonData;
+export async function install(): Promise<void> {
+  const statuses = detectAgentStatuses();
+  const available = statuses.filter(status => status.available);
 
-export async function install(options: InstallOptions = {}): Promise<void> {
-  const { local = false, _skipExistingCheck = false, assumeYes = false } = options;
-
-  const installPath = getInstallPath(!local);
-  const installType = local ? 'local' : 'global';
-  const displayPath = local ? '.claude' : '~/.claude';
-
-  // Check for existing installation
-  const existingPath = path.join(installPath, 'commands', 'cm');
-  const isUpgrade = exists(existingPath);
-
-  console.log(`Context Monkey v${packageJson.version} ${isUpgrade ? 'Upgrade' : 'Installation'}`);
-
-  // If this is called internally (like from upgrade command), skip this check
-  if (_skipExistingCheck) {
-    // This is an internal call, proceed without additional checks
-  }
-
-  const resourcesDir = path.join(import.meta.dirname, '../../resources');
-
-  // Count files to be installed
-  const commandsDir = path.join(resourcesDir, 'commands');
-  const commandFiles = fs.readdirSync(commandsDir).filter(file => file.endsWith('.md'));
-
-  const agentsDir = path.join(resourcesDir, 'agents');
-  const agentFiles = fs.existsSync(agentsDir)
-    ? fs.readdirSync(agentsDir).filter(file => file.endsWith('.md'))
-    : [];
-
-  // Show summary and ask for confirmation (unless this is called internally or --yes is used)
-  if (!_skipExistingCheck && !assumeYes) {
-    const confirmed = await confirmInstallation(
-      installType,
-      displayPath,
-      commandFiles.length,
-      agentFiles.length,
-      isUpgrade
-    );
-    if (!confirmed) {
-      console.log(`${isUpgrade ? 'Upgrade' : 'Installation'} cancelled.`);
-      return;
-    }
-  }
-
-  try {
-    // If this is an upgrade, clean up existing files first
-    if (isUpgrade) {
-      console.log('🗑️  Removing existing Context Monkey files...');
-
-      // Remove all commands (safe - our subdirectory)
-      const commandsPath = path.join(installPath, 'commands', 'cm');
-      if (exists(commandsPath)) {
-        await remove(commandsPath);
-        console.log('   Removed /commands/cm/');
-      }
-
-      // Remove all cm-prefixed agents (safe - our prefix)
-      const agentsPath = path.join(installPath, 'agents');
-      if (exists(agentsPath)) {
-        const existingAgentFiles = fs
-          .readdirSync(agentsPath)
-          .filter(file => file.startsWith('cm-') && file.endsWith('.md'));
-
-        for (const agentFile of existingAgentFiles) {
-          const agentPath = path.join(agentsPath, agentFile);
-          if (exists(agentPath)) {
-            await remove(agentPath);
-          }
-        }
-
-        if (existingAgentFiles.length > 0) {
-          console.log(`   Removed ${existingAgentFiles.length} Context Monkey agents`);
-        }
-      }
-    }
-
-    // Copy command files
-    console.log(`🔧 ${isUpgrade ? 'Updating' : 'Installing'} commands...`);
-    for (const file of commandFiles) {
-      await copyFileWithValidation(
-        path.join(commandsDir, file),
-        path.join(installPath, 'commands', 'cm', file)
-      );
-    }
-
-    // Copy agent files
-    if (agentFiles.length > 0) {
-      console.log(`🤖 ${isUpgrade ? 'Updating' : 'Installing'} subagents with project context...`);
-      for (const file of agentFiles) {
-        await copyFileWithValidation(
-          path.join(agentsDir, file),
-          path.join(installPath, 'agents', file)
-        );
-      }
-
-      console.log(`  ${displayPath}/agents/              - Subagents (${agentFiles.length} files)`);
-    }
-
-    // Handle hooks installation (only if not called internally from upgrade)
-    if (!_skipExistingCheck) {
-      await handleHooksInstallation(installPath, displayPath, assumeYes);
-    }
-
-    console.log('');
+  if (available.length === 0) {
     console.log(
-      `✅ Context Monkey v${packageJson.version} ${isUpgrade ? 'upgraded' : 'installed'} successfully!`
+      'No supported agent CLIs detected. Install Codex CLI or Gemini CLI to enable integration.'
     );
-    console.log('');
-    console.log('Next steps:');
-    console.log("• Run '/cm:intro' in Claude Code to see all available commands and get started");
-    console.log('');
-    console.log('Files installed:');
-    console.log(
-      `  ${displayPath}/commands/cm/     - Slash commands (${commandFiles.length} files)`
-    );
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error(`${isUpgrade ? 'Upgrade' : 'Installation'} failed:`, errorMessage);
-    throw error;
-  }
-}
-
-/**
- * Handle hooks installation process
- * @param installPath - Path to Claude Code directory
- * @param displayPath - Display path for user feedback
- * @param assumeYes - Skip prompts if true
- */
-async function handleHooksInstallation(
-  installPath: string,
-  displayPath: string,
-  assumeYes: boolean
-): Promise<void> {
-  const platformInfo: PlatformInfo = getPlatformInfo();
-
-  // Only proceed if platform supports notifications
-  if (!platformInfo.supportsNotifications) {
-    console.log('');
-    console.log('📬 Notification hooks are not supported on this platform');
-    console.log('   Continuing without hooks installation');
     return;
   }
 
-  // Check if user wants to install hooks (unless --yes is used)
-  if (!assumeYes) {
-    const wantsHooks = await confirmHooksInstallation(platformInfo);
-    if (!wantsHooks) {
-      console.log('   Skipping hooks installation');
-      return;
-    }
+  printAgentOverview(statuses, 'Detected agent environments');
+
+  const selectedAgents = await promptAgentSelection(available, 'install or update');
+  if (selectedAgents.length === 0) {
+    console.log('No agents selected. Aborting installation.');
+    return;
   }
 
-  try {
-    // Check if terminal-notifier is available on macOS
-    if (isMacOS()) {
-      const isAvailable = await checkTerminalNotifierAvailable();
-      if (!isAvailable) {
-        console.log('');
-        console.log('⚠️  Warning: terminal-notifier is not installed');
-        console.log('   Install it with: brew install terminal-notifier');
-        console.log(
-          "   Hooks will be installed but won't work until terminal-notifier is available"
-        );
+  const confirm = await confirmSelection(selectedAgents, 'Install Context Monkey for');
+  if (!confirm) {
+    console.log('Installation cancelled.');
+    return;
+  }
+
+  const errors: Array<{ target: TargetAgent; error: Error }> = [];
+
+  for (const status of selectedAgents) {
+    console.log('');
+    console.log(`=== ${getTargetLabel(status.agent)} ===`);
+
+    try {
+      switch (status.agent) {
+        case TargetAgent.CLAUDE_CODE:
+          await installClaude();
+          break;
+        case TargetAgent.CODEX_CLI:
+          await installCodex();
+          break;
+        case TargetAgent.GEMINI_CLI:
+          await installGemini();
+          break;
+        default:
+          throw new Error(`Unsupported agent: ${status.agent}`);
       }
+    } catch (error) {
+      errors.push({
+        target: status.agent,
+        error: error instanceof Error ? error : new Error(String(error)),
+      });
+    }
+  }
+
+  if (errors.length > 0) {
+    console.error('');
+    console.error('Some agents encountered errors:');
+    errors.forEach(({ target, error }) => {
+      console.error(`- ${getTargetLabel(target)}: ${error.message}`);
+    });
+    throw new Error('Installation encountered errors');
+  }
+
+  console.log('');
+  console.log('🎉 Context Monkey setup complete!');
+}
+
+function printAgentOverview(statuses: AgentStatus[], title: string): void {
+  console.log('');
+  console.log(title);
+  statuses.forEach((status, index) => {
+    const availability = status.available ? 'available' : 'not detected';
+    const state = status.available
+      ? status.installed
+        ? 'Context Monkey already installed'
+        : 'Context Monkey not installed'
+      : 'Install the CLI to enable installation';
+
+    console.log(`  [${index + 1}] ${status.label} — ${state} (${availability})`);
+    status.details.forEach(detail => {
+      console.log(`      • ${detail}`);
+    });
+  });
+  console.log('');
+}
+
+async function promptAgentSelection(
+  options: AgentStatus[],
+  actionDescription: string
+): Promise<AgentStatus[]> {
+  if (options.length === 1) {
+    const answer = await askQuestion(`${options[0].label} is available. Install now? [Y/n] `);
+    if (answer === '' || answer === 'y' || answer === 'yes') {
+      return options;
+    }
+    return [];
+  }
+
+  while (true) {
+    const answer = await askQuestion(
+      `Select agents to ${actionDescription} (numbers separated by commas, 'all' for every available agent, or press Enter to cancel): `
+    );
+
+    if (answer === '') {
+      return [];
     }
 
-    // Load existing settings
-    console.log('📬 Installing notification hooks...');
-    const existingSettings = loadSettings(installPath);
-    const existingHookCount = countContextMonkeyHooks(existingSettings);
+    if (answer === 'all' || answer === '*') {
+      return options;
+    }
 
-    // Generate and merge hooks
-    const contextMonkeyHooks = generateHooks();
-    const mergedSettings = mergeHooks(existingSettings, contextMonkeyHooks);
+    const parts = answer
+      .split(/[,\s]+/)
+      .map(part => part.trim())
+      .filter(Boolean);
 
-    // Save merged settings
-    saveSettings(installPath, mergedSettings);
+    const indices = new Set<number>();
+    let valid = true;
+    for (const part of parts) {
+      const idx = Number.parseInt(part, 10);
+      if (Number.isNaN(idx) || idx < 1 || idx > options.length) {
+        valid = false;
+        break;
+      }
+      indices.add(idx - 1);
+    }
 
-    const action = existingHookCount > 0 ? 'updated' : 'installed';
-    console.log(`   ${action} notification hooks in ${displayPath}/settings.json`);
-    console.log("   You'll receive notifications when Claude Code agents finish or need attention");
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.warn(`Warning: Could not install hooks: ${errorMessage}`);
-    console.log('   Continuing without hooks installation');
+    if (!valid || indices.size === 0) {
+      console.log('Please enter valid option numbers. Example: 1,3 or all');
+      continue;
+    }
+
+    return Array.from(indices).map(index => options[index]);
   }
+}
+
+async function confirmSelection(statuses: AgentStatus[], action: string): Promise<boolean> {
+  console.log('');
+  console.log(`${action}:`);
+  statuses.forEach(status => {
+    console.log(`  • ${status.label}`);
+  });
+  console.log('');
+  const answer = await askQuestion('Proceed? [Y/n] ');
+  return answer === '' || answer === 'y' || answer === 'yes';
 }

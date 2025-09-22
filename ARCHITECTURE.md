@@ -1,188 +1,79 @@
 # Architecture
 
-Context Monkey is a TypeScript CLI application that extends Claude Code with specialized subagents and project-aware commands.
-
 ## System Overview
 
-Context Monkey follows a **modular CLI architecture** with three main components:
+Context Monkey is a TypeScript CLI published on npm that provisions project-aware commands and agent blueprints for three desktop assistants: Claude Code, Codex CLI, and Gemini CLI. The CLI focuses on transforming a single set of Handlebars-backed Markdown templates into the dialect each host expects, then installing the rendered assets next to the host's native configuration.
 
-- **CLI Interface** - Command registration and user interaction
-- **Installation System** - File deployment and configuration management
-- **Resource Templates** - Reusable agents and commands
+## High-Level Flow
 
-## Component Architecture
+1. `bin/context-monkey.ts` registers `install` and `uninstall` subcommands with Commander.
+2. `install` probes the local machine for supported CLIs, asks the user which targets to configure, then dispatches to an installer per agent.
+3. Each installer loads shared templates, renders them for its platform, and writes them into that platform's prompts/commands directory. Claude also syncs agent blueprints and optional notification hooks.
+4. Commands executed inside the assistant reference project context files (`@.cm/stack.md`, `@.cm/rules.md`) and delegate to subagents defined in the shared resources directory.
+5. `uninstall` mirrors the detection logic and selectively removes Context Monkey assets without disturbing unrelated user files.
 
-### CLI Core (`src/`)
+## Source Layout
 
 ```
 src/
-├── bin/context-monkey.ts    # Main CLI entry point
+├── bin/context-monkey.ts         # CLI entry point
 ├── commands/
-│   ├── install.ts          # Installation logic
-│   └── uninstall.ts        # Cleanup logic
+│   ├── install.ts                # Interactive installer orchestrator
+│   ├── uninstall.ts              # Interactive uninstaller
+│   ├── installers/               # Claude, Codex, Gemini installers
+│   └── uninstallers/             # Claude, Codex, Gemini uninstallers
 ├── config/
-│   └── hooks.ts            # Notification hook generation
-├── utils/
-│   ├── files.ts            # File operations
-│   ├── platform.ts         # OS detection
-│   ├── prompt.ts           # User interaction
-│   └── settings.ts         # Configuration management
-└── types/
-    └── index.ts            # TypeScript definitions
-```
+│   ├── agents.ts                 # Rendering rules for inlining agent docs
+│   └── hooks.ts                  # Notification hook definitions
+├── templates/                    # Handlebars environment + multi-agent rendering
+├── utils/                        # File IO, target detection, prompts, settings helpers
+├── lib/                          # Reserved for future shared libraries
+└── types/index.ts                # Shared enums and interfaces
 
-**Key Responsibilities:**
-
-- **CLI Interface**: Command parsing and routing using Commander.js
-- **Installation Engine**: Safe deployment of resources to Claude Code directories
-- **Platform Detection**: OS-specific functionality (notifications, paths)
-- **Configuration Management**: Settings merging and validation
-
-### Resource System (`resources/`)
-
-```
 resources/
-├── commands/               # Slash commands for Claude Code
-│   ├── intro.md           # Welcome and overview
-│   ├── stack-scan.md      # Technology detection
-│   ├── explain-repo.md    # Repository analysis
-│   ├── plan.md            # Implementation planning
-│   ├── review-code.md     # Code review
-│   ├── deep-dive.md       # Detailed analysis
-│   ├── docs.md            # Documentation generation
-│   ├── add-rule.md        # Rule management
-│   ├── edit-rule.md       # Rule editing
-│   └── list-rules.md      # Rule listing
-└── agents/                # Specialized AI subagents
-    ├── cm-researcher.md   # Technical investigation
-    ├── cm-planner.md      # Implementation planning
-    ├── cm-reviewer.md     # Code review specialist
-    ├── cm-repo-explainer.md # Repository documentation
-    ├── cm-stack-profiler.md # Technology detection
-    ├── cm-doc-generator.md # Documentation automation
-    ├── cm-security-auditor.md # Security assessment
-    └── cm-dependency-manager.md # Dependency analysis
+├── commands/*.md.hbs             # Command blueprints (Handlebars + Markdown)
+├── agents/cm-*.md                # Subagent instruction sets
+└── partials/insert/*.hbs         # Shared Handlebars partials used by commands
 ```
 
-**Design Pattern**: Each resource follows a **template pattern** with:
+The TypeScript sources compile to `dist/` during `bun run build`; published artifacts ship only the compiled JavaScript, resources, and license metadata defined in `package.json#files`.
 
-- **YAML frontmatter** - Configuration and metadata
-- **Markdown content** - Instructions and context for Claude Code
-- **Consistent naming** - `cm-` prefix for agents, `/cm:` for commands
+## Command Rendering Pipeline
 
-## Data Flow
+- **Template collection** (`utils/resources.ts`): discovers Markdown templates, parses YAML frontmatter, and records any referenced subagents.
+- **Handlebars context** (`templates/handlebars.ts`): loads partials, registers helpers, and builds an agent-specific render context to control wording and capabilities.
+- **Agent-aware transforms** (`templates/index.ts`):
+  - Claude Code receives the rendered Markdown verbatim.
+  - Codex CLI content is rewritten to Codex terminology, stripped of sections that do not apply, and saved under slugified filenames with a `cm-` prefix.
+  - Gemini CLI prompts are embedded inside TOML, with escaping applied for quotes and backslashes; referenced agent blueprints are converted to Gemini-friendly Markdown sections.
+- **Agent blueprint injection**: referenced `cm-*` agents are inlined according to `config/agents.ts`, which controls heading depth and terminology replacements per platform.
 
-### Installation Process
+This pipeline allows a single Handlebars template to power all three assistants while keeping platform quirks isolated to renderer logic.
 
-```
-1. User runs `context-monkey install`
-2. CLI validates target directory (~/.claude or ./.claude)
-3. Resource files are copied with validation
-4. Notification hooks are optionally installed
-5. Claude Code discovers new commands and agents
-```
+## Installation Workflow
 
-### Command Execution
+- **Target detection** (`utils/targets.ts`): checks for CLI executables (`which codex`, `which gemini`) and inspects well-known directories to determine whether Context Monkey content already exists.
+- **Claude installer** (`commands/installers/claude.ts`): writes commands to `~/.claude/commands/cm/`, syncs `cm-*.md` agent blueprints, and optionally merges terminal-notifier hooks into `~/.claude/settings.json`. Legacy files are pruned on upgrade to avoid drift.
+- **Codex installer** (`commands/installers/codex.ts`): prunes legacy prompt files, renders Markdown prompts, writes them beneath `~/.codex/prompts/`, and updates `~/.codex/AGENTS.md` by replacing the Context Monkey summary block.
+- **Gemini installer** (`commands/installers/gemini.ts`): replaces the `cm` namespace under `~/.gemini/commands/`, writes TOML prompts, and refreshes the extension metadata bundle in `~/.gemini/extensions/cm/`.
+- **Install summaries** (`utils/installSummary.ts`): every installer reports the paths touched so users can verify the output.
 
-```
-1. User types `/cm:command` in Claude Code
-2. Claude Code loads command template from ~/.claude/commands/cm/
-3. Template references project context (@.cm/stack.md, @.cm/rules.md)
-4. Command may delegate to specialized agent for processing
-5. Agent processes request with full project context
-```
+Uninstallers reuse the same path helpers to remove only files created by Context Monkey, prompt for hook removal, and keep user-defined assets in place.
 
-### Project Context Integration
+## Notification Hooks
 
-Context Monkey maintains project awareness through:
-
-- **Stack Documentation** (`@.cm/stack.md`) - Technology choices and configurations
-- **Development Rules** (`@.cm/rules.md`) - Coding standards and patterns
-- **Automatic Reference** - All commands include these files in their context
-
-## Design Decisions
-
-### TypeScript + ES Modules
-
-- **Rationale**: Type safety and modern JavaScript features
-- **Trade-offs**: Build step required, but improved development experience
-- **Implementation**: Full ES module support with `import.meta.dirname`
-
-### Resource-Based Architecture
-
-- **Rationale**: Separation of logic from content, easy customization
-- **Trade-offs**: More files to manage, but flexible and maintainable
-- **Implementation**: Markdown templates with YAML frontmatter
-
-### Global vs Local Installation
-
-- **Rationale**: Support both team-wide and project-specific workflows
-- **Trade-offs**: Path complexity, but flexible deployment options
-- **Implementation**: Dynamic path resolution based on `--local` flag
-
-### Commander.js for CLI
-
-- **Rationale**: Mature, well-documented CLI framework
-- **Trade-offs**: Additional dependency, but robust argument parsing
-- **Implementation**: Subcommand architecture with typed options
+`config/hooks.ts` defines lightweight terminal-notifier commands tagged with a `__context_monkey_hook__` marker. During installation the hooks are merged into existing Claude settings via `utils/settings.ts`, which deep-clones JSON, removes prior Context Monkey entries, and writes back well-formatted output. On uninstall users can opt to strip the hooks while preserving non-Context Monkey entries.
 
 ## Technology Stack
 
-### Core Dependencies
-
-- **Node.js 16+** - Runtime environment
-- **TypeScript 5.3+** - Type system and compilation
-- **Commander.js 12** - CLI argument parsing and command routing
-- **fs-extra 11** - Enhanced file system operations
-
-### Development Tools
-
-- **Bun** - Fast package manager and test runner
-- **ESLint + Prettier** - Code quality and formatting
-- **Husky + lint-staged** - Git hooks for code quality
-- **TypeScript Compiler** - ES module compilation
-
-### Platform Integration
-
-- **Claude Code CLI** - Host environment for commands and agents
-- **terminal-notifier (macOS)** - Desktop notifications
-- **Cross-platform file operations** - Windows, macOS, Linux support
+- **Runtime**: Node.js ≥16 with ES module support, Commander for CLI parsing, fs-extra for filesystem work.
+- **Build**: TypeScript 5, Bun for package management and testing, ESLint + Prettier for linting, Husky + lint-staged for pre-commit hygiene.
+- **Content**: Handlebars templating, unified/remark for Markdown AST manipulation, gray-matter for frontmatter parsing.
 
 ## Extension Points
 
-### Adding New Commands
+- Add a command: create `resources/commands/<name>.md.hbs`, reference shared partials for consistent guidance, regenerate snapshots (`npm run snapshots:generate`), and rerun installers to validate behaviour.
+- Add or refine an agent: drop a new `resources/agents/cm-*.md` file; renderer will inline it automatically when commands reference the slug.
+- Customize hooks: adjust `config/hooks.ts` or extend `generateHooks` to support alternate notification systems; `utils/settings.ts` handles safe merging/removal.
 
-1. Create new `.md` file in `resources/commands/`
-2. Add YAML frontmatter with description and allowed tools
-3. Write command logic in Markdown format
-4. Commands are automatically discovered on next install
-
-### Adding New Agents
-
-1. Create new `cm-*.md` file in `resources/agents/`
-2. Define agent capabilities in YAML frontmatter
-3. Write agent prompt and instructions
-4. Agents are automatically available to commands
-
-### Custom Project Rules
-
-- Use `/cm:add-rule` to define project-specific patterns
-- Rules are stored in `@.cm/rules.md` and referenced by all commands
-- Supports custom coding standards, architectural decisions, and workflows
-
-## Security Considerations
-
-- **File System Access**: Limited to Claude Code directories (`~/.claude`, `./.claude`)
-- **Resource Validation**: Files are validated before copying during installation
-- **Safe Cleanup**: Uninstall only removes Context Monkey prefixed files (`cm-*`)
-- **No Network Access**: Core functionality works entirely offline
-- **Permission Model**: Inherits Claude Code's security model and tool restrictions
-
-## Performance Characteristics
-
-- **Installation**: O(n) where n = number of resource files (~20 files typical)
-- **Command Loading**: Instant - templates loaded by Claude Code as needed
-- **Memory Usage**: Minimal - CLI exits after operation, templates loaded on-demand
-- **Disk Usage**: ~100KB for all templates and agents
-
-The architecture prioritizes simplicity, safety, and extensibility while providing powerful project-aware capabilities to Claude Code.
+These extension points allow new workflows to be layered on without touching core installer logic, keeping the CLI stable while the prompt library evolves.

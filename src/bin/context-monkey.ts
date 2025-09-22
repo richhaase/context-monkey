@@ -3,7 +3,6 @@
 import { program } from 'commander';
 import { install } from '../commands/install.js';
 import { uninstall } from '../commands/uninstall.js';
-import { InstallOptions, UninstallOptions } from '../types/index.js';
 
 import packageJsonData from '../../package.json' with { type: 'json' };
 const packageJson = packageJsonData;
@@ -15,16 +14,10 @@ program
 
 program
   .command('install')
-  .description('Install or upgrade Context Monkey (global: ~/.claude/ or local: .claude/)')
-  .option('-l, --local', 'Install to ./.claude instead of ~/.claude')
-  .option('-y, --yes', 'Skip confirmation prompt')
-  .action(async options => {
+  .description('Interactively install or upgrade Context Monkey for supported agents')
+  .action(async () => {
     try {
-      const installOptions: InstallOptions = {
-        local: options.local,
-        assumeYes: options.yes,
-      };
-      await install(installOptions);
+      await install();
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       console.error('Error:', errorMessage);
@@ -34,16 +27,10 @@ program
 
 program
   .command('uninstall')
-  .description('Remove Context Monkey (global: ~/.claude/ or local: .claude/)')
-  .option('-l, --local', 'Uninstall from ./.claude instead of ~/.claude')
-  .option('-y, --yes', 'Skip confirmation prompt')
-  .action(async options => {
+  .description('Interactively remove Context Monkey from supported agents')
+  .action(async () => {
     try {
-      const uninstallOptions: UninstallOptions = {
-        local: options.local,
-        assumeYes: options.yes,
-      };
-      await uninstall(uninstallOptions);
+      await uninstall();
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       console.error('Error:', errorMessage);

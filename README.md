@@ -1,6 +1,6 @@
 # Context Monkey
 
-Prompt engineering framework for Claude Code using specialized subagents
+Context Monkey installs a project-aware command suite for Claude Code, Codex CLI, and Gemini CLI so you can drive audits, planning, and documentation straight from your editor.
 
 ## Quick Start
 
@@ -8,73 +8,47 @@ Prompt engineering framework for Claude Code using specialized subagents
 bunx context-monkey install
 ```
 
-Then in Claude Code:
-```
-/cm:intro
-```
+Run the installer again at any time to pick up updates or target newly detected CLIs.
 
 ## Key Commands
 
-- **`/cm:stack-scan`** - Auto-detect and document your technology stack
-- **`/cm:explain-repo`** - Generate comprehensive repository documentation  
-- **`/cm:plan`** - Create detailed implementation plans for features
-- **`/cm:review-code`** - Review code changes with project awareness
-- **`/cm:deep-dive`** - Perform detailed code analysis with context
+- `/cm:stack-scan` – profile the active repository and capture technology and tooling notes
+- `/cm:explain-repo` – describe architecture, hot paths, and risk areas for fast onboarding
+- `/cm:onboard-project [quick|standard|deep]` – chain stack analysis, architecture, and planning into a guided tour
+- `/cm:plan` – produce implementation plans with task breakdowns and open questions
+- `/cm:review-code` – review diffs with project conventions, tests, and follow-up suggestions
+- `/cm:deep-dive` – investigate a subsystem, dependency, or incident with targeted research
+- `/cm:docs` – regenerate README, architecture notes, setup guides, changelog, and contributing instructions
 
-## Installation
+## Installation & Updates
 
-### Global Installation (Recommended)
-```bash
-bunx context-monkey install
-```
-Installs to `~/.claude/` for all projects
+- `context-monkey install` – interactive wizard that detects Claude Code, Codex CLI, and Gemini CLI and lets you install to any combination
+- `context-monkey uninstall` – remove Context Monkey assets from selected CLIs while leaving other content untouched
+- Hooks: users of Claude Code on macOS users can opt into terminal notifications via `terminal-notifier`
 
-### Local Installation
-```bash
-bunx context-monkey install --local
-```
-Installs to `./.claude/` for current project only
+The installer copies command templates, agent blueprints, and optional notification hooks into per-agent folders:
 
-### Uninstall
-```bash
-bunx context-monkey uninstall
-```
+- `~/.claude/commands/cm/` and `~/.claude/agents/`
+- `~/.codex/prompts/cm-*` with a summary block in `~/.codex/AGENTS.md`
+- `~/.gemini/commands/cm/` plus the `~/.gemini/extensions/cm/` metadata bundle
 
-## Project Context
+## Project Context Files
 
-Context Monkey enhances Claude Code through project awareness:
+Context Monkey can use and maintains two shared knowledge files at your project root:
 
-- **`@.cm/stack.md`** - Auto-generated technology stack overview
-- **`@.cm/rules.md`** - Project-specific coding standards and patterns
+- `@.cm/stack.md` – technology stack, tooling, and operational notes
+- `@.cm/rules.md` – coding standards, patterns, and architectural decisions
 
-All commands automatically reference these files to provide consistent, contextual assistance.
+Commands automatically reference these files so the assistant answers with the correct vocabulary, workflows, and guardrails.
 
-## Available Subagents
+## Developing Context Monkey
 
-Context Monkey includes 8 specialized AI agents that integrate seamlessly with Claude Code:
+- Build TypeScript sources: `bun run build`
+- Watch for changes: `bun run dev`
+- Run unit tests: `bun test`
+- Refresh prompt snapshots: `npm run snapshots:generate`
 
-- **cm-researcher** - Deep technical investigation and analysis
-- **cm-planner** - Implementation planning with project context
-- **cm-reviewer** - Code review with awareness of project patterns
-- **cm-repo-explainer** - Repository documentation and explanation
-- **cm-stack-profiler** - Technology stack detection and profiling
-- **cm-doc-generator** - Automated documentation generation
-- **cm-security-auditor** - Security assessment and vulnerability analysis
-- **cm-dependency-manager** - Dependency analysis and management
-
-## Requirements
-
-- Node.js 16.0.0 or higher
-- Claude Code CLI
-- Bun (recommended) or npm
-
-## Features
-
-- **Zero Configuration** - Works immediately after installation
-- **Project Awareness** - All commands understand your stack and conventions
-- **Contextual Intelligence** - Maintains project knowledge across sessions
-- **Extensible Rules** - Add custom coding standards and patterns
-- **Notification Hooks** - Optional desktop notifications for long-running tasks
+See `SETUP.md` for environment setup and `CONTRIBUTING.md` for pull request guidelines.
 
 ## License
 

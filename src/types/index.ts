@@ -1,14 +1,9 @@
 // Core type definitions for Context Monkey
 
-export interface InstallOptions {
-  local?: boolean;
-  assumeYes?: boolean;
-  _skipExistingCheck?: boolean;
-}
-
-export interface UninstallOptions {
-  local?: boolean;
-  assumeYes?: boolean;
+export enum TargetAgent {
+  CLAUDE_CODE = 'claude-code',
+  CODEX_CLI = 'codex-cli',
+  GEMINI_CLI = 'gemini-cli',
 }
 
 export interface PlatformInfo {

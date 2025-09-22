@@ -1,11 +1,11 @@
 ---
-description: Delegate to cm-stack-profiler subagent for comprehensive technology stack analysis
-argument-hint: "[overwrite|append|skip]"
-allowed-tools: Task, Write, Edit
-plan_mode: true
+description: >-
+  Delegate to cm-stack-profiler subagent for comprehensive technology stack
+  analysis
+argument-hint: '[overwrite|append|skip]'
+allowed-tools: 'Task, Write, Edit'
+plan_mode: 'true'
 ---
-
-
 # Intent
 
 Delegate stack analysis to the specialized cm-stack-profiler subagent for comprehensive technology profiling.
@@ -32,10 +32,10 @@ When this command runs, Claude Code will:
    - **If exists**: Read and provide a concise summary of the current stack
    - **If missing**: Use Task tool to invoke the cm-stack-profiler subagent
 
-2. For new stack analysis, use Task tool to invoke the cm-stack-profiler subagent with:
-   - subagent_type: "cm-stack-profiler"
-   - prompt: Request stack analysis with action from $ARGUMENTS
-   - description: "Analyze technology stack"
+2. Use Task tool to invoke the cm-stack-profiler subagent with:
+  - subagent_type: "cm-stack-profiler"
+  - prompt: Request stack analysis with action from $ARGUMENTS
+  - description: "Analyze technology stack"
 
 3. Handle .cm/stack.md file (only when rescanning):
    - No file exists: Create with detected stack profile

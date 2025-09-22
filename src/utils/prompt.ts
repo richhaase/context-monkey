@@ -15,68 +15,6 @@ export function askQuestion(question: string): Promise<string> {
   });
 }
 
-export async function confirmInstallation(
-  installType: string,
-  displayPath: string,
-  commandCount: number,
-  agentCount: number,
-  isUpgrade = false
-): Promise<boolean> {
-  console.log('');
-  if (isUpgrade) {
-    console.log('📋 Upgrade Summary:');
-    console.log(`   Installation type: ${installType}`);
-    console.log(`   Target directory: ${displayPath}`);
-    console.log(`   Commands to update: ${commandCount} slash commands`);
-    console.log(`   Agents to update: ${agentCount} specialized subagents`);
-    console.log('   This will replace existing Context Monkey files');
-    console.log('');
-
-    const answer = await askQuestion('Proceed with upgrade? [Y/n] ');
-    return answer === '' || answer === 'y' || answer === 'yes';
-  } else {
-    console.log('📋 Installation Summary:');
-    console.log(`   Installation type: ${installType}`);
-    console.log(`   Target directory: ${displayPath}`);
-    console.log(`   Commands to install: ${commandCount} slash commands`);
-    console.log(`   Agents to install: ${agentCount} specialized subagents`);
-    console.log('');
-
-    const answer = await askQuestion('Proceed with installation? [Y/n] ');
-    return answer === '' || answer === 'y' || answer === 'yes';
-  }
-}
-
-export async function confirmUpgrade(
-  installType: string,
-  displayPath: string,
-  commandCount: number,
-  agentCount: number
-): Promise<boolean> {
-  console.log('');
-  console.log('📋 Upgrade Summary:');
-  console.log(`   Installation type: ${installType}`);
-  console.log(`   Target directory: ${displayPath}`);
-  console.log(`   Commands to update: ${commandCount} slash commands`);
-  console.log(`   Agents to update: ${agentCount} specialized subagents`);
-  console.log('');
-
-  const answer = await askQuestion('Proceed with upgrade? [Y/n] ');
-  return answer === '' || answer === 'y' || answer === 'yes';
-}
-
-export async function confirmUninstall(installType: string, displayPath: string): Promise<boolean> {
-  console.log('');
-  console.log('⚠️  Uninstall Summary:');
-  console.log(`   Installation type: ${installType}`);
-  console.log(`   Target directory: ${displayPath}`);
-  console.log('   This will remove all Context Monkey commands and agents');
-  console.log('');
-
-  const answer = await askQuestion('Proceed with uninstall? [y/N] ');
-  return answer === 'y' || answer === 'yes';
-}
-
 export async function confirmHooksInstallation(platformInfo: PlatformInfo): Promise<boolean> {
   console.log('');
   console.log('📬 Notification Hooks Setup:');

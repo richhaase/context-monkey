@@ -1,0 +1,15 @@
+{{!-- Agent-aware delegation instructions. Parameters: step, id, label, purpose, prompt, description. --}}
+{{#if agent.supportsSubagents}}
+{{step}}. Use Task tool to invoke the {{#if label}}{{label}}{{else}}{{id}}{{/if}} subagent with:
+  - subagent_type: "{{id}}"
+{{#if prompt}}  - prompt: {{{prompt}}}
+{{/if}}{{#if description}}  - description: "{{description}}"
+{{/if}}
+{{else}}
+{{step}}. Act as the {{purpose}} directly inside {{agent.name}}:
+{{#if prompt}}  - {{{prompt}}}
+{{/if}}{{#if description}}  - Objective: "{{description}}"
+{{/if}}
+{{> insert.useWorkspaceTools indent="  "}}
+{{> insert.referenceProjectDocs indent="  "}}
+{{/if}}

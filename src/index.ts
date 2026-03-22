@@ -5,7 +5,6 @@ import pkg from "../package.json";
 import { registerApply } from "./commands/apply.ts";
 import { registerDiff } from "./commands/diff.ts";
 import { registerScan } from "./commands/scan.ts";
-import { registerSync } from "./commands/sync.ts";
 
 const program = new Command()
   .name("cm")
@@ -14,7 +13,6 @@ const program = new Command()
 
 registerScan(program);
 registerDiff(program);
-registerSync(program);
 registerApply(program);
 
 // Default to scan when no command given

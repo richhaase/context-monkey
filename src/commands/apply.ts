@@ -1,4 +1,3 @@
-import { resolve } from "node:path";
 import chalk from "chalk";
 import type { Command } from "commander";
 import {
@@ -14,26 +13,13 @@ import type { SyncPlan } from "../writers/writer.ts";
 export function registerApply(program: Command): void {
   program
     .command("apply")
-    .description("Apply the IR store to a target harness")
-    .argument("<target>", `target harness (${ALL_HARNESS_IDS.join(", ")})`)
-    .option("-p, --path <path>", "target directory", ".")
+    .description("Apply the IR store to one or all target harnesses")
+    .argument("[target]", `target harness (${ALL_HARNESS_IDS.join(", ")}, or "all")`, "all")
     .option("-y, --yes", "skip confirmation")
     .option("--store <path>", "IR store path (default: ~/.config/context-monkey/context.json)")
     .option("--categories <cats>", "comma-separated categories to include (default: all)")
     .action(
-      async (
-        targetId: string,
-        opts: { path: string; yes?: boolean; store?: string; categories?: string },
-      ) => {
-        const root = resolve(opts.path);
-        const writer = getWriter(targetId as HarnessId);
-
-        if (!writer) {
-          console.error(chalk.red(`  Unknown target harness: ${targetId}`));
-          console.error(chalk.dim(`  Available: ${ALL_HARNESS_IDS.join(", ")}`));
-          process.exit(1);
-        }
-
+      async (targetId: string, opts: { yes?: boolean; store?: string; categories?: string }) => {
         const sp = storePath(opts.store);
         const bundle = await readStore(opts.store);
 
@@ -43,14 +29,25 @@ export function registerApply(program: Command): void {
           process.exit(1);
         }
 
-        const tgtName = HARNESS_DISPLAY_NAMES[writer.id];
-        const sources = bundle.sources.map((id) => HARNESS_DISPLAY_NAMES[id]).join(", ");
+        if (!bundle.root) {
+          console.error(
+            chalk.red("  Store has no root directory. Re-run 'cm scan <path>' to update."),
+          );
+          process.exit(1);
+        }
 
-        console.log();
-        console.log(chalk.bold(`  Apply: ${chalk.cyan(sources)} → ${chalk.cyan(tgtName)}`));
-        console.log(chalk.dim(`  Store: ${sp} (${bundle.items.length} items)`));
-        console.log(chalk.dim(`  Target: ${root}`));
-        console.log();
+        const root = bundle.root;
+        const targets: HarnessId[] =
+          targetId === "all" ? [...ALL_HARNESS_IDS] : [targetId as HarnessId];
+
+        // Validate targets
+        for (const t of targets) {
+          if (!getWriter(t)) {
+            console.error(chalk.red(`  Unknown target harness: ${t}`));
+            console.error(chalk.dim(`  Available: ${ALL_HARNESS_IDS.join(", ")}, all`));
+            process.exit(1);
+          }
+        }
 
         // Filter by categories if specified
         const catFilter = opts.categories
@@ -74,44 +71,60 @@ export function registerApply(program: Command): void {
           return;
         }
 
-        const plan = await writer.plan(entries, root);
-        renderPlan(plan);
+        const sources = bundle.sources.map((id) => HARNESS_DISPLAY_NAMES[id]).join(", ");
 
-        const creates = plan.actions.filter((a) => a.type === "create");
-        const updates = plan.actions.filter((a) => a.type === "update");
-        const skips = plan.actions.filter((a) => a.type === "skip");
+        console.log();
+        console.log(chalk.bold("  Context Monkey — Apply"));
+        console.log(chalk.dim(`  Store: ${sp} (${bundle.items.length} items from ${sources})`));
+        console.log(chalk.dim(`  Root: ${root}`));
+        console.log();
 
-        if (creates.length === 0 && updates.length === 0) {
-          console.log(chalk.yellow("  Nothing to apply — all entries were skipped."));
-          console.log();
-          return;
-        }
+        for (const targetHarness of targets) {
+          const writer = getWriter(targetHarness)!;
+          const tgtName = HARNESS_DISPLAY_NAMES[writer.id];
 
-        if (!opts.yes) {
-          process.stdout.write(chalk.bold("  Proceed? (y/N) "));
-          const response = await readLine();
-          if (response.trim().toLowerCase() !== "y") {
-            console.log(chalk.dim("  Aborted."));
-            console.log();
-            return;
+          // Skip the source harness — no point writing back to where it came from
+          if (bundle.sources.length === 1 && bundle.sources[0] === targetHarness) {
+            console.log(chalk.dim(`  ${tgtName}: skipped (source harness)`));
+            continue;
           }
-        }
 
-        await writer.execute(plan, root);
-        console.log();
-        console.log(
-          chalk.green(
-            `  Done. ${creates.length} created, ${updates.length} updated, ${skips.length} skipped.`,
-          ),
-        );
-        console.log();
+          const plan = await writer.plan(entries, root);
+          const creates = plan.actions.filter((a) => a.type === "create");
+          const updates = plan.actions.filter((a) => a.type === "update");
+          const skips = plan.actions.filter((a) => a.type === "skip");
+
+          if (creates.length === 0 && updates.length === 0) {
+            console.log(chalk.dim(`  ${tgtName}: nothing to apply`));
+            continue;
+          }
+
+          console.log(chalk.bold(`  ${chalk.cyan(tgtName)}:`));
+          renderPlan(plan);
+
+          if (!opts.yes) {
+            process.stdout.write(chalk.bold("  Proceed? (y/N) "));
+            const response = await readLine();
+            if (response.trim().toLowerCase() !== "y") {
+              console.log(chalk.dim("  Skipped."));
+              console.log();
+              continue;
+            }
+          }
+
+          await writer.execute(plan, root);
+          console.log(
+            chalk.green(
+              `  Done. ${creates.length} created, ${updates.length} updated, ${skips.length} skipped.`,
+            ),
+          );
+          console.log();
+        }
       },
     );
 }
 
 function renderPlan(plan: SyncPlan): void {
-  console.log(chalk.bold("  Plan:"));
-
   for (const action of plan.actions) {
     switch (action.type) {
       case "create":

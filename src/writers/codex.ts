@@ -1,6 +1,7 @@
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
-import type { ContextEntry } from "../model/context.ts";
+import { renderContextSection, renderFullMemoryDoc } from "../memory/render.ts";
+import type { CanonicalMemory, ContextEntry } from "../model/context.ts";
 import { exists } from "../utils/fs.ts";
 import type { SyncAction, SyncPlan, Writer } from "./writer.ts";
 
@@ -11,7 +12,18 @@ export const codexWriter: Writer = {
   async plan(entries: ContextEntry[], root: string): Promise<SyncPlan> {
     const actions: SyncAction[] = [];
 
+    const memoryEntries: CanonicalMemory[] = [];
+    const otherEntries: ContextEntry[] = [];
+
     for (const entry of entries) {
+      if (entry.canonical.type === "memory") {
+        memoryEntries.push(entry.canonical);
+      } else {
+        otherEntries.push(entry);
+      }
+    }
+
+    for (const entry of otherEntries) {
       const c = entry.canonical;
 
       switch (c.type) {
@@ -27,26 +39,13 @@ export const codexWriter: Writer = {
           break;
         }
         case "skill":
-          actions.push(
-            skip(
-              entry,
-              "Codex has no skills directory — skill instructions could be appended to AGENTS.md",
-            ),
-          );
+          actions.push(skip(entry, "Codex has no skills directory"));
           break;
         case "command":
-          actions.push(
-            skip(
-              entry,
-              "Codex has no slash command files — agent definitions handle similar functionality",
-            ),
-          );
+          actions.push(skip(entry, "Codex has no slash command files"));
           break;
         case "setting":
-          actions.push(skip(entry, "Settings sync requires TOML merge — use cm settings"));
-          break;
-        case "memory":
-          actions.push(skip(entry, "Use 'cm memory' for semantic memory translation"));
+          actions.push(skip(entry, "Settings sync requires TOML merge"));
           break;
         case "mcp":
           actions.push(skip(entry, "MCP server sync not yet supported for Codex"));
@@ -55,6 +54,35 @@ export const codexWriter: Writer = {
           actions.push(skip(entry, "Codex has no ignore file format"));
           break;
       }
+    }
+
+    // Memory: critical → AGENTS.md section, full → .codex/MEMORY.md
+    if (memoryEntries.length > 0) {
+      const placeholder: ContextEntry = {
+        category: "memory",
+        name: "memory (aggregated)",
+        canonical: memoryEntries[0]!,
+        sourcePath: "",
+        scope: "workspace",
+        raw: "",
+      };
+
+      const critical = memoryEntries.filter((u) => u.priority === 1);
+      if (critical.length > 0) {
+        const section = renderContextSection(critical, "Known Context", [
+          "This context was ported from another agent environment.",
+          "Treat it as established knowledge — the user should not need to re-teach these things.",
+        ]);
+        // Append to AGENTS.md
+        const agentsPath = join(root, "AGENTS.md");
+        const existing = await readExisting(agentsPath);
+        const content = existing ? `${existing}\n\n${section}` : section;
+        actions.push(await fileAction(agentsPath, content, placeholder));
+      }
+
+      // Full memory → .codex/MEMORY.md
+      const memoryDoc = renderFullMemoryDoc(memoryEntries);
+      actions.push(await fileAction(join(root, ".codex", "MEMORY.md"), memoryDoc, placeholder));
     }
 
     return { source: "codex", target: "codex", actions };
@@ -89,6 +117,14 @@ function generateCodexAgentToml(
   }
   lines.push('sandbox_mode = "workspace-write"');
   return lines.join("\n");
+}
+
+async function readExisting(path: string): Promise<string | null> {
+  try {
+    return await Bun.file(path).text();
+  } catch {
+    return null;
+  }
 }
 
 async function fileAction(path: string, content: string, entry: ContextEntry): Promise<SyncAction> {

@@ -1,6 +1,7 @@
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
-import type { ContextEntry } from "../model/context.ts";
+import { renderContextSection } from "../memory/render.ts";
+import type { CanonicalMemory, ContextEntry } from "../model/context.ts";
 import { serializeFrontmatter } from "../utils/frontmatter.ts";
 import { exists } from "../utils/fs.ts";
 import type { SyncAction, SyncPlan, Writer } from "./writer.ts";
@@ -13,7 +14,18 @@ export const cursorWriter: Writer = {
     const actions: SyncAction[] = [];
     const rulesDir = join(root, ".cursor", "rules");
 
+    const memoryEntries: CanonicalMemory[] = [];
+    const otherEntries: ContextEntry[] = [];
+
     for (const entry of entries) {
+      if (entry.canonical.type === "memory") {
+        memoryEntries.push(entry.canonical);
+      } else {
+        otherEntries.push(entry);
+      }
+    }
+
+    for (const entry of otherEntries) {
       const c = entry.canonical;
 
       switch (c.type) {
@@ -50,15 +62,42 @@ export const cursorWriter: Writer = {
         case "setting":
           actions.push(skip(entry, "Settings sync not supported for Cursor"));
           break;
-        case "memory":
-          actions.push(skip(entry, "Use 'cm memory' for semantic memory translation"));
-          break;
         case "mcp":
           actions.push(skip(entry, "MCP server sync not yet supported for Cursor"));
           break;
         case "ignore":
           actions.push(skip(entry, "Cursor has no ignore file format"));
           break;
+      }
+    }
+
+    // Memory: inject as an always-on rule file
+    if (memoryEntries.length > 0) {
+      const significant = memoryEntries.filter((u) => u.priority <= 2);
+      if (significant.length > 0) {
+        const placeholder: ContextEntry = {
+          category: "memory",
+          name: "memory (aggregated)",
+          canonical: memoryEntries[0]!,
+          sourcePath: "",
+          scope: "workspace",
+          raw: "",
+        };
+
+        const body = renderContextSection(significant, "Known User Context", [
+          "This context was ported from another agent environment.",
+          "Treat as established — do not ask the user to re-explain these things.",
+        ]);
+
+        const content = serializeFrontmatter(
+          {
+            description: "Ported user context and preferences — always apply",
+            alwaysApply: "true",
+          },
+          body,
+        );
+
+        actions.push(await fileAction(join(rulesDir, "user-context.mdc"), content, placeholder));
       }
     }
 

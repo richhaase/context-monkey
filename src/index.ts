@@ -4,7 +4,6 @@ import { Command } from "commander";
 import pkg from "../package.json";
 import { registerApply } from "./commands/apply.ts";
 import { registerDiff } from "./commands/diff.ts";
-import { registerMemory } from "./commands/memory.ts";
 import { registerScan } from "./commands/scan.ts";
 import { registerSync } from "./commands/sync.ts";
 
@@ -16,7 +15,6 @@ const program = new Command()
 registerScan(program);
 registerDiff(program);
 registerSync(program);
-registerMemory(program);
 registerApply(program);
 
 // Default to scan when no command given

@@ -1,6 +1,7 @@
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
-import type { ContextEntry } from "../model/context.ts";
+import { groupBy, kindDisplayName } from "../memory/render.ts";
+import type { CanonicalMemory, ContextEntry } from "../model/context.ts";
 import { serializeFrontmatter } from "../utils/frontmatter.ts";
 import { exists } from "../utils/fs.ts";
 import type { SyncAction, SyncPlan, Writer } from "./writer.ts";
@@ -12,7 +13,20 @@ export const claudeCodeWriter: Writer = {
   async plan(entries: ContextEntry[], root: string): Promise<SyncPlan> {
     const actions: SyncAction[] = [];
 
+    // Batch memory entries for aggregated handling
+    const memoryEntries: CanonicalMemory[] = [];
+    const otherEntries: ContextEntry[] = [];
+
     for (const entry of entries) {
+      if (entry.canonical.type === "memory") {
+        memoryEntries.push(entry.canonical);
+      } else {
+        otherEntries.push(entry);
+      }
+    }
+
+    // Handle non-memory entries
+    for (const entry of otherEntries) {
       const c = entry.canonical;
 
       switch (c.type) {
@@ -31,7 +45,6 @@ export const claudeCodeWriter: Writer = {
           break;
         }
         case "agent": {
-          // Agents → skills with context: fork
           const path = join(root, ".claude", "skills", c.name, "SKILL.md");
           const fm: Record<string, string> = { description: c.description, context: "fork" };
           if (c.model) fm.model = c.model;
@@ -45,10 +58,7 @@ export const claudeCodeWriter: Writer = {
           break;
         }
         case "setting":
-          actions.push(skip(entry, "Settings sync requires merging JSON — use cm settings"));
-          break;
-        case "memory":
-          actions.push(skip(entry, "Use 'cm memory' for semantic memory translation"));
+          actions.push(skip(entry, "Settings sync requires merging JSON"));
           break;
         case "mcp":
           actions.push(skip(entry, "MCP server sync requires JSON merge — not yet supported"));
@@ -56,6 +66,49 @@ export const claudeCodeWriter: Writer = {
         case "ignore":
           actions.push(skip(entry, "Claude Code has no ignore file format"));
           break;
+      }
+    }
+
+    // Handle memory: Claude Code gets the richest format — topic files + MEMORY.md index
+    if (memoryEntries.length > 0) {
+      const placeholder: ContextEntry = {
+        category: "memory",
+        name: "memory (aggregated)",
+        canonical: memoryEntries[0]!,
+        sourcePath: "",
+        scope: "workspace",
+        raw: "",
+      };
+
+      const grouped = groupBy(memoryEntries, (u) => u.kind);
+
+      // Generate MEMORY.md index
+      const indexLines = ["# Memory\n", "Auto-imported context. Details in topic files.\n"];
+      for (const [kind, kindUnits] of Object.entries(grouped)) {
+        indexLines.push(`## ${kindDisplayName(kind as CanonicalMemory["kind"])}`);
+        for (const unit of kindUnits) {
+          indexLines.push(`- **${unit.name}**: ${unit.summary}`);
+        }
+        indexLines.push("");
+      }
+      actions.push(
+        await fileAction(join(root, "memory", "MEMORY.md"), indexLines.join("\n"), placeholder),
+      );
+
+      // Generate topic files for feedback
+      for (const unit of grouped.feedback || []) {
+        const filename = `feedback_${unit.name.replace(/[^a-z0-9-]/gi, "_")}.md`;
+        const content = `---\nname: ${unit.name}\ndescription: ${unit.summary}\ntype: feedback\n---\n\n${unit.content}`;
+        actions.push(await fileAction(join(root, "memory", filename), content, placeholder));
+      }
+
+      // Preferences as a single file
+      const prefUnits = grouped.preference || [];
+      if (prefUnits.length > 0) {
+        const content = prefUnits.map((u) => u.content).join("\n\n");
+        actions.push(
+          await fileAction(join(root, "memory", "preferences.md"), content, placeholder),
+        );
       }
     }
 

@@ -1,6 +1,7 @@
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
-import type { ContextEntry } from "../model/context.ts";
+import { renderContextSection } from "../memory/render.ts";
+import type { CanonicalMemory, ContextEntry } from "../model/context.ts";
 import { exists } from "../utils/fs.ts";
 import type { SyncAction, SyncPlan, Writer } from "./writer.ts";
 
@@ -11,7 +12,18 @@ export const copilotWriter: Writer = {
   async plan(entries: ContextEntry[], root: string): Promise<SyncPlan> {
     const actions: SyncAction[] = [];
 
+    const memoryEntries: CanonicalMemory[] = [];
+    const otherEntries: ContextEntry[] = [];
+
     for (const entry of entries) {
+      if (entry.canonical.type === "memory") {
+        memoryEntries.push(entry.canonical);
+      } else {
+        otherEntries.push(entry);
+      }
+    }
+
+    for (const entry of otherEntries) {
       const c = entry.canonical;
 
       switch (c.type) {
@@ -32,15 +44,37 @@ export const copilotWriter: Writer = {
         case "setting":
           actions.push(skip(entry, "Settings sync not supported for Copilot"));
           break;
-        case "memory":
-          actions.push(skip(entry, "Use 'cm memory' for semantic memory translation"));
-          break;
         case "mcp":
           actions.push(skip(entry, "MCP server sync not yet supported for Copilot"));
           break;
         case "ignore":
           actions.push(skip(entry, "Copilot has no ignore file format"));
           break;
+      }
+    }
+
+    // Memory: inject into copilot-instructions.md
+    if (memoryEntries.length > 0) {
+      const significant = memoryEntries.filter((u) => u.priority <= 2);
+      if (significant.length > 0) {
+        const placeholder: ContextEntry = {
+          category: "memory",
+          name: "memory (aggregated)",
+          canonical: memoryEntries[0]!,
+          sourcePath: "",
+          scope: "workspace",
+          raw: "",
+        };
+
+        const body = renderContextSection(significant, "Known User Context", [
+          "This context was ported from another agent environment.",
+          "Treat as established knowledge.",
+        ]);
+
+        const instructionsPath = join(root, ".github", "copilot-instructions.md");
+        const existing = await readExisting(instructionsPath);
+        const content = existing ? `${existing}\n\n${body}` : body;
+        actions.push(await fileAction(instructionsPath, content, placeholder));
       }
     }
 
@@ -58,6 +92,14 @@ export const copilotWriter: Writer = {
     }
   },
 };
+
+async function readExisting(path: string): Promise<string | null> {
+  try {
+    return await Bun.file(path).text();
+  } catch {
+    return null;
+  }
+}
 
 async function fileAction(path: string, content: string, entry: ContextEntry): Promise<SyncAction> {
   const existingFile = Bun.file(path);

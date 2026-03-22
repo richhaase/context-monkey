@@ -1,6 +1,7 @@
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
-import type { ContextEntry } from "../model/context.ts";
+import { renderContextSection } from "../memory/render.ts";
+import type { CanonicalMemory, ContextEntry } from "../model/context.ts";
 import { exists } from "../utils/fs.ts";
 import type { SyncAction, SyncPlan, Writer } from "./writer.ts";
 
@@ -11,7 +12,18 @@ export const geminiWriter: Writer = {
   async plan(entries: ContextEntry[], root: string): Promise<SyncPlan> {
     const actions: SyncAction[] = [];
 
+    const memoryEntries: CanonicalMemory[] = [];
+    const otherEntries: ContextEntry[] = [];
+
     for (const entry of entries) {
+      if (entry.canonical.type === "memory") {
+        memoryEntries.push(entry.canonical);
+      } else {
+        otherEntries.push(entry);
+      }
+    }
+
+    for (const entry of otherEntries) {
       const c = entry.canonical;
 
       switch (c.type) {
@@ -27,7 +39,6 @@ export const geminiWriter: Writer = {
           break;
         }
         case "skill": {
-          // Agent Skills spec — portable .agents/skills/ path
           const path = join(root, ".agents", "skills", c.name, "SKILL.md");
           actions.push(await fileAction(path, c.instructions, entry));
           break;
@@ -39,22 +50,66 @@ export const geminiWriter: Writer = {
           break;
         }
         case "agent":
-          actions.push(
-            skip(
-              entry,
-              "Gemini CLI agent definitions require extension packaging — not yet automated",
-            ),
-          );
+          actions.push(skip(entry, "Gemini CLI agent definitions require extension packaging"));
           break;
         case "setting":
-          actions.push(skip(entry, "Settings sync requires JSON merge — use cm settings"));
-          break;
-        case "memory":
-          actions.push(skip(entry, "Use 'cm memory' for semantic memory translation"));
+          actions.push(skip(entry, "Settings sync requires JSON merge"));
           break;
         case "mcp":
           actions.push(skip(entry, "MCP server sync not yet supported for Gemini"));
           break;
+      }
+    }
+
+    // Memory: priority-tiered sections appended to GEMINI.md
+    if (memoryEntries.length > 0) {
+      const placeholder: ContextEntry = {
+        category: "memory",
+        name: "memory (aggregated)",
+        canonical: memoryEntries[0]!,
+        sourcePath: "",
+        scope: "workspace",
+        raw: "",
+      };
+
+      const critical = memoryEntries.filter((u) => u.priority === 1);
+      const important = memoryEntries.filter((u) => u.priority === 2);
+      const contextual = memoryEntries.filter((u) => u.priority === 3);
+
+      const sections: string[] = [];
+
+      if (critical.length > 0) {
+        sections.push(
+          renderContextSection(critical, "Known Context (Critical)", [
+            "This context was ported from another agent environment.",
+            "These are high-priority items — corrections, preferences, and identity that must be respected.",
+          ]),
+        );
+      }
+
+      if (important.length > 0) {
+        sections.push(
+          renderContextSection(important, "Known Context (Important)", [
+            "System and project context from another agent environment.",
+          ]),
+        );
+      }
+
+      if (contextual.length > 0) {
+        const memoryLines = ["## Gemini Added Memories\n"];
+        for (const unit of contextual) {
+          memoryLines.push(`- **${unit.name}**: ${unit.summary}`);
+        }
+        sections.push(memoryLines.join("\n"));
+      }
+
+      if (sections.length > 0) {
+        const geminiPath = join(root, "GEMINI.md");
+        const existing = await readExisting(geminiPath);
+        const content = existing
+          ? `${existing}\n\n${sections.join("\n\n")}`
+          : sections.join("\n\n");
+        actions.push(await fileAction(geminiPath, content, placeholder));
       }
     }
 
@@ -72,6 +127,14 @@ export const geminiWriter: Writer = {
     }
   },
 };
+
+async function readExisting(path: string): Promise<string | null> {
+  try {
+    return await Bun.file(path).text();
+  } catch {
+    return null;
+  }
+}
 
 async function fileAction(path: string, content: string, entry: ContextEntry): Promise<SyncAction> {
   const existingFile = Bun.file(path);

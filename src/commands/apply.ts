@@ -14,12 +14,18 @@ export function registerApply(program: Command): void {
   program
     .command("apply")
     .description("Apply the IR store to one or all target harnesses")
-    .argument("[target]", `target harness (${ALL_HARNESS_IDS.join(", ")}, or "all")`, "all")
+    .argument(
+      "[targets...]",
+      `target harness(es) (${ALL_HARNESS_IDS.join(", ")}), or "all" (default)`,
+    )
     .option("-y, --yes", "skip confirmation")
     .option("--store <path>", "IR store path (default: ~/.config/context-monkey/context.json)")
     .option("--categories <cats>", "comma-separated categories to include (default: all)")
     .action(
-      async (targetId: string, opts: { yes?: boolean; store?: string; categories?: string }) => {
+      async (
+        targetArgs: string[],
+        opts: { yes?: boolean; store?: string; categories?: string },
+      ) => {
         const sp = storePath(opts.store);
         const bundle = await readStore(opts.store);
 
@@ -38,7 +44,9 @@ export function registerApply(program: Command): void {
 
         const root = bundle.root;
         const targets: HarnessId[] =
-          targetId === "all" ? [...ALL_HARNESS_IDS] : [targetId as HarnessId];
+          targetArgs.length === 0 || targetArgs.includes("all")
+            ? [...ALL_HARNESS_IDS]
+            : (targetArgs as HarnessId[]);
 
         // Validate targets
         for (const t of targets) {

@@ -16,19 +16,32 @@ export function registerScan(program: Command): void {
   program
     .command("scan")
     .description("Scan for configured AI agent harnesses and update the IR store")
-    .argument("[path]", "directory to scan", ".")
+    .argument("[harnesses...]", `harness(es) to scan (${ALL_HARNESS_IDS.join(", ")}); omit for all`)
     .option("--store <path>", "IR store path (default: ~/.config/context-monkey/context.json)")
     .option("--no-persist", "skip updating the store")
-    .action(async (path: string, opts: { store?: string; persist?: boolean }) => {
-      const root = resolve(path);
+    .action(async (harnesses: string[], opts: { store?: string; persist?: boolean }) => {
+      const root = resolve(".");
       const skipStore = opts.persist === false;
+
+      // Validate harness names if provided
+      const filter: HarnessId[] | undefined = harnesses.length > 0 ? [] : undefined;
+      if (harnesses.length > 0) {
+        for (const h of harnesses) {
+          if (!ALL_HARNESS_IDS.includes(h as HarnessId)) {
+            console.error(chalk.red(`  Unknown harness: ${h}`));
+            console.error(chalk.dim(`  Available: ${ALL_HARNESS_IDS.join(", ")}`));
+            process.exit(1);
+          }
+          filter!.push(h as HarnessId);
+        }
+      }
 
       console.log();
       console.log(chalk.bold("  Context Monkey"));
       console.log(chalk.dim(`  Scanning ${root}...`));
       console.log();
 
-      const contexts = await scanAll(root);
+      const contexts = await scanAll(root, filter);
 
       if (contexts.length === 0) {
         console.log(chalk.yellow("  No harnesses detected."));

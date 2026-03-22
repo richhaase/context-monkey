@@ -25,7 +25,8 @@ export async function detectAll(root: string): Promise<Scanner[]> {
   return results.filter((r) => r.found).map((r) => r.scanner);
 }
 
-export async function scanAll(root: string): Promise<HarnessContext[]> {
+export async function scanAll(root: string, filter?: HarnessId[]): Promise<HarnessContext[]> {
   const detected = await detectAll(root);
-  return Promise.all(detected.map((s) => s.scan(root)));
+  const filtered = filter?.length ? detected.filter((s) => filter.includes(s.id)) : detected;
+  return Promise.all(filtered.map((s) => s.scan(root)));
 }

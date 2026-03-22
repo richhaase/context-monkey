@@ -1,6 +1,8 @@
+import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import type { ContextEntry } from "../model/context.ts";
-import { readFileIfExists } from "../utils/fs.ts";
+import { parseFrontmatter } from "../utils/frontmatter.ts";
+import { exists, readFileIfExists } from "../utils/fs.ts";
 import type { SyncAction, SyncPlan, Writer } from "./writer.ts";
 
 export const geminiWriter: Writer = {
@@ -36,12 +38,41 @@ export const geminiWriter: Writer = {
           });
           break;
         }
-        case "skills":
+        case "commands": {
+          // Translate commands to Gemini TOML format
+          const { frontmatter, body } = parseFrontmatter(entry.content);
+          const description = frontmatter.description || `Command: ${entry.name}`;
+          const tomlContent = `description = "${description.replace(/"/g, '\\"')}"\nprompt = """\n${body.trim()}\n"""`;
+          const cmdPath = join(root, ".gemini", "commands", `${entry.name}.toml`);
+          const cmdExisting = await readFileIfExists(cmdPath);
+          actions.push({
+            type: cmdExisting !== null ? "update" : "create",
+            path: cmdPath,
+            content: tomlContent,
+            entry,
+            existing: cmdExisting ?? undefined,
+          });
+          break;
+        }
+        case "skills": {
+          // Gemini supports Agent Skills — put them in .agents/skills/ (portable path)
+          const skillPath = join(root, ".agents", "skills", entry.name, "SKILL.md");
+          const skillExisting = await readFileIfExists(skillPath);
+          actions.push({
+            type: skillExisting !== null ? "update" : "create",
+            path: skillPath,
+            content: entry.content,
+            entry,
+            existing: skillExisting ?? undefined,
+          });
+          break;
+        }
+        case "agents":
           actions.push({
             type: "skip",
             path: "",
             entry,
-            reason: "Gemini CLI has no skills directory",
+            reason: "Gemini CLI agent definitions require extension packaging — not yet automated",
           });
           break;
         default:
@@ -60,6 +91,10 @@ export const geminiWriter: Writer = {
   async execute(plan: SyncPlan, _root: string): Promise<void> {
     for (const action of plan.actions) {
       if (action.type === "skip" || !action.content) continue;
+      const dir = join(action.path, "..");
+      if (!(await exists(dir))) {
+        await mkdir(dir, { recursive: true });
+      }
       await Bun.write(action.path, action.content);
     }
   },

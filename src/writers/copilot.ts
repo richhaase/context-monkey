@@ -34,6 +34,22 @@ export const copilotWriter: Writer = {
               "GitHub Copilot has no skills directory — could be added as path-specific instructions",
           });
           break;
+        case "agents":
+          actions.push({
+            type: "skip",
+            path: "",
+            entry,
+            reason: "GitHub Copilot has no agent definition format",
+          });
+          break;
+        case "commands":
+          actions.push({
+            type: "skip",
+            path: "",
+            entry,
+            reason: "GitHub Copilot has no slash command format",
+          });
+          break;
         default:
           actions.push({
             type: "skip",

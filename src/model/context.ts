@@ -7,7 +7,8 @@ export type ContextCategory =
   | "memory"
   | "mcp"
   | "ignore"
-  | "commands";
+  | "commands"
+  | "agents";
 
 export interface ContextEntry {
   category: ContextCategory;
@@ -40,6 +41,7 @@ export const CATEGORY_DISPLAY_NAMES: Record<ContextCategory, string> = {
   mcp: "MCP Servers",
   ignore: "Ignore Patterns",
   commands: "Commands",
+  agents: "Agent Definitions",
 };
 
 export const ALL_HARNESS_IDS: HarnessId[] = ["claude-code", "codex", "gemini", "cursor", "copilot"];

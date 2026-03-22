@@ -1,7 +1,7 @@
 import { homedir } from "node:os";
 import { join } from "node:path";
 import type { ContextEntry, HarnessContext } from "../model/context.ts";
-import { exists, readFileIfExists } from "../utils/fs.ts";
+import { exists, globFiles, globSkillDirs, readFileIfExists } from "../utils/fs.ts";
 import type { Scanner } from "./scanner.ts";
 
 export const geminiScanner: Scanner = {
@@ -66,6 +66,47 @@ export const geminiScanner: Scanner = {
         sourcePath: ignorePath,
         scope: "workspace",
       });
+    }
+
+    // Commands: .gemini/commands/*.toml (project and global)
+    for (const commandsDir of [
+      join(root, ".gemini", "commands"),
+      join(homedir(), ".gemini", "commands"),
+    ]) {
+      const commandFiles = await globFiles(commandsDir, ".toml");
+      for (const file of commandFiles) {
+        const filePath = join(commandsDir, file);
+        const content = await readFileIfExists(filePath);
+        if (content === null) continue;
+        const isGlobal = commandsDir.startsWith(homedir());
+        const name = file.replace(/\.toml$/, "");
+        entries.push({
+          category: "commands",
+          name,
+          content,
+          sourcePath: filePath,
+          scope: isGlobal ? "global" : "workspace",
+          metadata: { format: "toml" },
+        });
+      }
+    }
+
+    // Skills: .gemini/skills/ and .agents/skills/ (shared portable path)
+    for (const skillsDir of [join(root, ".gemini", "skills"), join(root, ".agents", "skills")]) {
+      const skillNames = await globSkillDirs(skillsDir);
+      for (const name of skillNames) {
+        const skillPath = join(skillsDir, name, "SKILL.md");
+        const content = await readFileIfExists(skillPath);
+        if (content !== null) {
+          entries.push({
+            category: "skills",
+            name,
+            content,
+            sourcePath: skillPath,
+            scope: "workspace",
+          });
+        }
+      }
     }
 
     return { harness: "gemini", root, entries };

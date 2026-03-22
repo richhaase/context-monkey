@@ -1,7 +1,7 @@
 import { homedir } from "node:os";
 import { join } from "node:path";
 import type { ContextEntry, HarnessContext } from "../model/context.ts";
-import { exists, readFileIfExists } from "../utils/fs.ts";
+import { exists, globFiles, readFileIfExists } from "../utils/fs.ts";
 import type { Scanner } from "./scanner.ts";
 
 export const codexScanner: Scanner = {
@@ -54,14 +54,60 @@ export const codexScanner: Scanner = {
       });
     }
 
-    // Settings: config.toml
-    const configToml = await readFileIfExists(join(root, ".codex", "config.toml"));
-    if (configToml !== null) {
+    // Settings: config.toml (project and global)
+    for (const configPath of [
+      join(root, ".codex", "config.toml"),
+      join(homedir(), ".codex", "config.toml"),
+    ]) {
+      const content = await readFileIfExists(configPath);
+      if (content !== null) {
+        const isGlobal = configPath.startsWith(homedir());
+        entries.push({
+          category: "settings",
+          name: "config.toml",
+          content,
+          sourcePath: configPath,
+          scope: isGlobal ? "global" : "workspace",
+        });
+      }
+    }
+
+    // Agents: .codex/agents/*.toml (project) and ~/.codex/agents/*.toml (global)
+    for (const agentsDir of [join(root, ".codex", "agents"), join(homedir(), ".codex", "agents")]) {
+      const agentFiles = await globFiles(agentsDir, ".toml");
+      for (const file of agentFiles) {
+        const filePath = join(agentsDir, file);
+        const content = await readFileIfExists(filePath);
+        if (content === null) continue;
+        const isGlobal = agentsDir.startsWith(homedir());
+        const name = file.replace(/\.toml$/, "");
+        // Extract key fields from TOML (simple parsing for name/description)
+        const descMatch = content.match(/^description\s*=\s*"([^"]*)"/m);
+        const modelMatch = content.match(/^model\s*=\s*"([^"]*)"/m);
+        entries.push({
+          category: "agents",
+          name,
+          content,
+          sourcePath: filePath,
+          scope: isGlobal ? "global" : "workspace",
+          metadata: {
+            format: "toml",
+            description: descMatch?.[1],
+            model: modelMatch?.[1],
+          },
+        });
+      }
+    }
+
+    // Memory: .codex/MEMORY.md
+    const memoryPath = join(root, ".codex", "MEMORY.md");
+    const memoryContent = await readFileIfExists(memoryPath);
+    if (memoryContent !== null) {
       entries.push({
-        category: "settings",
-        name: "config.toml",
-        content: configToml,
-        sourcePath: join(root, ".codex", "config.toml"),
+        category: "memory",
+        name: "MEMORY.md",
+        content: memoryContent,
+        sourcePath: memoryPath,
         scope: "workspace",
       });
     }

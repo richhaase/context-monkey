@@ -54,6 +54,34 @@ export const cursorWriter: Writer = {
           });
           break;
         }
+        case "agents": {
+          // Agent definitions → cursor rule with agent context note
+          const filename = `agent-${sanitizeName(entry.name)}.mdc`;
+          const path = join(rulesDir, filename);
+          const existing = await readFileIfExists(path);
+          const description = (entry.metadata?.description as string) || `Agent: ${entry.name}`;
+          const content = serializeFrontmatter(
+            { description, alwaysApply: "false" },
+            `<!-- Ported agent definition: ${entry.name} -->\n${entry.content}`,
+          );
+          actions.push({
+            type: existing !== null ? "update" : "create",
+            path,
+            content,
+            entry,
+            existing: existing ?? undefined,
+          });
+          break;
+        }
+        case "commands":
+          actions.push({
+            type: "skip",
+            path: "",
+            entry,
+            reason:
+              "Cursor has no slash command system — commands can be added as agent rules instead",
+          });
+          break;
         default:
           actions.push({
             type: "skip",

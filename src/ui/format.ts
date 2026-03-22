@@ -28,11 +28,12 @@ export function formatScanResult(ctx: HarnessContext): string {
   const categories: ContextCategory[] = [
     "instructions",
     "skills",
+    "agents",
+    "commands",
     "settings",
     "memory",
     "mcp",
     "ignore",
-    "commands",
   ];
 
   for (const cat of categories) {

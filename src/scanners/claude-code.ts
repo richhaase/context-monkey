@@ -29,7 +29,8 @@ export const claudeCodeScanner: Scanner = {
       });
     }
 
-    // Skills: .claude/skills/*/SKILL.md
+    // Skills and Agents: .claude/skills/*/SKILL.md
+    // Skills with context: fork are agent definitions
     const skillsRoot = join(root, ".claude", "skills");
     const skillNames = await globSkillDirs(skillsRoot);
     for (const name of skillNames) {
@@ -37,8 +38,9 @@ export const claudeCodeScanner: Scanner = {
       const content = await readFileIfExists(skillPath);
       if (content !== null) {
         const { frontmatter } = parseFrontmatter(content);
+        const isAgent = frontmatter.context === "fork";
         entries.push({
-          category: "skills",
+          category: isAgent ? "agents" : "skills",
           name,
           content,
           sourcePath: skillPath,

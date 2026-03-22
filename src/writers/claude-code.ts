@@ -1,6 +1,7 @@
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import type { ContextEntry } from "../model/context.ts";
+import { parseFrontmatter, serializeFrontmatter } from "../utils/frontmatter.ts";
 import { exists, readFileIfExists } from "../utils/fs.ts";
 import type { SyncAction, SyncPlan, Writer } from "./writer.ts";
 
@@ -25,14 +26,60 @@ export const claudeCodeWriter: Writer = {
           });
           break;
         }
-        case "skills":
+        case "skills": {
+          // Create SKILL.md in .claude/skills/<name>/
+          const skillPath = join(root, ".claude", "skills", entry.name, "SKILL.md");
+          const existing = await readFileIfExists(skillPath);
           actions.push({
-            type: "skip",
-            path: join(root, ".claude", "skills", entry.name),
+            type: existing !== null ? "update" : "create",
+            path: skillPath,
+            content: entry.content,
             entry,
-            reason: "Skill directory sync requires copying entire directories — not yet supported",
+            existing: existing ?? undefined,
           });
           break;
+        }
+        case "agents": {
+          // Agents become skills with context: fork
+          const { frontmatter: srcFm, body } = parseFrontmatter(entry.content);
+          const description =
+            srcFm.description || (entry.metadata?.description as string) || `Agent: ${entry.name}`;
+          const skillContent = serializeFrontmatter(
+            { description, context: "fork" },
+            body.trim() || entry.content,
+          );
+          const agentPath = join(root, ".claude", "skills", entry.name, "SKILL.md");
+          const existing = await readFileIfExists(agentPath);
+          actions.push({
+            type: existing !== null ? "update" : "create",
+            path: agentPath,
+            content: skillContent,
+            entry,
+            existing: existing ?? undefined,
+          });
+          break;
+        }
+        case "commands": {
+          // Slash commands → .claude/commands/<name>.md
+          const { frontmatter: srcFm, body } = parseFrontmatter(entry.content);
+          let content: string;
+          if (entry.metadata?.format === "toml") {
+            // Translate from TOML (Gemini) to markdown command
+            content = body.trim() || entry.content;
+          } else {
+            content = entry.content;
+          }
+          const cmdPath = join(root, ".claude", "commands", `${entry.name}.md`);
+          const existing = await readFileIfExists(cmdPath);
+          actions.push({
+            type: existing !== null ? "update" : "create",
+            path: cmdPath,
+            content,
+            entry,
+            existing: existing ?? undefined,
+          });
+          break;
+        }
         case "ignore":
           actions.push({
             type: "skip",

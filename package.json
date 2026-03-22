@@ -1,6 +1,6 @@
 {
   "name": "context-monkey",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Make AI agent harness configurations portable — scan, diff, and sync context between Claude Code, Codex, Gemini, Cursor, Copilot, and more",
   "keywords": [
     "ai",

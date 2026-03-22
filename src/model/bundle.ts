@@ -1,16 +1,16 @@
 import type { CanonicalItem, ContextCategory, HarnessId } from "./context.ts";
 
 /**
- * A portable context bundle — the distributable IR.
- * Store this in dotfiles, version control, or anywhere.
- * Run `cm apply <bundle> <harness>` to generate native config.
+ * The persistent IR store — canonical context from all scanned harnesses.
+ * Lives on disk, updated by `cm scan`, consumed by `cm apply`.
+ * Store it in dotfiles for portability across machines.
  */
 export interface ContextBundle {
   /** Schema version for forward compat */
   version: 1;
-  /** When this bundle was created */
-  exportedAt: string;
-  /** Source harnesses that contributed to this bundle */
+  /** Last time this store was updated */
+  updatedAt: string;
+  /** Harnesses that have contributed to this store */
   sources: HarnessId[];
   /** The canonical items */
   items: BundleItem[];

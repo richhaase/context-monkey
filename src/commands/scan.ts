@@ -9,15 +9,20 @@ import {
   type HarnessId,
 } from "../model/context.ts";
 import { scanAll } from "../scanners/registry.ts";
+import { mergeIntoStore, readStore, writeStore } from "../store/index.ts";
 import { formatNotDetected, formatScanResult } from "../ui/format.ts";
 
 export function registerScan(program: Command): void {
   program
     .command("scan")
-    .description("Scan for configured AI agent harnesses")
+    .description("Scan for configured AI agent harnesses and update the IR store")
     .argument("[path]", "directory to scan", ".")
-    .action(async (path: string) => {
+    .option("--store <path>", "IR store path (default: ~/.config/context-monkey/context.json)")
+    .option("--no-persist", "skip updating the store")
+    .action(async (path: string, opts: { store?: string; persist?: boolean }) => {
       const root = resolve(path);
+      const skipStore = opts.persist === false;
+
       console.log();
       console.log(chalk.bold("  Context Monkey"));
       console.log(chalk.dim(`  Scanning ${root}...`));
@@ -47,14 +52,27 @@ export function registerScan(program: Command): void {
       const missingIds = ALL_HARNESS_IDS.filter((id) => !detectedIds.includes(id));
       console.log(formatNotDetected(root, missingIds));
 
-      // Show portable settings from all harnesses
       renderPortableSettings(contexts);
+
+      // Update the persistent IR store
+      if (!skipStore) {
+        const sp = opts.store;
+        const existing = await readStore(sp);
+        const updated = mergeIntoStore(existing, contexts);
+        const writtenTo = await writeStore(updated, sp);
+        const totalItems = updated.items.length;
+        const newItems = contexts.reduce((n, c) => n + c.entries.length, 0);
+        console.log(
+          chalk.dim(
+            `  Store updated: ${writtenTo} (${totalItems} items, ${newItems} from this scan)`,
+          ),
+        );
+        console.log();
+      }
     });
 }
 
-/** Collect and display settings that exist across multiple harnesses. */
 function renderPortableSettings(contexts: HarnessContext[]): void {
-  // Gather all settings keyed by setting key → { harness, value }
   const settingsByKey = new Map<string, Array<{ harness: HarnessId; setting: CanonicalSetting }>>();
 
   for (const ctx of contexts) {
@@ -85,7 +103,6 @@ function renderPortableSettings(contexts: HarnessContext[]): void {
     );
     console.log(`    ${chalk.dim("value:")} ${preview}`);
 
-    // Check if values differ across harnesses
     if (sources.length > 1) {
       const values = sources.map((s) => JSON.stringify(s.setting.value));
       const allSame = values.every((v) => v === values[0]);

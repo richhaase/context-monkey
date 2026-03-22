@@ -3,17 +3,19 @@
 import { Command } from "commander";
 import pkg from "../package.json";
 import { registerDiff } from "./commands/diff.ts";
+import { registerMemory } from "./commands/memory.ts";
 import { registerScan } from "./commands/scan.ts";
 import { registerSync } from "./commands/sync.ts";
 
 const program = new Command()
   .name("cm")
-  .description("Make AI agent harness configurations portable")
+  .description("Make AI agent harness configurations portable — memory, context, and skills")
   .version(pkg.version, "-v, --version");
 
 registerScan(program);
 registerDiff(program);
 registerSync(program);
+registerMemory(program);
 
 // Default to scan when no command given
 program.action(async () => {

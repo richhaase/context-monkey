@@ -2,7 +2,7 @@ import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import type { ContextEntry } from "../model/context.ts";
 import { serializeFrontmatter } from "../utils/frontmatter.ts";
-import { exists, readFileIfExists } from "../utils/fs.ts";
+import { exists } from "../utils/fs.ts";
 import type { SyncAction, SyncPlan, Writer } from "./writer.ts";
 
 export const cursorWriter: Writer = {
@@ -14,85 +14,55 @@ export const cursorWriter: Writer = {
     const rulesDir = join(root, ".cursor", "rules");
 
     for (const entry of entries) {
-      switch (entry.category) {
-        case "instructions": {
-          const filename = `${sanitizeName(entry.name)}.mdc`;
-          const path = join(rulesDir, filename);
-          const existing = await readFileIfExists(path);
+      const c = entry.canonical;
+
+      switch (c.type) {
+        case "instruction": {
+          const path = join(rulesDir, `${sanitizeName(entry.name)}.mdc`);
           const content = serializeFrontmatter(
-            {
-              description: `Ported from ${entry.sourcePath}`,
-              alwaysApply: "true",
-            },
-            entry.content,
+            { description: `Ported from ${entry.sourcePath}`, alwaysApply: "true" },
+            c.body,
           );
-          actions.push({
-            type: existing !== null ? "update" : "create",
-            path,
-            content,
-            entry,
-            existing: existing ?? undefined,
-          });
+          actions.push(await fileAction(path, content, entry));
           break;
         }
-        case "skills": {
-          // Convert skill SKILL.md to a cursor rule file (instructions only)
-          const filename = `${sanitizeName(entry.name)}.mdc`;
-          const path = join(rulesDir, filename);
-          const existing = await readFileIfExists(path);
-          const description = (entry.metadata?.description as string) || `Skill: ${entry.name}`;
+        case "skill": {
+          const path = join(rulesDir, `${sanitizeName(c.name)}.mdc`);
           const content = serializeFrontmatter(
-            { description, alwaysApply: "false" },
-            entry.content,
+            { description: c.description || `Skill: ${c.name}`, alwaysApply: "false" },
+            c.instructions,
           );
-          actions.push({
-            type: existing !== null ? "update" : "create",
-            path,
-            content,
-            entry,
-            existing: existing ?? undefined,
-          });
+          actions.push(await fileAction(path, content, entry));
           break;
         }
-        case "agents": {
-          // Agent definitions → cursor rule with agent context note
-          const filename = `agent-${sanitizeName(entry.name)}.mdc`;
-          const path = join(rulesDir, filename);
-          const existing = await readFileIfExists(path);
-          const description = (entry.metadata?.description as string) || `Agent: ${entry.name}`;
+        case "agent": {
+          const path = join(rulesDir, `agent-${sanitizeName(c.name)}.mdc`);
           const content = serializeFrontmatter(
-            { description, alwaysApply: "false" },
-            `<!-- Ported agent definition: ${entry.name} -->\n${entry.content}`,
+            { description: c.description || `Agent: ${c.name}`, alwaysApply: "false" },
+            c.instructions,
           );
-          actions.push({
-            type: existing !== null ? "update" : "create",
-            path,
-            content,
-            entry,
-            existing: existing ?? undefined,
-          });
+          actions.push(await fileAction(path, content, entry));
           break;
         }
-        case "commands":
-          actions.push({
-            type: "skip",
-            path: "",
-            entry,
-            reason:
-              "Cursor has no slash command system — commands can be added as agent rules instead",
-          });
+        case "command":
+          actions.push(skip(entry, "Cursor has no slash command system"));
           break;
-        default:
-          actions.push({
-            type: "skip",
-            path: "",
-            entry,
-            reason: `Category "${entry.category}" not supported for Cursor sync`,
-          });
+        case "setting":
+          actions.push(skip(entry, "Settings sync not supported for Cursor"));
+          break;
+        case "memory":
+          actions.push(skip(entry, "Use 'cm memory' for semantic memory translation"));
+          break;
+        case "mcp":
+          actions.push(skip(entry, "MCP server sync not yet supported for Cursor"));
+          break;
+        case "ignore":
+          actions.push(skip(entry, "Cursor has no ignore file format"));
+          break;
       }
     }
 
-    return { source: entries[0]?.category as any, target: "cursor", actions };
+    return { source: "cursor", target: "cursor", actions };
   },
 
   async execute(plan: SyncPlan, _root: string): Promise<void> {
@@ -112,4 +82,20 @@ function sanitizeName(name: string): string {
     .replace(/\.md$/, "")
     .replace(/[^a-zA-Z0-9-_]/g, "-")
     .toLowerCase();
+}
+
+async function fileAction(path: string, content: string, entry: ContextEntry): Promise<SyncAction> {
+  const existingFile = Bun.file(path);
+  const fileExists = await existingFile.exists();
+  return {
+    type: fileExists ? "update" : "create",
+    path,
+    content,
+    entry,
+    existing: fileExists ? await existingFile.text() : undefined,
+  };
+}
+
+function skip(entry: ContextEntry, reason: string): SyncAction {
+  return { type: "skip", path: "", entry, reason };
 }

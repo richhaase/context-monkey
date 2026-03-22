@@ -1,6 +1,13 @@
 import { homedir } from "node:os";
 import { join } from "node:path";
-import type { ContextEntry, HarnessContext } from "../model/context.ts";
+import type {
+  CanonicalAgent,
+  CanonicalInstruction,
+  CanonicalMemory,
+  CanonicalSetting,
+  ContextEntry,
+  HarnessContext,
+} from "../model/context.ts";
 import { exists, globFiles, readFileIfExists } from "../utils/fs.ts";
 import type { Scanner } from "./scanner.ts";
 
@@ -24,9 +31,10 @@ export const codexScanner: Scanner = {
       entries.push({
         category: "instructions",
         name: "AGENTS.md",
-        content: agentsMd,
+        canonical: { type: "instruction", body: agentsMd } satisfies CanonicalInstruction,
         sourcePath: join(root, "AGENTS.md"),
         scope: "workspace",
+        raw: agentsMd,
       });
     }
 
@@ -36,9 +44,10 @@ export const codexScanner: Scanner = {
       entries.push({
         category: "instructions",
         name: "AGENTS.override.md",
-        content: overrideMd,
+        canonical: { type: "instruction", body: overrideMd } satisfies CanonicalInstruction,
         sourcePath: join(root, "AGENTS.override.md"),
         scope: "workspace",
+        raw: overrideMd,
       });
     }
 
@@ -48,9 +57,10 @@ export const codexScanner: Scanner = {
       entries.push({
         category: "instructions",
         name: "AGENTS.md",
-        content: globalAgentsMd,
+        canonical: { type: "instruction", body: globalAgentsMd } satisfies CanonicalInstruction,
         sourcePath: join(homedir(), ".codex", "AGENTS.md"),
         scope: "global",
+        raw: globalAgentsMd,
       });
     }
 
@@ -62,17 +72,24 @@ export const codexScanner: Scanner = {
       const content = await readFileIfExists(configPath);
       if (content !== null) {
         const isGlobal = configPath.startsWith(homedir());
-        entries.push({
-          category: "settings",
-          name: "config.toml",
-          content,
-          sourcePath: configPath,
-          scope: isGlobal ? "global" : "workspace",
-        });
+        // Extract known settings from TOML
+        for (const { key, displayName } of CODEX_SETTINGS) {
+          const value = extractTomlValue(content, key);
+          if (value !== null) {
+            entries.push({
+              category: "settings",
+              name: `config.toml:${key}`,
+              canonical: { type: "setting", key, displayName, value } satisfies CanonicalSetting,
+              sourcePath: configPath,
+              scope: isGlobal ? "global" : "workspace",
+              raw: content,
+            });
+          }
+        }
       }
     }
 
-    // Agents: .codex/agents/*.toml (project) and ~/.codex/agents/*.toml (global)
+    // Agents: .codex/agents/*.toml (project and global)
     for (const agentsDir of [join(root, ".codex", "agents"), join(homedir(), ".codex", "agents")]) {
       const agentFiles = await globFiles(agentsDir, ".toml");
       for (const file of agentFiles) {
@@ -81,20 +98,25 @@ export const codexScanner: Scanner = {
         if (content === null) continue;
         const isGlobal = agentsDir.startsWith(homedir());
         const name = file.replace(/\.toml$/, "");
-        // Extract key fields from TOML (simple parsing for name/description)
-        const descMatch = content.match(/^description\s*=\s*"([^"]*)"/m);
-        const modelMatch = content.match(/^model\s*=\s*"([^"]*)"/m);
+
+        // Parse TOML fields
+        const description = extractTomlString(content, "description") || `Agent: ${name}`;
+        const model = extractTomlString(content, "model") || undefined;
+        const instructions = extractTomlMultilineString(content, "developer_instructions") || "";
+
         entries.push({
           category: "agents",
           name,
-          content,
+          canonical: {
+            type: "agent",
+            name,
+            description,
+            instructions,
+            model,
+          } satisfies CanonicalAgent,
           sourcePath: filePath,
           scope: isGlobal ? "global" : "workspace",
-          metadata: {
-            format: "toml",
-            description: descMatch?.[1],
-            model: modelMatch?.[1],
-          },
+          raw: content,
         });
       }
     }
@@ -106,12 +128,56 @@ export const codexScanner: Scanner = {
       entries.push({
         category: "memory",
         name: "MEMORY.md",
-        content: memoryContent,
+        canonical: {
+          type: "memory",
+          kind: "reference",
+          name: "MEMORY",
+          summary: "Codex memory index",
+          content: memoryContent,
+          priority: 1,
+        } satisfies CanonicalMemory,
         sourcePath: memoryPath,
         scope: "workspace",
+        raw: memoryContent,
       });
     }
 
     return { harness: "codex", root, entries };
   },
 };
+
+const CODEX_SETTINGS = [
+  { key: "model", displayName: "Default Model" },
+  { key: "sandbox_mode", displayName: "Sandbox Mode" },
+  { key: "approval_mode", displayName: "Approval Mode" },
+];
+
+function extractTomlString(content: string, key: string): string | null {
+  const regex = new RegExp(`^${key}\\s*=\\s*"([^"]*)"`, "m");
+  const match = content.match(regex);
+  return match?.[1] ?? null;
+}
+
+function extractTomlMultilineString(content: string, key: string): string | null {
+  const regex = new RegExp(`^${key}\\s*=\\s*"""([\\s\\S]*?)"""`, "m");
+  const match = content.match(regex);
+  return match?.[1]?.trim() ?? null;
+}
+
+function extractTomlValue(content: string, key: string): unknown {
+  // Try string
+  const str = extractTomlString(content, key);
+  if (str !== null) return str;
+  // Try bare value (boolean, number)
+  const bareRegex = new RegExp(`^${key}\\s*=\\s*(.+)$`, "m");
+  const bareMatch = content.match(bareRegex);
+  if (bareMatch) {
+    const raw = bareMatch[1]!.trim();
+    if (raw === "true") return true;
+    if (raw === "false") return false;
+    const num = Number(raw);
+    if (!Number.isNaN(num)) return num;
+    return raw;
+  }
+  return null;
+}

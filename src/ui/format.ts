@@ -17,7 +17,7 @@ export function categoryLabel(cat: ContextCategory): string {
 }
 
 export function entrySummary(entry: ContextEntry): string {
-  const lines = entry.content.split("\n").length;
+  const lines = entry.raw.split("\n").length;
   return chalk.dim(`(${lines} lines)`);
 }
 

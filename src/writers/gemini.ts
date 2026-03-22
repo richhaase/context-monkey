@@ -1,8 +1,7 @@
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import type { ContextEntry } from "../model/context.ts";
-import { parseFrontmatter } from "../utils/frontmatter.ts";
-import { exists, readFileIfExists } from "../utils/fs.ts";
+import { exists } from "../utils/fs.ts";
 import type { SyncAction, SyncPlan, Writer } from "./writer.ts";
 
 export const geminiWriter: Writer = {
@@ -13,79 +12,53 @@ export const geminiWriter: Writer = {
     const actions: SyncAction[] = [];
 
     for (const entry of entries) {
-      switch (entry.category) {
-        case "instructions": {
+      const c = entry.canonical;
+
+      switch (c.type) {
+        case "instruction": {
           const path = join(root, "GEMINI.md");
-          const existing = await readFileIfExists(path);
-          actions.push({
-            type: existing !== null ? "update" : "create",
-            path,
-            content: entry.content,
-            entry,
-            existing: existing ?? undefined,
-          });
+          actions.push(await fileAction(path, c.body, entry));
+          break;
+        }
+        case "command": {
+          const path = join(root, ".gemini", "commands", `${c.name}.toml`);
+          const content = `description = "${c.description.replace(/"/g, '\\"')}"\nprompt = """\n${c.prompt}\n"""`;
+          actions.push(await fileAction(path, content, entry));
+          break;
+        }
+        case "skill": {
+          // Agent Skills spec — portable .agents/skills/ path
+          const path = join(root, ".agents", "skills", c.name, "SKILL.md");
+          actions.push(await fileAction(path, c.instructions, entry));
           break;
         }
         case "ignore": {
           const path = join(root, ".geminiignore");
-          const existing = await readFileIfExists(path);
-          actions.push({
-            type: existing !== null ? "update" : "create",
-            path,
-            content: entry.content,
-            entry,
-            existing: existing ?? undefined,
-          });
+          const content = c.patterns.join("\n");
+          actions.push(await fileAction(path, content, entry));
           break;
         }
-        case "commands": {
-          // Translate commands to Gemini TOML format
-          const { frontmatter, body } = parseFrontmatter(entry.content);
-          const description = frontmatter.description || `Command: ${entry.name}`;
-          const tomlContent = `description = "${description.replace(/"/g, '\\"')}"\nprompt = """\n${body.trim()}\n"""`;
-          const cmdPath = join(root, ".gemini", "commands", `${entry.name}.toml`);
-          const cmdExisting = await readFileIfExists(cmdPath);
-          actions.push({
-            type: cmdExisting !== null ? "update" : "create",
-            path: cmdPath,
-            content: tomlContent,
-            entry,
-            existing: cmdExisting ?? undefined,
-          });
+        case "agent":
+          actions.push(
+            skip(
+              entry,
+              "Gemini CLI agent definitions require extension packaging — not yet automated",
+            ),
+          );
           break;
-        }
-        case "skills": {
-          // Gemini supports Agent Skills — put them in .agents/skills/ (portable path)
-          const skillPath = join(root, ".agents", "skills", entry.name, "SKILL.md");
-          const skillExisting = await readFileIfExists(skillPath);
-          actions.push({
-            type: skillExisting !== null ? "update" : "create",
-            path: skillPath,
-            content: entry.content,
-            entry,
-            existing: skillExisting ?? undefined,
-          });
+        case "setting":
+          actions.push(skip(entry, "Settings sync requires JSON merge — use cm settings"));
           break;
-        }
-        case "agents":
-          actions.push({
-            type: "skip",
-            path: "",
-            entry,
-            reason: "Gemini CLI agent definitions require extension packaging — not yet automated",
-          });
+        case "memory":
+          actions.push(skip(entry, "Use 'cm memory' for semantic memory translation"));
           break;
-        default:
-          actions.push({
-            type: "skip",
-            path: "",
-            entry,
-            reason: `Category "${entry.category}" not yet supported for Gemini sync`,
-          });
+        case "mcp":
+          actions.push(skip(entry, "MCP server sync not yet supported for Gemini"));
+          break;
       }
     }
 
-    return { source: entries[0]?.category as any, target: "gemini", actions };
+    return { source: "gemini", target: "gemini", actions };
   },
 
   async execute(plan: SyncPlan, _root: string): Promise<void> {
@@ -99,3 +72,19 @@ export const geminiWriter: Writer = {
     }
   },
 };
+
+async function fileAction(path: string, content: string, entry: ContextEntry): Promise<SyncAction> {
+  const existingFile = Bun.file(path);
+  const fileExists = await existingFile.exists();
+  return {
+    type: fileExists ? "update" : "create",
+    path,
+    content,
+    entry,
+    existing: fileExists ? await existingFile.text() : undefined,
+  };
+}
+
+function skip(entry: ContextEntry, reason: string): SyncAction {
+  return { type: "skip", path: "", entry, reason };
+}

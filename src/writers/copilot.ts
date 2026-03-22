@@ -1,7 +1,7 @@
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import type { ContextEntry } from "../model/context.ts";
-import { exists, readFileIfExists } from "../utils/fs.ts";
+import { exists } from "../utils/fs.ts";
 import type { SyncAction, SyncPlan, Writer } from "./writer.ts";
 
 export const copilotWriter: Writer = {
@@ -12,55 +12,39 @@ export const copilotWriter: Writer = {
     const actions: SyncAction[] = [];
 
     for (const entry of entries) {
-      switch (entry.category) {
-        case "instructions": {
+      const c = entry.canonical;
+
+      switch (c.type) {
+        case "instruction": {
           const path = join(root, ".github", "copilot-instructions.md");
-          const existing = await readFileIfExists(path);
-          actions.push({
-            type: existing !== null ? "update" : "create",
-            path,
-            content: entry.content,
-            entry,
-            existing: existing ?? undefined,
-          });
+          actions.push(await fileAction(path, c.body, entry));
           break;
         }
-        case "skills":
-          actions.push({
-            type: "skip",
-            path: "",
-            entry,
-            reason:
-              "GitHub Copilot has no skills directory — could be added as path-specific instructions",
-          });
+        case "skill":
+          actions.push(skip(entry, "GitHub Copilot has no skills directory"));
           break;
-        case "agents":
-          actions.push({
-            type: "skip",
-            path: "",
-            entry,
-            reason: "GitHub Copilot has no agent definition format",
-          });
+        case "agent":
+          actions.push(skip(entry, "GitHub Copilot has no agent definition format"));
           break;
-        case "commands":
-          actions.push({
-            type: "skip",
-            path: "",
-            entry,
-            reason: "GitHub Copilot has no slash command format",
-          });
+        case "command":
+          actions.push(skip(entry, "GitHub Copilot has no slash command format"));
           break;
-        default:
-          actions.push({
-            type: "skip",
-            path: "",
-            entry,
-            reason: `Category "${entry.category}" not supported for Copilot sync`,
-          });
+        case "setting":
+          actions.push(skip(entry, "Settings sync not supported for Copilot"));
+          break;
+        case "memory":
+          actions.push(skip(entry, "Use 'cm memory' for semantic memory translation"));
+          break;
+        case "mcp":
+          actions.push(skip(entry, "MCP server sync not yet supported for Copilot"));
+          break;
+        case "ignore":
+          actions.push(skip(entry, "Copilot has no ignore file format"));
+          break;
       }
     }
 
-    return { source: entries[0]?.category as any, target: "copilot", actions };
+    return { source: "copilot", target: "copilot", actions };
   },
 
   async execute(plan: SyncPlan, _root: string): Promise<void> {
@@ -74,3 +58,19 @@ export const copilotWriter: Writer = {
     }
   },
 };
+
+async function fileAction(path: string, content: string, entry: ContextEntry): Promise<SyncAction> {
+  const existingFile = Bun.file(path);
+  const fileExists = await existingFile.exists();
+  return {
+    type: fileExists ? "update" : "create",
+    path,
+    content,
+    entry,
+    existing: fileExists ? await existingFile.text() : undefined,
+  };
+}
+
+function skip(entry: ContextEntry, reason: string): SyncAction {
+  return { type: "skip", path: "", entry, reason };
+}

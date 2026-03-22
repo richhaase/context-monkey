@@ -1,9 +1,14 @@
 import { resolve } from "node:path";
 import chalk from "chalk";
 import type { Command } from "commander";
-import { ALL_HARNESS_IDS, HARNESS_DISPLAY_NAMES, type HarnessContext } from "../model/context.ts";
+import {
+  ALL_HARNESS_IDS,
+  type CanonicalSetting,
+  HARNESS_DISPLAY_NAMES,
+  type HarnessContext,
+  type HarnessId,
+} from "../model/context.ts";
 import { scanAll } from "../scanners/registry.ts";
-import { evaluateSettings, type PortableSetting } from "../settings/evaluator.ts";
 import { formatNotDetected, formatScanResult } from "../ui/format.ts";
 
 export function registerScan(program: Command): void {
@@ -42,51 +47,51 @@ export function registerScan(program: Command): void {
       const missingIds = ALL_HARNESS_IDS.filter((id) => !detectedIds.includes(id));
       console.log(formatNotDetected(root, missingIds));
 
-      // Evaluate portable settings across detected harnesses
+      // Show portable settings from all harnesses
       renderPortableSettings(contexts);
     });
 }
 
+/** Collect and display settings that exist across multiple harnesses. */
 function renderPortableSettings(contexts: HarnessContext[]): void {
-  const allSettings: PortableSetting[] = [];
+  // Gather all settings keyed by setting key → { harness, value }
+  const settingsByKey = new Map<string, Array<{ harness: HarnessId; setting: CanonicalSetting }>>();
 
   for (const ctx of contexts) {
-    const settingsEntries = ctx.entries.filter((e) => e.category === "settings");
-    if (settingsEntries.length === 0) continue;
-    const found = evaluateSettings(settingsEntries, ctx.harness);
-    allSettings.push(...found);
+    for (const entry of ctx.entries) {
+      if (entry.canonical.type !== "setting") continue;
+      const s = entry.canonical;
+      if (!settingsByKey.has(s.key)) settingsByKey.set(s.key, []);
+      settingsByKey.get(s.key)!.push({ harness: ctx.harness, setting: s });
+    }
   }
 
-  if (allSettings.length === 0) return;
-
-  // Deduplicate by key (keep first occurrence)
-  const seen = new Set<string>();
-  const unique = allSettings.filter((s) => {
-    if (seen.has(s.key)) return false;
-    seen.add(s.key);
-    return true;
-  });
+  if (settingsByKey.size === 0) return;
 
   console.log(chalk.bold("  Portable Settings:"));
   console.log();
 
-  for (const setting of unique) {
-    const sourceName = HARNESS_DISPLAY_NAMES[setting.sourceHarness];
-    const preview = setting.value.length > 60 ? `${setting.value.slice(0, 57)}...` : setting.value;
-    console.log(`    ${chalk.white(setting.displayName)}  ${chalk.dim(`(from ${sourceName})`)}`);
+  for (const [key, sources] of settingsByKey) {
+    const first = sources[0]!;
+    const valueStr =
+      typeof first.setting.value === "string"
+        ? first.setting.value
+        : JSON.stringify(first.setting.value);
+    const preview = valueStr.length > 60 ? `${valueStr.slice(0, 57)}...` : valueStr;
+
+    const harnessNames = sources.map((s) => HARNESS_DISPLAY_NAMES[s.harness]).join(", ");
+    console.log(
+      `    ${chalk.white(first.setting.displayName || key)}  ${chalk.dim(`(${harnessNames})`)}`,
+    );
     console.log(`    ${chalk.dim("value:")} ${preview}`);
 
-    const targets = Object.entries(setting.equivalents);
-    if (targets.length > 0) {
-      const targetNames = targets
-        .map(([id]) => HARNESS_DISPLAY_NAMES[id as keyof typeof HARNESS_DISPLAY_NAMES])
-        .join(", ");
-      console.log(`    ${chalk.dim("portable to:")} ${targetNames}`);
-    }
-
-    const notesEntries = targets.filter(([, eq]) => eq.notes);
-    for (const [, eq] of notesEntries) {
-      console.log(`    ${chalk.yellow("note:")} ${eq.notes}`);
+    // Check if values differ across harnesses
+    if (sources.length > 1) {
+      const values = sources.map((s) => JSON.stringify(s.setting.value));
+      const allSame = values.every((v) => v === values[0]);
+      if (!allSame) {
+        console.log(`    ${chalk.yellow("note:")} values differ across harnesses`);
+      }
     }
 
     console.log();

@@ -1,6 +1,6 @@
 import { readdir } from "node:fs/promises";
 import { join } from "node:path";
-import type { ContextEntry, HarnessContext } from "../model/context.ts";
+import type { CanonicalInstruction, ContextEntry, HarnessContext } from "../model/context.ts";
 import { parseFrontmatter } from "../utils/frontmatter.ts";
 import { exists, readFileIfExists } from "../utils/fs.ts";
 import type { Scanner } from "./scanner.ts";
@@ -30,16 +30,19 @@ export const cursorScanner: Scanner = {
         const content = await readFileIfExists(filePath);
         if (content === null) continue;
 
-        const { frontmatter } = parseFrontmatter(content);
+        const { body } = parseFrontmatter(content);
         const name = file.name.replace(/\.(mdc|md)$/, "");
 
         entries.push({
           category: "instructions",
           name,
-          content,
+          canonical: {
+            type: "instruction",
+            body: body.trim() || content,
+          } satisfies CanonicalInstruction,
           sourcePath: filePath,
           scope: "workspace",
-          metadata: frontmatter,
+          raw: content,
         });
       }
     }
@@ -51,10 +54,13 @@ export const cursorScanner: Scanner = {
       entries.push({
         category: "instructions",
         name: ".cursorrules",
-        content: legacyContent,
+        canonical: {
+          type: "instruction",
+          body: legacyContent,
+        } satisfies CanonicalInstruction,
         sourcePath: legacyPath,
         scope: "workspace",
-        metadata: { legacy: "true" },
+        raw: legacyContent,
       });
     }
 

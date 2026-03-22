@@ -1,8 +1,7 @@
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import type { ContextEntry } from "../model/context.ts";
-import { parseFrontmatter } from "../utils/frontmatter.ts";
-import { exists, readFileIfExists } from "../utils/fs.ts";
+import { exists } from "../utils/fs.ts";
 import type { SyncAction, SyncPlan, Writer } from "./writer.ts";
 
 export const codexWriter: Writer = {
@@ -13,76 +12,52 @@ export const codexWriter: Writer = {
     const actions: SyncAction[] = [];
 
     for (const entry of entries) {
-      switch (entry.category) {
-        case "instructions": {
+      const c = entry.canonical;
+
+      switch (c.type) {
+        case "instruction": {
           const path = join(root, "AGENTS.md");
-          const existing = await readFileIfExists(path);
-          actions.push({
-            type: existing !== null ? "update" : "create",
-            path,
-            content: entry.content,
-            entry,
-            existing: existing ?? undefined,
-          });
+          actions.push(await fileAction(path, c.body, entry));
           break;
         }
-        case "agents": {
-          // Translate agent definition to Codex TOML format
-          const { frontmatter, body } = parseFrontmatter(entry.content);
-          const agentName = frontmatter.name || entry.name;
-          const description = frontmatter.description || `Agent: ${entry.name}`;
-          const model = frontmatter.model || "";
-          const tomlContent = generateCodexAgentToml(agentName, description, body.trim(), model);
-          const agentPath = join(root, ".codex", "agents", `${entry.name}.toml`);
-          const agentExisting = await readFileIfExists(agentPath);
-          actions.push({
-            type: agentExisting !== null ? "update" : "create",
-            path: agentPath,
-            content: tomlContent,
-            entry,
-            existing: agentExisting ?? undefined,
-          });
+        case "agent": {
+          const path = join(root, ".codex", "agents", `${c.name}.toml`);
+          const content = generateCodexAgentToml(c.name, c.description, c.instructions, c.model);
+          actions.push(await fileAction(path, content, entry));
           break;
         }
-        case "commands": {
-          // Commands don't have a direct Codex equivalent — note in skip
-          actions.push({
-            type: "skip",
-            path: "",
-            entry,
-            reason:
-              "Codex has no slash command files — agent definitions handle similar functionality",
-          });
-          break;
-        }
-        case "skills":
-          actions.push({
-            type: "skip",
-            path: "",
-            entry,
-            reason:
+        case "skill":
+          actions.push(
+            skip(
+              entry,
               "Codex has no skills directory — skill instructions could be appended to AGENTS.md",
-          });
+            ),
+          );
+          break;
+        case "command":
+          actions.push(
+            skip(
+              entry,
+              "Codex has no slash command files — agent definitions handle similar functionality",
+            ),
+          );
+          break;
+        case "setting":
+          actions.push(skip(entry, "Settings sync requires TOML merge — use cm settings"));
+          break;
+        case "memory":
+          actions.push(skip(entry, "Use 'cm memory' for semantic memory translation"));
+          break;
+        case "mcp":
+          actions.push(skip(entry, "MCP server sync not yet supported for Codex"));
           break;
         case "ignore":
-          actions.push({
-            type: "skip",
-            path: "",
-            entry,
-            reason: "Codex has no ignore file format",
-          });
+          actions.push(skip(entry, "Codex has no ignore file format"));
           break;
-        default:
-          actions.push({
-            type: "skip",
-            path: "",
-            entry,
-            reason: `Category "${entry.category}" not yet supported for Codex sync`,
-          });
       }
     }
 
-    return { source: entries[0]?.category as any, target: "codex", actions };
+    return { source: "codex", target: "codex", actions };
   },
 
   async execute(plan: SyncPlan, _root: string): Promise<void> {
@@ -101,17 +76,33 @@ function generateCodexAgentToml(
   name: string,
   description: string,
   instructions: string,
-  model: string,
+  model?: string,
 ): string {
   const lines: string[] = [];
   lines.push(`name = "${name}"`);
   lines.push(`description = "${description.replace(/"/g, '\\"')}"`);
-  lines.push(`developer_instructions = """`);
+  lines.push('developer_instructions = """');
   lines.push(instructions);
-  lines.push(`"""`);
+  lines.push('"""');
   if (model) {
     lines.push(`model = "${model}"`);
   }
-  lines.push(`sandbox_mode = "workspace-write"`);
+  lines.push('sandbox_mode = "workspace-write"');
   return lines.join("\n");
+}
+
+async function fileAction(path: string, content: string, entry: ContextEntry): Promise<SyncAction> {
+  const existingFile = Bun.file(path);
+  const fileExists = await existingFile.exists();
+  return {
+    type: fileExists ? "update" : "create",
+    path,
+    content,
+    entry,
+    existing: fileExists ? await existingFile.text() : undefined,
+  };
+}
+
+function skip(entry: ContextEntry, reason: string): SyncAction {
+  return { type: "skip", path: "", entry, reason };
 }

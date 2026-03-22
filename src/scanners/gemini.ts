@@ -1,6 +1,14 @@
 import { homedir } from "node:os";
 import { join } from "node:path";
-import type { ContextEntry, HarnessContext } from "../model/context.ts";
+import type {
+  CanonicalCommand,
+  CanonicalIgnore,
+  CanonicalInstruction,
+  CanonicalSetting,
+  ContextEntry,
+  HarnessContext,
+} from "../model/context.ts";
+import { parseFrontmatter } from "../utils/frontmatter.ts";
 import { exists, globFiles, globSkillDirs, readFileIfExists } from "../utils/fs.ts";
 import type { Scanner } from "./scanner.ts";
 
@@ -24,9 +32,10 @@ export const geminiScanner: Scanner = {
       entries.push({
         category: "instructions",
         name: "GEMINI.md",
-        content: geminiMd,
+        canonical: { type: "instruction", body: geminiMd } satisfies CanonicalInstruction,
         sourcePath: join(root, "GEMINI.md"),
         scope: "workspace",
+        raw: geminiMd,
       });
     }
 
@@ -36,23 +45,35 @@ export const geminiScanner: Scanner = {
       entries.push({
         category: "instructions",
         name: "GEMINI.md",
-        content: globalGeminiMd,
+        canonical: { type: "instruction", body: globalGeminiMd } satisfies CanonicalInstruction,
         sourcePath: join(homedir(), ".gemini", "GEMINI.md"),
         scope: "global",
+        raw: globalGeminiMd,
       });
     }
 
     // Settings: .gemini/settings.json
     const settingsPath = join(root, ".gemini", "settings.json");
-    const settings = await readFileIfExists(settingsPath);
-    if (settings !== null) {
-      entries.push({
-        category: "settings",
-        name: "settings.json",
-        content: settings,
-        sourcePath: settingsPath,
-        scope: "workspace",
-      });
+    const settingsContent = await readFileIfExists(settingsPath);
+    if (settingsContent !== null) {
+      const parsed = tryParseJson(settingsContent);
+      if (parsed) {
+        for (const [key, value] of Object.entries(parsed)) {
+          entries.push({
+            category: "settings",
+            name: `settings.json:${key}`,
+            canonical: {
+              type: "setting",
+              key,
+              displayName: key,
+              value,
+            } satisfies CanonicalSetting,
+            sourcePath: settingsPath,
+            scope: "workspace",
+            raw: settingsContent,
+          });
+        }
+      }
     }
 
     // Ignore: .geminiignore
@@ -62,9 +83,16 @@ export const geminiScanner: Scanner = {
       entries.push({
         category: "ignore",
         name: ".geminiignore",
-        content: ignoreContent,
+        canonical: {
+          type: "ignore",
+          patterns: ignoreContent
+            .split("\n")
+            .map((l) => l.trim())
+            .filter((l) => l && !l.startsWith("#")),
+        } satisfies CanonicalIgnore,
         sourcePath: ignorePath,
         scope: "workspace",
+        raw: ignoreContent,
       });
     }
 
@@ -80,13 +108,22 @@ export const geminiScanner: Scanner = {
         if (content === null) continue;
         const isGlobal = commandsDir.startsWith(homedir());
         const name = file.replace(/\.toml$/, "");
+
+        const description = extractTomlString(content, "description") || `Command: ${name}`;
+        const prompt = extractTomlMultilineString(content, "prompt") || "";
+
         entries.push({
           category: "commands",
           name,
-          content,
+          canonical: {
+            type: "command",
+            name,
+            description,
+            prompt,
+          } satisfies CanonicalCommand,
           sourcePath: filePath,
           scope: isGlobal ? "global" : "workspace",
-          metadata: { format: "toml" },
+          raw: content,
         });
       }
     }
@@ -98,12 +135,20 @@ export const geminiScanner: Scanner = {
         const skillPath = join(skillsDir, name, "SKILL.md");
         const content = await readFileIfExists(skillPath);
         if (content !== null) {
+          const { frontmatter, body } = parseFrontmatter(content);
           entries.push({
             category: "skills",
             name,
-            content,
+            canonical: {
+              type: "skill",
+              name,
+              description: frontmatter.description || "",
+              instructions: body.trim(),
+              trigger: frontmatter.trigger,
+            },
             sourcePath: skillPath,
             scope: "workspace",
+            raw: content,
           });
         }
       }
@@ -112,3 +157,23 @@ export const geminiScanner: Scanner = {
     return { harness: "gemini", root, entries };
   },
 };
+
+function extractTomlString(content: string, key: string): string | null {
+  const regex = new RegExp(`^${key}\\s*=\\s*"([^"]*)"`, "m");
+  const match = content.match(regex);
+  return match?.[1] ?? null;
+}
+
+function extractTomlMultilineString(content: string, key: string): string | null {
+  const regex = new RegExp(`^${key}\\s*=\\s*"""([\\s\\S]*?)"""`, "m");
+  const match = content.match(regex);
+  return match?.[1]?.trim() ?? null;
+}
+
+function tryParseJson(content: string): Record<string, unknown> | null {
+  try {
+    return JSON.parse(content);
+  } catch {
+    return null;
+  }
+}

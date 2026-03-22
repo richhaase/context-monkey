@@ -34,7 +34,7 @@ export function diffContexts(source: HarnessContext, target: HarnessContext): Di
 
     if (tgtEntry) {
       matchedTargetKeys.add(key);
-      const same = srcEntry.content.trim() === tgtEntry.content.trim();
+      const same = srcEntry.raw.trim() === tgtEntry.raw.trim();
       matches.push({
         category: srcEntry.category,
         name: srcEntry.name,
@@ -50,7 +50,7 @@ export function diffContexts(source: HarnessContext, target: HarnessContext): Di
       if (sameCatTarget.length === 1) {
         const tgt = sameCatTarget[0]!;
         matchedTargetKeys.add(entryKey(tgt));
-        const same = srcEntry.content.trim() === tgt.content.trim();
+        const same = srcEntry.raw.trim() === tgt.raw.trim();
         matches.push({
           category: srcEntry.category,
           name: `${srcEntry.name} ↔ ${tgt.name}`,

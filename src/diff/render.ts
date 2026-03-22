@@ -73,7 +73,7 @@ export function renderDetailedDiff(match: EntryMatch): string {
   if (match.status === "same") return chalk.dim("  (identical)");
   if (!match.source || !match.target) return chalk.dim("  (no counterpart to diff)");
 
-  const { added, removed, unchanged } = lineDiff(match.source.content, match.target.content);
+  const { added, removed, unchanged } = lineDiff(match.source.raw, match.target.raw);
   const lines: string[] = [];
 
   lines.push(`  ${chalk.bold(match.name)}`);

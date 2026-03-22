@@ -1,5 +1,5 @@
 import { join } from "node:path";
-import type { ContextEntry, HarnessContext } from "../model/context.ts";
+import type { CanonicalInstruction, ContextEntry, HarnessContext } from "../model/context.ts";
 import { parseFrontmatter } from "../utils/frontmatter.ts";
 import { exists, globFiles, readFileIfExists } from "../utils/fs.ts";
 import type { Scanner } from "./scanner.ts";
@@ -24,9 +24,13 @@ export const copilotScanner: Scanner = {
       entries.push({
         category: "instructions",
         name: "copilot-instructions.md",
-        content: mainContent,
+        canonical: {
+          type: "instruction",
+          body: mainContent,
+        } satisfies CanonicalInstruction,
         sourcePath: mainPath,
         scope: "workspace",
+        raw: mainContent,
       });
     }
 
@@ -39,16 +43,19 @@ export const copilotScanner: Scanner = {
         const content = await readFileIfExists(filePath);
         if (content === null) continue;
 
-        const { frontmatter } = parseFrontmatter(content);
+        const { body } = parseFrontmatter(content);
         const name = file.replace(/\.instructions\.md$/, "").replace(/\.md$/, "");
 
         entries.push({
           category: "instructions",
           name,
-          content,
+          canonical: {
+            type: "instruction",
+            body: body.trim() || content,
+          } satisfies CanonicalInstruction,
           sourcePath: filePath,
           scope: "subdirectory",
-          metadata: frontmatter,
+          raw: content,
         });
       }
     }

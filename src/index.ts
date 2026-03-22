@@ -3,7 +3,6 @@
 import { Command } from "commander";
 import pkg from "../package.json";
 import { registerApply } from "./commands/apply.ts";
-import { registerDiff } from "./commands/diff.ts";
 import { registerScan } from "./commands/scan.ts";
 
 const program = new Command()
@@ -12,7 +11,6 @@ const program = new Command()
   .version(pkg.version, "-v, --version");
 
 registerScan(program);
-registerDiff(program);
 registerApply(program);
 
 // Default to scan when no command given

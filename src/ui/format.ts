@@ -45,19 +45,15 @@ export function formatScanResult(ctx: HarnessContext): string {
 
     if (catEntries.length === 1) {
       const entry = catEntries[0]!;
-      const scope = entry.scope !== "workspace" ? chalk.dim(` [${entry.scope}]`) : "";
       lines.push(
-        `  ${chalk.dim("│")}  ${categoryLabel(cat)}  ${entry.name} ${entrySummary(entry)}${scope}`,
+        `  ${chalk.dim("│")}  ${categoryLabel(cat)}  ${entry.name} ${entrySummary(entry)}`,
       );
     } else {
       lines.push(
         `  ${chalk.dim("│")}  ${categoryLabel(cat)}  ${chalk.white(`${catEntries.length} entries`)}`,
       );
       for (const entry of catEntries) {
-        const scope = entry.scope !== "workspace" ? chalk.dim(` [${entry.scope}]`) : "";
-        lines.push(
-          `  ${chalk.dim("│")}    ${chalk.dim("·")} ${entry.name} ${entrySummary(entry)}${scope}`,
-        );
+        lines.push(`  ${chalk.dim("│")}    ${chalk.dim("·")} ${entry.name} ${entrySummary(entry)}`);
       }
     }
   }
@@ -66,7 +62,7 @@ export function formatScanResult(ctx: HarnessContext): string {
   return lines.join("\n");
 }
 
-export function formatNotDetected(_root: string, ids: HarnessId[]): string {
+export function formatNotDetected(ids: HarnessId[]): string {
   if (ids.length === 0) return "";
   const names = ids.map((id) => HARNESS_DISPLAY_NAMES[id]).join(", ");
   return chalk.dim(`  Not detected: ${names}\n`);

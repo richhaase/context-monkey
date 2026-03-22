@@ -1,4 +1,5 @@
 import { mkdir } from "node:fs/promises";
+import { homedir } from "node:os";
 import { join } from "node:path";
 import { renderContextSection } from "../memory/render.ts";
 import type { CanonicalMemory, ContextEntry } from "../model/context.ts";
@@ -6,13 +7,15 @@ import { serializeFrontmatter } from "../utils/frontmatter.ts";
 import { exists } from "../utils/fs.ts";
 import type { SyncAction, SyncPlan, Writer } from "./writer.ts";
 
+const CURSOR_DIR = join(homedir(), ".cursor");
+const RULES_DIR = join(CURSOR_DIR, "rules");
+
 export const cursorWriter: Writer = {
   id: "cursor",
   displayName: "Cursor",
 
-  async plan(entries: ContextEntry[], root: string): Promise<SyncPlan> {
+  async plan(entries: ContextEntry[]): Promise<SyncPlan> {
     const actions: SyncAction[] = [];
-    const rulesDir = join(root, ".cursor", "rules");
 
     const memoryEntries: CanonicalMemory[] = [];
     const otherEntries: ContextEntry[] = [];
@@ -30,7 +33,7 @@ export const cursorWriter: Writer = {
 
       switch (c.type) {
         case "instruction": {
-          const path = join(rulesDir, `${sanitizeName(entry.name)}.mdc`);
+          const path = join(RULES_DIR, `${sanitizeName(entry.name)}.mdc`);
           const content = serializeFrontmatter(
             { description: `Ported from ${entry.sourcePath}`, alwaysApply: "true" },
             c.body,
@@ -39,7 +42,7 @@ export const cursorWriter: Writer = {
           break;
         }
         case "skill": {
-          const path = join(rulesDir, `${sanitizeName(c.name)}.mdc`);
+          const path = join(RULES_DIR, `${sanitizeName(c.name)}.mdc`);
           const content = serializeFrontmatter(
             { description: c.description || `Skill: ${c.name}`, alwaysApply: "false" },
             c.instructions,
@@ -48,7 +51,7 @@ export const cursorWriter: Writer = {
           break;
         }
         case "agent": {
-          const path = join(rulesDir, `agent-${sanitizeName(c.name)}.mdc`);
+          const path = join(RULES_DIR, `agent-${sanitizeName(c.name)}.mdc`);
           const content = serializeFrontmatter(
             { description: c.description || `Agent: ${c.name}`, alwaysApply: "false" },
             c.instructions,
@@ -80,7 +83,7 @@ export const cursorWriter: Writer = {
           name: "memory (aggregated)",
           canonical: memoryEntries[0]!,
           sourcePath: "",
-          scope: "workspace",
+          scope: "global",
           raw: "",
         };
 
@@ -97,14 +100,14 @@ export const cursorWriter: Writer = {
           body,
         );
 
-        actions.push(await fileAction(join(rulesDir, "user-context.mdc"), content, placeholder));
+        actions.push(await fileAction(join(RULES_DIR, "user-context.mdc"), content, placeholder));
       }
     }
 
     return { source: "cursor", target: "cursor", actions };
   },
 
-  async execute(plan: SyncPlan, _root: string): Promise<void> {
+  async execute(plan: SyncPlan): Promise<void> {
     for (const action of plan.actions) {
       if (action.type === "skip" || !action.content) continue;
       const dir = join(action.path, "..");

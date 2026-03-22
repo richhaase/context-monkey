@@ -1,15 +1,18 @@
 import { mkdir } from "node:fs/promises";
+import { homedir } from "node:os";
 import { join } from "node:path";
 import { renderContextSection } from "../memory/render.ts";
 import type { CanonicalMemory, ContextEntry } from "../model/context.ts";
 import { exists } from "../utils/fs.ts";
 import type { SyncAction, SyncPlan, Writer } from "./writer.ts";
 
+const GITHUB_DIR = join(homedir(), ".github");
+
 export const copilotWriter: Writer = {
   id: "copilot",
   displayName: "GitHub Copilot",
 
-  async plan(entries: ContextEntry[], root: string): Promise<SyncPlan> {
+  async plan(entries: ContextEntry[]): Promise<SyncPlan> {
     const actions: SyncAction[] = [];
 
     const memoryEntries: CanonicalMemory[] = [];
@@ -28,7 +31,7 @@ export const copilotWriter: Writer = {
 
       switch (c.type) {
         case "instruction": {
-          const path = join(root, ".github", "copilot-instructions.md");
+          const path = join(GITHUB_DIR, "copilot-instructions.md");
           actions.push(await fileAction(path, c.body, entry));
           break;
         }
@@ -62,7 +65,7 @@ export const copilotWriter: Writer = {
           name: "memory (aggregated)",
           canonical: memoryEntries[0]!,
           sourcePath: "",
-          scope: "workspace",
+          scope: "global",
           raw: "",
         };
 
@@ -71,7 +74,7 @@ export const copilotWriter: Writer = {
           "Treat as established knowledge.",
         ]);
 
-        const instructionsPath = join(root, ".github", "copilot-instructions.md");
+        const instructionsPath = join(GITHUB_DIR, "copilot-instructions.md");
         const existing = await readExisting(instructionsPath);
         const content = existing ? `${existing}\n\n${body}` : body;
         actions.push(await fileAction(instructionsPath, content, placeholder));
@@ -81,7 +84,7 @@ export const copilotWriter: Writer = {
     return { source: "copilot", target: "copilot", actions };
   },
 
-  async execute(plan: SyncPlan, _root: string): Promise<void> {
+  async execute(plan: SyncPlan): Promise<void> {
     for (const action of plan.actions) {
       if (action.type === "skip" || !action.content) continue;
       const dir = join(action.path, "..");

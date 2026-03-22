@@ -1,15 +1,18 @@
 import { mkdir } from "node:fs/promises";
+import { homedir } from "node:os";
 import { join } from "node:path";
 import { renderContextSection, renderFullMemoryDoc } from "../memory/render.ts";
 import type { CanonicalMemory, ContextEntry } from "../model/context.ts";
 import { exists } from "../utils/fs.ts";
 import type { SyncAction, SyncPlan, Writer } from "./writer.ts";
 
+const CODEX_DIR = join(homedir(), ".codex");
+
 export const codexWriter: Writer = {
   id: "codex",
   displayName: "Codex",
 
-  async plan(entries: ContextEntry[], root: string): Promise<SyncPlan> {
+  async plan(entries: ContextEntry[]): Promise<SyncPlan> {
     const actions: SyncAction[] = [];
 
     const memoryEntries: CanonicalMemory[] = [];
@@ -28,12 +31,12 @@ export const codexWriter: Writer = {
 
       switch (c.type) {
         case "instruction": {
-          const path = join(root, "AGENTS.md");
+          const path = join(CODEX_DIR, "AGENTS.md");
           actions.push(await fileAction(path, c.body, entry));
           break;
         }
         case "agent": {
-          const path = join(root, ".codex", "agents", `${c.name}.toml`);
+          const path = join(CODEX_DIR, "agents", `${c.name}.toml`);
           const content = generateCodexAgentToml(c.name, c.description, c.instructions, c.model);
           actions.push(await fileAction(path, content, entry));
           break;
@@ -63,7 +66,7 @@ export const codexWriter: Writer = {
         name: "memory (aggregated)",
         canonical: memoryEntries[0]!,
         sourcePath: "",
-        scope: "workspace",
+        scope: "global",
         raw: "",
       };
 
@@ -74,7 +77,7 @@ export const codexWriter: Writer = {
           "Treat it as established knowledge — the user should not need to re-teach these things.",
         ]);
         // Append to AGENTS.md
-        const agentsPath = join(root, "AGENTS.md");
+        const agentsPath = join(CODEX_DIR, "AGENTS.md");
         const existing = await readExisting(agentsPath);
         const content = existing ? `${existing}\n\n${section}` : section;
         actions.push(await fileAction(agentsPath, content, placeholder));
@@ -82,13 +85,13 @@ export const codexWriter: Writer = {
 
       // Full memory → .codex/MEMORY.md
       const memoryDoc = renderFullMemoryDoc(memoryEntries);
-      actions.push(await fileAction(join(root, ".codex", "MEMORY.md"), memoryDoc, placeholder));
+      actions.push(await fileAction(join(CODEX_DIR, "MEMORY.md"), memoryDoc, placeholder));
     }
 
     return { source: "codex", target: "codex", actions };
   },
 
-  async execute(plan: SyncPlan, _root: string): Promise<void> {
+  async execute(plan: SyncPlan): Promise<void> {
     for (const action of plan.actions) {
       if (action.type === "skip" || !action.content) continue;
       const dir = join(action.path, "..");

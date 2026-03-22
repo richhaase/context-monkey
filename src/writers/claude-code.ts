@@ -1,4 +1,5 @@
 import { mkdir } from "node:fs/promises";
+import { homedir } from "node:os";
 import { join } from "node:path";
 import { groupBy, kindDisplayName } from "../memory/render.ts";
 import type { CanonicalMemory, ContextEntry } from "../model/context.ts";
@@ -6,11 +7,13 @@ import { serializeFrontmatter } from "../utils/frontmatter.ts";
 import { exists } from "../utils/fs.ts";
 import type { SyncAction, SyncPlan, Writer } from "./writer.ts";
 
+const CLAUDE_DIR = join(homedir(), ".claude");
+
 export const claudeCodeWriter: Writer = {
   id: "claude-code",
   displayName: "Claude Code",
 
-  async plan(entries: ContextEntry[], root: string): Promise<SyncPlan> {
+  async plan(entries: ContextEntry[]): Promise<SyncPlan> {
     const actions: SyncAction[] = [];
 
     // Batch memory entries for aggregated handling
@@ -31,12 +34,12 @@ export const claudeCodeWriter: Writer = {
 
       switch (c.type) {
         case "instruction": {
-          const path = join(root, "CLAUDE.md");
+          const path = join(CLAUDE_DIR, "CLAUDE.md");
           actions.push(await fileAction(path, c.body, entry));
           break;
         }
         case "skill": {
-          const path = join(root, ".claude", "skills", c.name, "SKILL.md");
+          const path = join(CLAUDE_DIR, "skills", c.name, "SKILL.md");
           const content = serializeFrontmatter(
             { description: c.description, ...(c.trigger ? { trigger: c.trigger } : {}) },
             c.instructions,
@@ -45,7 +48,7 @@ export const claudeCodeWriter: Writer = {
           break;
         }
         case "agent": {
-          const path = join(root, ".claude", "skills", c.name, "SKILL.md");
+          const path = join(CLAUDE_DIR, "skills", c.name, "SKILL.md");
           const fm: Record<string, string> = { description: c.description, context: "fork" };
           if (c.model) fm.model = c.model;
           const content = serializeFrontmatter(fm, c.instructions);
@@ -53,7 +56,7 @@ export const claudeCodeWriter: Writer = {
           break;
         }
         case "command": {
-          const path = join(root, ".claude", "commands", `${c.name}.md`);
+          const path = join(CLAUDE_DIR, "commands", `${c.name}.md`);
           actions.push(await fileAction(path, c.prompt, entry));
           break;
         }
@@ -76,11 +79,12 @@ export const claudeCodeWriter: Writer = {
         name: "memory (aggregated)",
         canonical: memoryEntries[0]!,
         sourcePath: "",
-        scope: "workspace",
+        scope: "global",
         raw: "",
       };
 
       const grouped = groupBy(memoryEntries, (u) => u.kind);
+      const memoryDir = join(CLAUDE_DIR, "memory");
 
       // Generate MEMORY.md index
       const indexLines = ["# Memory\n", "Auto-imported context. Details in topic files.\n"];
@@ -92,30 +96,28 @@ export const claudeCodeWriter: Writer = {
         indexLines.push("");
       }
       actions.push(
-        await fileAction(join(root, "memory", "MEMORY.md"), indexLines.join("\n"), placeholder),
+        await fileAction(join(memoryDir, "MEMORY.md"), indexLines.join("\n"), placeholder),
       );
 
       // Generate topic files for feedback
       for (const unit of grouped.feedback || []) {
         const filename = `feedback_${unit.name.replace(/[^a-z0-9-]/gi, "_")}.md`;
         const content = `---\nname: ${unit.name}\ndescription: ${unit.summary}\ntype: feedback\n---\n\n${unit.content}`;
-        actions.push(await fileAction(join(root, "memory", filename), content, placeholder));
+        actions.push(await fileAction(join(memoryDir, filename), content, placeholder));
       }
 
       // Preferences as a single file
       const prefUnits = grouped.preference || [];
       if (prefUnits.length > 0) {
         const content = prefUnits.map((u) => u.content).join("\n\n");
-        actions.push(
-          await fileAction(join(root, "memory", "preferences.md"), content, placeholder),
-        );
+        actions.push(await fileAction(join(memoryDir, "preferences.md"), content, placeholder));
       }
     }
 
     return { source: "claude-code", target: "claude-code", actions };
   },
 
-  async execute(plan: SyncPlan, _root: string): Promise<void> {
+  async execute(plan: SyncPlan): Promise<void> {
     for (const action of plan.actions) {
       if (action.type === "skip" || !action.content) continue;
       const dir = join(action.path, "..");

@@ -1,4 +1,3 @@
-import { resolve } from "node:path";
 import chalk from "chalk";
 import type { Command } from "commander";
 import {
@@ -15,12 +14,11 @@ import { formatNotDetected, formatScanResult } from "../ui/format.ts";
 export function registerScan(program: Command): void {
   program
     .command("scan")
-    .description("Scan for configured AI agent harnesses and update the IR store")
+    .description("Scan global harness configurations and update the IR store")
     .argument("[harnesses...]", `harness(es) to scan (${ALL_HARNESS_IDS.join(", ")}); omit for all`)
     .option("--store <path>", "IR store path (default: ~/.config/context-monkey/context.json)")
     .option("--no-persist", "skip updating the store")
     .action(async (harnesses: string[], opts: { store?: string; persist?: boolean }) => {
-      const root = resolve(".");
       const skipStore = opts.persist === false;
 
       // Validate harness names if provided
@@ -38,10 +36,10 @@ export function registerScan(program: Command): void {
 
       console.log();
       console.log(chalk.bold("  Context Monkey"));
-      console.log(chalk.dim(`  Scanning ${root}...`));
+      console.log(chalk.dim("  Scanning global harness configurations..."));
       console.log();
 
-      const contexts = await scanAll(root, filter);
+      const contexts = await scanAll(filter);
 
       if (contexts.length === 0) {
         console.log(chalk.yellow("  No harnesses detected."));
@@ -63,7 +61,7 @@ export function registerScan(program: Command): void {
 
       const detectedIds = contexts.map((c) => c.harness);
       const missingIds = ALL_HARNESS_IDS.filter((id) => !detectedIds.includes(id));
-      console.log(formatNotDetected(root, missingIds));
+      console.log(formatNotDetected(missingIds));
 
       renderPortableSettings(contexts);
 

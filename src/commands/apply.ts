@@ -35,14 +35,6 @@ export function registerApply(program: Command): void {
           process.exit(1);
         }
 
-        if (!bundle.root) {
-          console.error(
-            chalk.red("  Store has no root directory. Re-run 'cm scan <path>' to update."),
-          );
-          process.exit(1);
-        }
-
-        const root = bundle.root;
         const targets: HarnessId[] =
           targetArgs.length === 0 || targetArgs.includes("all")
             ? [...ALL_HARNESS_IDS]
@@ -84,7 +76,6 @@ export function registerApply(program: Command): void {
         console.log();
         console.log(chalk.bold("  Context Monkey — Apply"));
         console.log(chalk.dim(`  Store: ${sp} (${bundle.items.length} items from ${sources})`));
-        console.log(chalk.dim(`  Root: ${root}`));
         console.log();
 
         for (const targetHarness of targets) {
@@ -97,7 +88,7 @@ export function registerApply(program: Command): void {
             continue;
           }
 
-          const plan = await writer.plan(entries, root);
+          const plan = await writer.plan(entries);
           const creates = plan.actions.filter((a) => a.type === "create");
           const updates = plan.actions.filter((a) => a.type === "update");
           const skips = plan.actions.filter((a) => a.type === "skip");
@@ -120,7 +111,7 @@ export function registerApply(program: Command): void {
             }
           }
 
-          await writer.execute(plan, root);
+          await writer.execute(plan);
           console.log(
             chalk.green(
               `  Done. ${creates.length} created, ${updates.length} updated, ${skips.length} skipped.`,

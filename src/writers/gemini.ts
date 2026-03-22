@@ -1,15 +1,18 @@
 import { mkdir } from "node:fs/promises";
+import { homedir } from "node:os";
 import { join } from "node:path";
 import { renderContextSection } from "../memory/render.ts";
 import type { CanonicalMemory, ContextEntry } from "../model/context.ts";
 import { exists } from "../utils/fs.ts";
 import type { SyncAction, SyncPlan, Writer } from "./writer.ts";
 
+const GEMINI_DIR = join(homedir(), ".gemini");
+
 export const geminiWriter: Writer = {
   id: "gemini",
   displayName: "Gemini CLI",
 
-  async plan(entries: ContextEntry[], root: string): Promise<SyncPlan> {
+  async plan(entries: ContextEntry[]): Promise<SyncPlan> {
     const actions: SyncAction[] = [];
 
     const memoryEntries: CanonicalMemory[] = [];
@@ -28,23 +31,23 @@ export const geminiWriter: Writer = {
 
       switch (c.type) {
         case "instruction": {
-          const path = join(root, "GEMINI.md");
+          const path = join(GEMINI_DIR, "GEMINI.md");
           actions.push(await fileAction(path, c.body, entry));
           break;
         }
         case "command": {
-          const path = join(root, ".gemini", "commands", `${c.name}.toml`);
+          const path = join(GEMINI_DIR, "commands", `${c.name}.toml`);
           const content = `description = "${c.description.replace(/"/g, '\\"')}"\nprompt = """\n${c.prompt}\n"""`;
           actions.push(await fileAction(path, content, entry));
           break;
         }
         case "skill": {
-          const path = join(root, ".agents", "skills", c.name, "SKILL.md");
+          const path = join(GEMINI_DIR, "skills", c.name, "SKILL.md");
           actions.push(await fileAction(path, c.instructions, entry));
           break;
         }
         case "ignore": {
-          const path = join(root, ".geminiignore");
+          const path = join(GEMINI_DIR, ".geminiignore");
           const content = c.patterns.join("\n");
           actions.push(await fileAction(path, content, entry));
           break;
@@ -68,7 +71,7 @@ export const geminiWriter: Writer = {
         name: "memory (aggregated)",
         canonical: memoryEntries[0]!,
         sourcePath: "",
-        scope: "workspace",
+        scope: "global",
         raw: "",
       };
 
@@ -104,7 +107,7 @@ export const geminiWriter: Writer = {
       }
 
       if (sections.length > 0) {
-        const geminiPath = join(root, "GEMINI.md");
+        const geminiPath = join(GEMINI_DIR, "GEMINI.md");
         const existing = await readExisting(geminiPath);
         const content = existing
           ? `${existing}\n\n${sections.join("\n\n")}`
@@ -116,7 +119,7 @@ export const geminiWriter: Writer = {
     return { source: "gemini", target: "gemini", actions };
   },
 
-  async execute(plan: SyncPlan, _root: string): Promise<void> {
+  async execute(plan: SyncPlan): Promise<void> {
     for (const action of plan.actions) {
       if (action.type === "skip" || !action.content) continue;
       const dir = join(action.path, "..");

@@ -105,7 +105,6 @@ export interface ContextEntry {
 
 export interface HarnessContext {
   harness: HarnessId;
-  root: string;
   entries: ContextEntry[];
 }
 

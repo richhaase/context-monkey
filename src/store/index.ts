@@ -20,7 +20,7 @@ export async function readStore(path?: string): Promise<ContextBundle> {
     const raw = await Bun.file(p).text();
     return JSON.parse(raw);
   } catch {
-    return { version: 1, updatedAt: new Date().toISOString(), root: "", sources: [], items: [] };
+    return { version: 1, updatedAt: new Date().toISOString(), sources: [], items: [] };
   }
 }
 
@@ -60,13 +60,9 @@ export function mergeIntoStore(store: ContextBundle, contexts: HarnessContext[])
     }
   }
 
-  // Use root from the first context (all contexts share the same root in a scan)
-  const root = contexts[0]?.root || store.root;
-
   return {
     version: 1,
     updatedAt: new Date().toISOString(),
-    root,
     sources: [...new Set([...store.sources, ...scannedHarnesses])].filter(
       // Remove sources that were scanned but produced 0 items
       (id) =>

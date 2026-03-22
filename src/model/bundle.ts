@@ -10,8 +10,6 @@ export interface ContextBundle {
   version: 1;
   /** Last time this store was updated */
   updatedAt: string;
-  /** Root directory that was last scanned */
-  root: string;
   /** Harnesses that have contributed to this store */
   sources: HarnessId[];
   /** The canonical items */

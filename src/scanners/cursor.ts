@@ -1,25 +1,26 @@
 import { readdir } from "node:fs/promises";
+import { homedir } from "node:os";
 import { join } from "node:path";
 import type { CanonicalInstruction, ContextEntry, HarnessContext } from "../model/context.ts";
 import { parseFrontmatter } from "../utils/frontmatter.ts";
 import { exists, readFileIfExists } from "../utils/fs.ts";
 import type { Scanner } from "./scanner.ts";
 
+const CURSOR_DIR = join(homedir(), ".cursor");
+
 export const cursorScanner: Scanner = {
   id: "cursor",
   displayName: "Cursor",
 
-  async detect(root: string): Promise<boolean> {
-    const hasCursorDir = await exists(join(root, ".cursor"));
-    const hasCursorRules = await exists(join(root, ".cursorrules"));
-    return hasCursorDir || hasCursorRules;
+  async detect(): Promise<boolean> {
+    return exists(CURSOR_DIR);
   },
 
-  async scan(root: string): Promise<HarnessContext> {
+  async scan(): Promise<HarnessContext> {
     const entries: ContextEntry[] = [];
 
-    // Rules: .cursor/rules/ (MDC files)
-    const rulesDir = join(root, ".cursor", "rules");
+    // Rules: ~/.cursor/rules/ (MDC files)
+    const rulesDir = join(CURSOR_DIR, "rules");
     if (await exists(rulesDir)) {
       const files = await readdir(rulesDir, { withFileTypes: true, recursive: true });
       for (const file of files) {
@@ -41,29 +42,12 @@ export const cursorScanner: Scanner = {
             body: body.trim() || content,
           } satisfies CanonicalInstruction,
           sourcePath: filePath,
-          scope: "workspace",
+          scope: "global",
           raw: content,
         });
       }
     }
 
-    // Legacy: .cursorrules
-    const legacyPath = join(root, ".cursorrules");
-    const legacyContent = await readFileIfExists(legacyPath);
-    if (legacyContent !== null) {
-      entries.push({
-        category: "instructions",
-        name: ".cursorrules",
-        canonical: {
-          type: "instruction",
-          body: legacyContent,
-        } satisfies CanonicalInstruction,
-        sourcePath: legacyPath,
-        scope: "workspace",
-        raw: legacyContent,
-      });
-    }
-
-    return { harness: "cursor", root, entries };
+    return { harness: "cursor", entries };
   },
 };

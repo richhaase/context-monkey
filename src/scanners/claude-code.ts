@@ -1,3 +1,4 @@
+import { homedir } from "node:os";
 import { join } from "node:path";
 import type {
   CanonicalAgent,
@@ -12,37 +13,50 @@ import { parseFrontmatter } from "../utils/frontmatter.ts";
 import { exists, globFiles, globSkillDirs, readFileIfExists } from "../utils/fs.ts";
 import type { Scanner } from "./scanner.ts";
 
+const CLAUDE_DIR = join(homedir(), ".claude");
+
 export const claudeCodeScanner: Scanner = {
   id: "claude-code",
   displayName: "Claude Code",
 
-  async detect(root: string): Promise<boolean> {
-    const hasClaudeDir = await exists(join(root, ".claude"));
-    const hasClaudeMd = await exists(join(root, "CLAUDE.md"));
-    return hasClaudeDir || hasClaudeMd;
+  async detect(): Promise<boolean> {
+    return exists(CLAUDE_DIR);
   },
 
-  async scan(root: string): Promise<HarnessContext> {
+  async scan(): Promise<HarnessContext> {
     const entries: ContextEntry[] = [];
 
-    // Instructions: CLAUDE.md
-    const claudeMd = await readFileIfExists(join(root, "CLAUDE.md"));
-    if (claudeMd !== null) {
-      entries.push({
-        category: "instructions",
-        name: "CLAUDE.md",
-        canonical: { type: "instruction", body: claudeMd } satisfies CanonicalInstruction,
-        sourcePath: join(root, "CLAUDE.md"),
-        scope: "workspace",
-        raw: claudeMd,
-      });
+    // Settings: ~/.claude/settings.json and ~/.claude/settings.local.json
+    for (const filename of ["settings.json", "settings.local.json"]) {
+      const settingsPath = join(CLAUDE_DIR, filename);
+      const content = await readFileIfExists(settingsPath);
+      if (content !== null) {
+        const parsed = tryParseJson(content);
+        if (parsed) {
+          for (const [key, value] of Object.entries(parsed)) {
+            entries.push({
+              category: "settings",
+              name: `${filename}:${key}`,
+              canonical: {
+                type: "setting",
+                key,
+                displayName: key,
+                value,
+              } satisfies CanonicalSetting,
+              sourcePath: settingsPath,
+              scope: "global",
+              raw: content,
+            });
+          }
+        }
+      }
     }
 
-    // Skills and Agents: .claude/skills/*/SKILL.md
-    const skillsRoot = join(root, ".claude", "skills");
-    const skillNames = await globSkillDirs(skillsRoot);
+    // Skills and Agents: ~/.claude/skills/*/SKILL.md
+    const skillsDir = join(CLAUDE_DIR, "skills");
+    const skillNames = await globSkillDirs(skillsDir);
     for (const name of skillNames) {
-      const skillPath = join(skillsRoot, name, "SKILL.md");
+      const skillPath = join(skillsDir, name, "SKILL.md");
       const content = await readFileIfExists(skillPath);
       if (content !== null) {
         const { frontmatter, body } = parseFrontmatter(content);
@@ -61,7 +75,7 @@ export const claudeCodeScanner: Scanner = {
               model: frontmatter.model,
             } satisfies CanonicalAgent,
             sourcePath: skillPath,
-            scope: "workspace",
+            scope: "global",
             raw: content,
           });
         } else {
@@ -76,41 +90,15 @@ export const claudeCodeScanner: Scanner = {
               trigger: frontmatter.trigger,
             },
             sourcePath: skillPath,
-            scope: "workspace",
+            scope: "global",
             raw: content,
           });
         }
       }
     }
 
-    // Settings: .claude/settings.json and .claude/settings.local.json
-    for (const filename of ["settings.json", "settings.local.json"]) {
-      const settingsPath = join(root, ".claude", filename);
-      const content = await readFileIfExists(settingsPath);
-      if (content !== null) {
-        const parsed = tryParseJson(content);
-        if (parsed) {
-          for (const [key, value] of Object.entries(parsed)) {
-            entries.push({
-              category: "settings",
-              name: `${filename}:${key}`,
-              canonical: {
-                type: "setting",
-                key,
-                displayName: key,
-                value,
-              } satisfies CanonicalSetting,
-              sourcePath: settingsPath,
-              scope: "workspace",
-              raw: content,
-            });
-          }
-        }
-      }
-    }
-
-    // MCP: .mcp.json
-    const mcpPath = join(root, ".mcp.json");
+    // MCP: ~/.claude/.mcp.json
+    const mcpPath = join(CLAUDE_DIR, ".mcp.json");
     const mcpContent = await readFileIfExists(mcpPath);
     if (mcpContent !== null) {
       const parsed = tryParseJson(mcpContent);
@@ -128,27 +116,27 @@ export const claudeCodeScanner: Scanner = {
             env: cfg.env as Record<string, string> | undefined,
           } satisfies CanonicalMcp,
           sourcePath: mcpPath,
-          scope: "workspace",
+          scope: "global",
           raw: JSON.stringify(config, null, 2),
         });
       }
     }
 
-    // Memory: memory/ directory
-    const memoryDir = join(root, "memory");
+    // Memory: ~/.claude/memory/ (if redirected or present)
+    const memoryDir = join(CLAUDE_DIR, "memory");
     if (await exists(memoryDir)) {
       const memoryFiles = await globFiles(memoryDir, ".md");
       for (const file of memoryFiles) {
         const filePath = join(memoryDir, file);
         const content = await readFileIfExists(filePath);
         if (content !== null) {
-          entries.push(normalizeMemoryEntry(file, content, filePath, "workspace"));
+          entries.push(normalizeMemoryEntry(file, content, filePath));
         }
       }
     }
 
-    // Commands: .claude/commands/*.md
-    const commandsDir = join(root, ".claude", "commands");
+    // Commands: ~/.claude/commands/*.md
+    const commandsDir = join(CLAUDE_DIR, "commands");
     const commandFiles = await globFiles(commandsDir, ".md");
     for (const file of commandFiles) {
       const filePath = join(commandsDir, file);
@@ -166,22 +154,30 @@ export const claudeCodeScanner: Scanner = {
             prompt: body.trim() || content,
           } satisfies CanonicalCommand,
           sourcePath: filePath,
-          scope: "workspace",
+          scope: "global",
           raw: content,
         });
       }
     }
 
-    return { harness: "claude-code", root, entries };
+    // Instructions: ~/.claude/CLAUDE.md (global instructions)
+    const claudeMd = await readFileIfExists(join(CLAUDE_DIR, "CLAUDE.md"));
+    if (claudeMd !== null) {
+      entries.push({
+        category: "instructions",
+        name: "CLAUDE.md",
+        canonical: { type: "instruction", body: claudeMd } satisfies CanonicalInstruction,
+        sourcePath: join(CLAUDE_DIR, "CLAUDE.md"),
+        scope: "global",
+        raw: claudeMd,
+      });
+    }
+
+    return { harness: "claude-code", entries };
   },
 };
 
-function normalizeMemoryEntry(
-  file: string,
-  content: string,
-  filePath: string,
-  scope: "global" | "workspace",
-): ContextEntry {
+function normalizeMemoryEntry(file: string, content: string, filePath: string): ContextEntry {
   const { frontmatter, body } = parseFrontmatter(content);
   const name = file.replace(/\.md$/, "");
   const fmType = frontmatter.type;
@@ -250,7 +246,7 @@ function normalizeMemoryEntry(
       priority,
     },
     sourcePath: filePath,
-    scope,
+    scope: "global",
     raw: content,
   };
 }

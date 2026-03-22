@@ -18,15 +18,15 @@ export function getScanner(id: HarnessId): Scanner | undefined {
   return scanners.find((s) => s.id === id);
 }
 
-export async function detectAll(root: string): Promise<Scanner[]> {
+export async function detectAll(): Promise<Scanner[]> {
   const results = await Promise.all(
-    scanners.map(async (s) => ({ scanner: s, found: await s.detect(root) })),
+    scanners.map(async (s) => ({ scanner: s, found: await s.detect() })),
   );
   return results.filter((r) => r.found).map((r) => r.scanner);
 }
 
-export async function scanAll(root: string, filter?: HarnessId[]): Promise<HarnessContext[]> {
-  const detected = await detectAll(root);
+export async function scanAll(filter?: HarnessId[]): Promise<HarnessContext[]> {
+  const detected = await detectAll();
   const filtered = filter?.length ? detected.filter((s) => filter.includes(s.id)) : detected;
-  return Promise.all(filtered.map((s) => s.scan(root)));
+  return Promise.all(filtered.map((s) => s.scan()));
 }

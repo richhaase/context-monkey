@@ -43,9 +43,7 @@ export function registerScan(program: Command): void {
 
       if (contexts.length === 0) {
         console.log(chalk.yellow("  No harnesses detected."));
-        console.log(
-          chalk.dim("  Looked for: Claude Code, Codex, Gemini CLI, Cursor, GitHub Copilot"),
-        );
+        console.log(chalk.dim("  Looked for: Claude Code, Codex, Gemini CLI, Cursor"));
         console.log();
         return;
       }

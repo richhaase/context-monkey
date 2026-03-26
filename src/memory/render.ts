@@ -26,7 +26,7 @@ export function kindDisplayName(kind: CanonicalMemory["kind"]): string {
 
 /**
  * Render a markdown section from memory units with a heading and preamble.
- * Used by writers that inject memory into instruction files (Codex, Gemini, Copilot).
+ * Used by writers that inject memory into instruction files (Codex, Gemini, Cursor).
  */
 export function renderContextSection(
   units: CanonicalMemory[],

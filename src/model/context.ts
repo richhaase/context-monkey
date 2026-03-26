@@ -1,4 +1,4 @@
-export type HarnessId = "claude-code" | "codex" | "gemini" | "cursor" | "copilot";
+export type HarnessId = "claude-code" | "codex" | "gemini" | "cursor";
 
 export type ContextCategory =
   | "instructions"
@@ -113,7 +113,6 @@ export const HARNESS_DISPLAY_NAMES: Record<HarnessId, string> = {
   codex: "Codex",
   gemini: "Gemini CLI",
   cursor: "Cursor",
-  copilot: "GitHub Copilot",
 };
 
 export const CATEGORY_DISPLAY_NAMES: Record<ContextCategory, string> = {
@@ -127,4 +126,4 @@ export const CATEGORY_DISPLAY_NAMES: Record<ContextCategory, string> = {
   agents: "Agent Definitions",
 };
 
-export const ALL_HARNESS_IDS: HarnessId[] = ["claude-code", "codex", "gemini", "cursor", "copilot"];
+export const ALL_HARNESS_IDS: HarnessId[] = ["claude-code", "codex", "gemini", "cursor"];

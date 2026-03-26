@@ -1,18 +1,11 @@
 import type { HarnessContext, HarnessId } from "../model/context.ts";
 import { claudeCodeScanner } from "./claude-code.ts";
 import { codexScanner } from "./codex.ts";
-import { copilotScanner } from "./copilot.ts";
 import { cursorScanner } from "./cursor.ts";
 import { geminiScanner } from "./gemini.ts";
 import type { Scanner } from "./scanner.ts";
 
-export const scanners: Scanner[] = [
-  claudeCodeScanner,
-  codexScanner,
-  geminiScanner,
-  cursorScanner,
-  copilotScanner,
-];
+export const scanners: Scanner[] = [claudeCodeScanner, codexScanner, geminiScanner, cursorScanner];
 
 export function getScanner(id: HarnessId): Scanner | undefined {
   return scanners.find((s) => s.id === id);

@@ -16,7 +16,9 @@ export const claudeCodeWriter: Writer = {
   async plan(entries: ContextEntry[], workspaceRoot?: string): Promise<SyncPlan> {
     const actions: SyncAction[] = [];
     const baseDir = workspaceRoot ? join(workspaceRoot, ".claude") : CLAUDE_DIR;
-    const instructionPath = workspaceRoot ? join(workspaceRoot, "CLAUDE.md") : join(CLAUDE_DIR, "CLAUDE.md");
+    const instructionPath = workspaceRoot
+      ? join(workspaceRoot, "CLAUDE.md")
+      : join(CLAUDE_DIR, "CLAUDE.md");
 
     // Batch memory entries for aggregated handling
     const memoryEntries: CanonicalMemory[] = [];

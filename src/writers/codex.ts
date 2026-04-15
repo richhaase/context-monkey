@@ -14,12 +14,18 @@ export const codexWriter: Writer = {
 
   async plan(entries: ContextEntry[], workspaceRoot?: string): Promise<SyncPlan> {
     const actions: SyncAction[] = [];
-    const agentsPath = workspaceRoot ? join(workspaceRoot, "AGENTS.md") : join(CODEX_DIR, "AGENTS.md");
-    const agentsDir = workspaceRoot ? join(workspaceRoot, ".codex", "agents") : join(CODEX_DIR, "agents");
+    const agentsPath = workspaceRoot
+      ? join(workspaceRoot, "AGENTS.md")
+      : join(CODEX_DIR, "AGENTS.md");
+    const agentsDir = workspaceRoot
+      ? join(workspaceRoot, ".codex", "agents")
+      : join(CODEX_DIR, "agents");
     const skillsDir = workspaceRoot
       ? join(workspaceRoot, ".agents", "skills")
       : join(homedir(), ".agents", "skills");
-    const memoryPath = workspaceRoot ? join(workspaceRoot, ".codex", "MEMORY.md") : join(CODEX_DIR, "MEMORY.md");
+    const memoryPath = workspaceRoot
+      ? join(workspaceRoot, ".codex", "MEMORY.md")
+      : join(CODEX_DIR, "MEMORY.md");
 
     const memoryEntries: CanonicalMemory[] = [];
     const instructionEntries: ContextEntry[] = [];
@@ -92,9 +98,7 @@ export const codexWriter: Writer = {
                 "Treat it as established knowledge — the user should not need to re-teach these things.",
               ])
             : "";
-        const content = [baseInstructions.trim(), section.trim()]
-          .filter(Boolean)
-          .join("\n\n");
+        const content = [baseInstructions.trim(), section.trim()].filter(Boolean).join("\n\n");
         actions.push(await fileAction(agentsPath, content, placeholder));
       }
 
@@ -103,7 +107,11 @@ export const codexWriter: Writer = {
       actions.push(await fileAction(memoryPath, memoryDoc, placeholder));
     } else if (instructionEntries.length > 0) {
       actions.push(
-        await fileAction(agentsPath, renderInstructionBundle(instructionEntries), instructionEntries[0]!),
+        await fileAction(
+          agentsPath,
+          renderInstructionBundle(instructionEntries),
+          instructionEntries[0]!,
+        ),
       );
     }
 

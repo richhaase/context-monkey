@@ -27,7 +27,9 @@ export const claudeCodeScanner: Scanner = {
   displayName: "Claude Code",
 
   async detect(workspaceRoot?: string): Promise<boolean> {
-    return (await exists(CLAUDE_DIR)) || (workspaceRoot ? hasWorkspaceArtifacts(workspaceRoot) : false);
+    return (
+      (await exists(CLAUDE_DIR)) || (workspaceRoot ? hasWorkspaceArtifacts(workspaceRoot) : false)
+    );
   },
 
   async scan(workspaceRoot?: string): Promise<HarnessContext> {
@@ -204,9 +206,8 @@ async function hasWorkspaceArtifacts(workspaceRoot: string): Promise<boolean> {
     if (await exists(path)) return true;
   }
 
-  const pluginManifests = await walkFiles(
-    workspaceRoot,
-    (path) => path.endsWith(".claude-plugin/plugin.json"),
+  const pluginManifests = await walkFiles(workspaceRoot, (path) =>
+    path.endsWith(".claude-plugin/plugin.json"),
   );
   return pluginManifests.length > 0;
 }
@@ -311,9 +312,8 @@ async function scanWorkspace(entries: ContextEntry[], workspaceRoot: string): Pr
     });
   }
 
-  const ruleFiles = await walkFiles(
-    join(workspaceRoot, ".claude", "rules"),
-    (path) => path.endsWith(".md"),
+  const ruleFiles = await walkFiles(join(workspaceRoot, ".claude", "rules"), (path) =>
+    path.endsWith(".md"),
   );
   for (const rulePath of ruleFiles) {
     const content = await readFileIfExists(rulePath);
@@ -332,9 +332,8 @@ async function scanWorkspace(entries: ContextEntry[], workspaceRoot: string): Pr
     });
   }
 
-  const commandFiles = await walkFiles(
-    join(workspaceRoot, ".claude", "commands"),
-    (path) => path.endsWith(".md"),
+  const commandFiles = await walkFiles(join(workspaceRoot, ".claude", "commands"), (path) =>
+    path.endsWith(".md"),
   );
   for (const filePath of commandFiles) {
     const content = await readFileIfExists(filePath);
@@ -359,9 +358,8 @@ async function scanWorkspace(entries: ContextEntry[], workspaceRoot: string): Pr
     });
   }
 
-  const pluginManifests = await walkFiles(
-    workspaceRoot,
-    (path) => path.endsWith(".claude-plugin/plugin.json"),
+  const pluginManifests = await walkFiles(workspaceRoot, (path) =>
+    path.endsWith(".claude-plugin/plugin.json"),
   );
   for (const manifestPath of pluginManifests) {
     const pluginRoot = dirname(dirname(manifestPath));
@@ -391,9 +389,8 @@ async function scanWorkspace(entries: ContextEntry[], workspaceRoot: string): Pr
       });
     }
 
-    const pluginCommands = await walkFiles(
-      join(pluginRoot, "commands"),
-      (path) => path.endsWith(".md"),
+    const pluginCommands = await walkFiles(join(pluginRoot, "commands"), (path) =>
+      path.endsWith(".md"),
     );
     for (const commandPath of pluginCommands) {
       const content = await readFileIfExists(commandPath);

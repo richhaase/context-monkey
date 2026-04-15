@@ -8,6 +8,7 @@ import type {
   ContextEntry,
   HarnessContext,
 } from "../model/context.ts";
+import { parseFrontmatter } from "../utils/frontmatter.ts";
 import {
   exists,
   globFiles,
@@ -16,7 +17,6 @@ import {
   relativeDisplayPath,
   walkFiles,
 } from "../utils/fs.ts";
-import { parseFrontmatter } from "../utils/frontmatter.ts";
 import type { Scanner } from "./scanner.ts";
 
 const CODEX_DIR = join(homedir(), ".codex");
@@ -26,7 +26,9 @@ export const codexScanner: Scanner = {
   displayName: "Codex",
 
   async detect(workspaceRoot?: string): Promise<boolean> {
-    return (await exists(CODEX_DIR)) || (workspaceRoot ? hasWorkspaceArtifacts(workspaceRoot) : false);
+    return (
+      (await exists(CODEX_DIR)) || (workspaceRoot ? hasWorkspaceArtifacts(workspaceRoot) : false)
+    );
   },
 
   async scan(workspaceRoot?: string): Promise<HarnessContext> {
@@ -158,9 +160,11 @@ async function scanWorkspace(entries: ContextEntry[], workspaceRoot: string): Pr
         body: content,
       } satisfies CanonicalInstruction,
       sourcePath: path,
-      scope: path === join(workspaceRoot, "AGENTS.md") || path === join(workspaceRoot, "AGENTS.override.md")
-        ? "workspace"
-        : "subdirectory",
+      scope:
+        path === join(workspaceRoot, "AGENTS.md") ||
+        path === join(workspaceRoot, "AGENTS.override.md")
+          ? "workspace"
+          : "subdirectory",
       raw: content,
     });
   }

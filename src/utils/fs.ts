@@ -1,3 +1,4 @@
+import type { Dirent } from "node:fs";
 import { readdir, stat } from "node:fs/promises";
 import { join, relative } from "node:path";
 
@@ -42,8 +43,8 @@ export async function globFiles(dir: string, ext: string): Promise<string[]> {
   try {
     const entries = await readdir(dir, { withFileTypes: true });
     return entries
-      .filter((e) => e.isFile() && e.name.endsWith(ext))
-      .map((e) => e.name)
+      .filter((entry) => entry.isFile() && entry.name.endsWith(ext))
+      .map((entry) => entry.name)
       .sort();
   } catch {
     return [];
@@ -57,7 +58,7 @@ export async function walkFiles(
   const files: string[] = [];
 
   async function visit(dir: string): Promise<void> {
-    let entries;
+    let entries: Dirent[];
     try {
       entries = await readdir(dir, { withFileTypes: true });
     } catch {

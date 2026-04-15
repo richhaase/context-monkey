@@ -15,7 +15,9 @@ export const geminiWriter: Writer = {
   async plan(entries: ContextEntry[], workspaceRoot?: string): Promise<SyncPlan> {
     const actions: SyncAction[] = [];
     const baseDir = workspaceRoot ? join(workspaceRoot, ".gemini") : GEMINI_DIR;
-    const instructionPath = workspaceRoot ? join(workspaceRoot, "GEMINI.md") : join(GEMINI_DIR, "GEMINI.md");
+    const instructionPath = workspaceRoot
+      ? join(workspaceRoot, "GEMINI.md")
+      : join(GEMINI_DIR, "GEMINI.md");
 
     const memoryEntries: CanonicalMemory[] = [];
     const instructionEntries: ContextEntry[] = [];

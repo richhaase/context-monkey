@@ -13,7 +13,10 @@ export const cursorScanner: Scanner = {
   displayName: "Cursor",
 
   async detect(workspaceRoot?: string): Promise<boolean> {
-    return (await exists(CURSOR_DIR)) || (workspaceRoot ? exists(join(workspaceRoot, ".cursor", "rules")) : false);
+    return (
+      (await exists(CURSOR_DIR)) ||
+      (workspaceRoot ? exists(join(workspaceRoot, ".cursor", "rules")) : false)
+    );
   },
 
   async scan(workspaceRoot?: string): Promise<HarnessContext> {

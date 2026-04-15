@@ -1,6 +1,6 @@
+import { resolve } from "node:path";
 import chalk from "chalk";
 import type { Command } from "commander";
-import { resolve } from "node:path";
 import {
   ALL_HARNESS_IDS,
   type ContextEntry,
@@ -89,7 +89,11 @@ export function registerApply(program: Command): void {
           const tgtName = HARNESS_DISPLAY_NAMES[writer.id];
 
           // Skip the source harness — no point writing back to where it came from
-          if (!workspaceRoot && bundle.sources.length === 1 && bundle.sources[0] === targetHarness) {
+          if (
+            !workspaceRoot &&
+            bundle.sources.length === 1 &&
+            bundle.sources[0] === targetHarness
+          ) {
             console.log(chalk.dim(`  ${tgtName}: skipped (source harness)`));
             continue;
           }
@@ -155,7 +159,7 @@ function renderPlan(plan: SyncPlan): void {
 
 async function readLine(): Promise<string> {
   return new Promise((resolve) => {
-    process.stdin.once("data", (data) => {
+    process.stdin.once("data", (data: Buffer) => {
       resolve(data.toString());
     });
     process.stdin.resume();

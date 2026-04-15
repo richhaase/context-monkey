@@ -26,7 +26,9 @@ export const geminiScanner: Scanner = {
   displayName: "Gemini CLI",
 
   async detect(workspaceRoot?: string): Promise<boolean> {
-    return (await exists(GEMINI_DIR)) || (workspaceRoot ? hasWorkspaceArtifacts(workspaceRoot) : false);
+    return (
+      (await exists(GEMINI_DIR)) || (workspaceRoot ? hasWorkspaceArtifacts(workspaceRoot) : false)
+    );
   },
 
   async scan(workspaceRoot?: string): Promise<HarnessContext> {
@@ -227,9 +229,8 @@ async function scanWorkspace(entries: ContextEntry[], workspaceRoot: string): Pr
     });
   }
 
-  const commandFiles = await walkFiles(
-    join(workspaceRoot, ".gemini", "commands"),
-    (path) => path.endsWith(".toml"),
+  const commandFiles = await walkFiles(join(workspaceRoot, ".gemini", "commands"), (path) =>
+    path.endsWith(".toml"),
   );
   for (const filePath of commandFiles) {
     const content = await readFileIfExists(filePath);
@@ -253,7 +254,10 @@ async function scanWorkspace(entries: ContextEntry[], workspaceRoot: string): Pr
     });
   }
 
-  for (const baseDir of [join(workspaceRoot, ".gemini", "skills"), join(workspaceRoot, ".agents", "skills")]) {
+  for (const baseDir of [
+    join(workspaceRoot, ".gemini", "skills"),
+    join(workspaceRoot, ".agents", "skills"),
+  ]) {
     for (const skillName of await globSkillDirs(baseDir)) {
       const skillPath = join(baseDir, skillName, "SKILL.md");
       const content = await readFileIfExists(skillPath);

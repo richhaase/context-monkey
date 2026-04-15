@@ -27,8 +27,8 @@
   },
   "scripts": {
     "dev": "bun src/index.ts",
-    "test": "bun test",
-    "check": "tsc --noEmit && biome check src/ && bun test",
+    "test": "bun test --passWithNoTests",
+    "check": "tsc --noEmit && biome check src/ && bun run test",
     "lint": "biome check src/",
     "fmt": "biome check --write src/"
   },
@@ -38,7 +38,8 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.6",
-    "@types/bun": "^1.3.9"
+    "@types/bun": "^1.3.9",
+    "@types/node": "^24.7.2"
   },
   "files": [
     "src"

@@ -1,5 +1,6 @@
 import chalk from "chalk";
 import type { Command } from "commander";
+import { resolve } from "node:path";
 import {
   ALL_HARNESS_IDS,
   type ContextEntry,
@@ -20,14 +21,16 @@ export function registerApply(program: Command): void {
     )
     .option("-y, --yes", "skip confirmation")
     .option("--store <path>", "IR store path (default: ~/.config/context-monkey/context.json)")
+    .option("--path <path>", "write project-scoped files under this workspace root")
     .option("--categories <cats>", "comma-separated categories to include (default: all)")
     .action(
       async (
         targetArgs: string[],
-        opts: { yes?: boolean; store?: string; categories?: string },
+        opts: { yes?: boolean; store?: string; path?: string; categories?: string },
       ) => {
         const sp = storePath(opts.store);
         const bundle = await readStore(opts.store);
+        const workspaceRoot = opts.path ? resolve(opts.path) : undefined;
 
         if (bundle.items.length === 0) {
           console.error(chalk.red("  Store is empty. Run 'cm scan' first."));
@@ -76,6 +79,9 @@ export function registerApply(program: Command): void {
         console.log();
         console.log(chalk.bold("  Context Monkey — Apply"));
         console.log(chalk.dim(`  Store: ${sp} (${bundle.items.length} items from ${sources})`));
+        if (workspaceRoot) {
+          console.log(chalk.dim(`  Target workspace: ${workspaceRoot}`));
+        }
         console.log();
 
         for (const targetHarness of targets) {
@@ -83,12 +89,12 @@ export function registerApply(program: Command): void {
           const tgtName = HARNESS_DISPLAY_NAMES[writer.id];
 
           // Skip the source harness — no point writing back to where it came from
-          if (bundle.sources.length === 1 && bundle.sources[0] === targetHarness) {
+          if (!workspaceRoot && bundle.sources.length === 1 && bundle.sources[0] === targetHarness) {
             console.log(chalk.dim(`  ${tgtName}: skipped (source harness)`));
             continue;
           }
 
-          const plan = await writer.plan(entries);
+          const plan = await writer.plan(entries, workspaceRoot);
           const creates = plan.actions.filter((a) => a.type === "create");
           const updates = plan.actions.filter((a) => a.type === "update");
           const skips = plan.actions.filter((a) => a.type === "skip");

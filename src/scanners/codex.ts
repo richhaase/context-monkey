@@ -8,7 +8,15 @@ import type {
   ContextEntry,
   HarnessContext,
 } from "../model/context.ts";
-import { exists, globFiles, readFileIfExists } from "../utils/fs.ts";
+import {
+  exists,
+  globFiles,
+  globSkillDirs,
+  readFileIfExists,
+  relativeDisplayPath,
+  walkFiles,
+} from "../utils/fs.ts";
+import { parseFrontmatter } from "../utils/frontmatter.ts";
 import type { Scanner } from "./scanner.ts";
 
 const CODEX_DIR = join(homedir(), ".codex");
@@ -17,11 +25,11 @@ export const codexScanner: Scanner = {
   id: "codex",
   displayName: "Codex",
 
-  async detect(): Promise<boolean> {
-    return exists(CODEX_DIR);
+  async detect(workspaceRoot?: string): Promise<boolean> {
+    return (await exists(CODEX_DIR)) || (workspaceRoot ? hasWorkspaceArtifacts(workspaceRoot) : false);
   },
 
-  async scan(): Promise<HarnessContext> {
+  async scan(workspaceRoot?: string): Promise<HarnessContext> {
     const entries: ContextEntry[] = [];
 
     // Instructions: ~/.codex/AGENTS.md
@@ -106,9 +114,117 @@ export const codexScanner: Scanner = {
       });
     }
 
+    if (workspaceRoot) {
+      await scanWorkspace(entries, workspaceRoot);
+    }
+
     return { harness: "codex", entries };
   },
 };
+
+async function hasWorkspaceArtifacts(workspaceRoot: string): Promise<boolean> {
+  const candidates = [
+    join(workspaceRoot, "AGENTS.md"),
+    join(workspaceRoot, "AGENTS.override.md"),
+    join(workspaceRoot, ".codex", "config.toml"),
+    join(workspaceRoot, ".codex", "agents"),
+    join(workspaceRoot, ".agents", "skills"),
+  ];
+
+  for (const path of candidates) {
+    if (await exists(path)) return true;
+  }
+
+  const nestedAgents = await walkFiles(
+    workspaceRoot,
+    (path) => path.endsWith("/AGENTS.md") || path.endsWith("/AGENTS.override.md"),
+  );
+  return nestedAgents.length > 0;
+}
+
+async function scanWorkspace(entries: ContextEntry[], workspaceRoot: string): Promise<void> {
+  const instructionFiles = await walkFiles(
+    workspaceRoot,
+    (path) => path.endsWith("/AGENTS.md") || path.endsWith("/AGENTS.override.md"),
+  );
+  for (const path of instructionFiles) {
+    const content = await readFileIfExists(path);
+    if (content === null) continue;
+    entries.push({
+      category: "instructions",
+      name: relativeDisplayPath(workspaceRoot, path),
+      canonical: {
+        type: "instruction",
+        body: content,
+      } satisfies CanonicalInstruction,
+      sourcePath: path,
+      scope: path === join(workspaceRoot, "AGENTS.md") || path === join(workspaceRoot, "AGENTS.override.md")
+        ? "workspace"
+        : "subdirectory",
+      raw: content,
+    });
+  }
+
+  const configPath = join(workspaceRoot, ".codex", "config.toml");
+  const configContent = await readFileIfExists(configPath);
+  if (configContent !== null) {
+    for (const { key, displayName } of CODEX_SETTINGS) {
+      const value = extractTomlValue(configContent, key);
+      if (value === null) continue;
+      entries.push({
+        category: "settings",
+        name: `${relativeDisplayPath(workspaceRoot, configPath)}:${key}`,
+        canonical: { type: "setting", key, displayName, value } satisfies CanonicalSetting,
+        sourcePath: configPath,
+        scope: "workspace",
+        raw: configContent,
+      });
+    }
+  }
+
+  const agentsDir = join(workspaceRoot, ".codex", "agents");
+  for (const file of await globFiles(agentsDir, ".toml")) {
+    const filePath = join(agentsDir, file);
+    const content = await readFileIfExists(filePath);
+    if (content === null) continue;
+    const name = file.replace(/\.toml$/, "");
+    entries.push({
+      category: "agents",
+      name,
+      canonical: {
+        type: "agent",
+        name,
+        description: extractTomlString(content, "description") || `Agent: ${name}`,
+        instructions: extractTomlMultilineString(content, "developer_instructions") || "",
+        model: extractTomlString(content, "model") || undefined,
+      } satisfies CanonicalAgent,
+      sourcePath: filePath,
+      scope: "workspace",
+      raw: content,
+    });
+  }
+
+  const skillsDir = join(workspaceRoot, ".agents", "skills");
+  for (const skillName of await globSkillDirs(skillsDir)) {
+    const skillPath = join(skillsDir, skillName, "SKILL.md");
+    const content = await readFileIfExists(skillPath);
+    if (content === null) continue;
+    const { frontmatter, body } = parseFrontmatter(content);
+    entries.push({
+      category: "skills",
+      name: skillName,
+      canonical: {
+        type: "skill",
+        name: skillName,
+        description: frontmatter.description || "",
+        instructions: body.trim(),
+      },
+      sourcePath: skillPath,
+      scope: "workspace",
+      raw: content,
+    });
+  }
+}
 
 const CODEX_SETTINGS = [
   { key: "model", displayName: "Default Model" },

@@ -1,6 +1,6 @@
 # context-monkey
 
-Make AI agent harness configurations portable — scan, diff, and sync context **and memory** between Claude Code, Codex, Gemini CLI, Cursor, GitHub Copilot, and more.
+Make AI agent harness configurations portable — scan and apply context **and memory** between Claude Code, Codex, Gemini CLI, Cursor, and more.
 
 > **v1.0** is a ground-up rewrite. The old context-monkey (≤ v0.10.x) was a subagent installer for Claude Code. This version is a harness portability tool focused on the hard problem: **semantic memory translation**.
 
@@ -24,62 +24,41 @@ bunx cm
 
 ### `cm scan [path]`
 
-Detect and inventory all harness configs in a directory:
+Detect and inventory harness configs for a workspace plus your global harness state:
 
 ```bash
 cm scan              # current directory
 cm scan ~/src/myapp  # specific path
+cm scan ~/notes --harnesses claude-code,codex,gemini
 ```
 
-### `cm diff <source> <target>`
+### `cm apply <target>`
 
-Compare two harness configurations:
+Write the canonical store into one or more target harness layouts:
 
 ```bash
-cm diff claude-code codex
-cm diff claude-code cursor --detailed
+cm apply codex --path ~/notes    # write repo-local Codex files
+cm apply gemini --path ~/notes   # write repo-local Gemini files
+cm apply all -y                  # write to detected global harness homes
 ```
-
-### `cm sync <source> <target>`
-
-Port instructions and skills from one harness to another:
-
-```bash
-cm sync claude-code codex      # creates AGENTS.md from CLAUDE.md
-cm sync claude-code cursor     # creates .cursor/rules/ from CLAUDE.md + skills
-cm sync claude-code gemini     # creates GEMINI.md
-cm sync claude-code copilot    # creates .github/copilot-instructions.md
-```
-
-### `cm memory <source> <target>`
-
-The differentiator. Export memory from one harness to another with semantic translation:
-
-```bash
-cm memory claude-code codex      # critical context → AGENTS.md, full memory → .codex/MEMORY.md
-cm memory claude-code gemini     # priority-tiered sections in GEMINI.md
-cm memory claude-code cursor     # always-on .mdc rule with user context
-cm memory claude-code codex --preview  # see translated output without writing
-```
-
-Memory is extracted into typed knowledge units (feedback, preferences, user profile, system info, project context) with priority levels (critical, important, contextual). Each target format gets an idiomatic translation — not a raw dump.
 
 ## Supported Harnesses
 
 | Harness | ID | Scans | Writes | Memory |
 |---------|-----|-------|--------|--------|
-| Claude Code | `claude-code` | CLAUDE.md, skills, settings, memory, MCP | CLAUDE.md | Full structured memory (topic files + index) |
-| Codex | `codex` | AGENTS.md (workspace + global) | AGENTS.md | Critical context in AGENTS.md, full memory in .codex/MEMORY.md |
-| Gemini CLI | `gemini` | GEMINI.md (workspace + global), .geminiignore | GEMINI.md, .geminiignore | Priority-tiered sections + native Gemini Added Memories format |
-| Cursor | `cursor` | .cursor/rules/, .cursorrules | .cursor/rules/*.mdc | Always-on user-context.mdc rule |
-| GitHub Copilot | `copilot` | .github/copilot-instructions.md, .github/instructions/ | .github/copilot-instructions.md | Appended to instructions |
+| Claude Code | `claude-code` | Global + workspace CLAUDE.md, `.claude/`, `.mcp.json`, local plugins | CLAUDE.md, `.claude/` | Full structured memory (topic files + index) |
+| Codex | `codex` | Global + workspace AGENTS.md, `.codex/`, `.agents/skills/` | AGENTS.md, `.codex/agents/` | Critical context in AGENTS.md, full memory in `.codex/MEMORY.md` |
+| Gemini CLI | `gemini` | Global + workspace GEMINI.md, `.gemini/`, `.agents/skills/` | GEMINI.md, `.gemini/` | Priority-tiered sections + native Gemini Added Memories format |
+| Cursor | `cursor` | Global + workspace `.cursor/rules/` | `.cursor/rules/*.mdc` | Always-on `user-context.mdc` rule |
 
 ## What Syncs
 
 - **Memory** — the core value. Typed knowledge units translated to target-native formats.
-- **Instructions** — full portability. CLAUDE.md ↔ AGENTS.md ↔ GEMINI.md ↔ .cursor/rules/ ↔ copilot-instructions.md
-- **Skills** — Claude Code skills convert to Cursor rules (instructions only; scripts noted as skipped)
-- **Ignore patterns** — portable between .geminiignore, .aiderignore, .codeiumignore
+- **Instructions** — CLAUDE.md ↔ AGENTS.md ↔ GEMINI.md ↔ `.cursor/rules/`
+- **Skills** — native skill directories plus the cross-tool `.agents/skills/` layout
+- **Commands** — project and user command directories where the target harness supports them
+- **Agents** — Codex `.codex/agents/` and Claude fork-style skills
+- **Ignore patterns** — Gemini `.geminiignore` today, with room to extend to other ignore formats
 
 ## Prior Art
 

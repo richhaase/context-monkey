@@ -1,5 +1,6 @@
 import chalk from "chalk";
 import type { Command } from "commander";
+import { resolve } from "node:path";
 import {
   ALL_HARNESS_IDS,
   type CanonicalSetting,
@@ -14,17 +15,22 @@ import { formatNotDetected, formatScanResult } from "../ui/format.ts";
 export function registerScan(program: Command): void {
   program
     .command("scan")
-    .description("Scan global harness configurations and update the IR store")
-    .argument("[harnesses...]", `harness(es) to scan (${ALL_HARNESS_IDS.join(", ")}); omit for all`)
+    .description("Scan a workspace plus global harness configurations and update the IR store")
+    .argument("[path]", "workspace path to scan (default: current directory)")
+    .option("--harnesses <ids>", `comma-separated harnesses (${ALL_HARNESS_IDS.join(", ")})`)
     .option("--store <path>", "IR store path (default: ~/.config/context-monkey/context.json)")
     .option("--no-persist", "skip updating the store")
-    .action(async (harnesses: string[], opts: { store?: string; persist?: boolean }) => {
+    .action(async (pathArg: string | undefined, opts: { harnesses?: string; store?: string; persist?: boolean }) => {
       const skipStore = opts.persist === false;
+      const workspaceRoot = resolve(pathArg || process.cwd());
 
       // Validate harness names if provided
-      const filter: HarnessId[] | undefined = harnesses.length > 0 ? [] : undefined;
-      if (harnesses.length > 0) {
-        for (const h of harnesses) {
+      const requestedHarnesses = opts.harnesses
+        ? opts.harnesses.split(",").map((h) => h.trim()).filter(Boolean)
+        : [];
+      const filter: HarnessId[] | undefined = requestedHarnesses.length > 0 ? [] : undefined;
+      if (requestedHarnesses.length > 0) {
+        for (const h of requestedHarnesses) {
           if (!ALL_HARNESS_IDS.includes(h as HarnessId)) {
             console.error(chalk.red(`  Unknown harness: ${h}`));
             console.error(chalk.dim(`  Available: ${ALL_HARNESS_IDS.join(", ")}`));
@@ -36,10 +42,10 @@ export function registerScan(program: Command): void {
 
       console.log();
       console.log(chalk.bold("  Context Monkey"));
-      console.log(chalk.dim("  Scanning global harness configurations..."));
+      console.log(chalk.dim(`  Scanning workspace: ${workspaceRoot}`));
       console.log();
 
-      const contexts = await scanAll(filter);
+      const contexts = await scanAll(filter, workspaceRoot);
 
       if (contexts.length === 0) {
         console.log(chalk.yellow("  No harnesses detected."));

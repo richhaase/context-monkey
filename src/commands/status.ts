@@ -10,7 +10,7 @@ import { readStore, storePath } from "../store/index.ts";
  */
 const WRITER_CAPABILITIES: Record<HarnessId, Set<ContextCategory>> = {
   "claude-code": new Set(["instructions", "skills", "agents", "commands", "memory"]),
-  codex: new Set(["instructions", "agents", "memory"]),
+  codex: new Set(["instructions", "skills", "agents", "memory"]),
   gemini: new Set(["instructions", "commands", "skills", "ignore", "memory"]),
   cursor: new Set(["instructions", "skills", "agents", "memory"]),
 };

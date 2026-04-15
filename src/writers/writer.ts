@@ -18,6 +18,6 @@ export interface SyncPlan {
 export interface Writer {
   id: HarnessId;
   displayName: string;
-  plan(entries: ContextEntry[]): Promise<SyncPlan>;
+  plan(entries: ContextEntry[], workspaceRoot?: string): Promise<SyncPlan>;
   execute(plan: SyncPlan): Promise<void>;
 }

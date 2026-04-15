@@ -1,6 +1,6 @@
 import { mkdir } from "node:fs/promises";
 import { homedir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { renderContextSection } from "../memory/render.ts";
 import type { CanonicalMemory, ContextEntry } from "../model/context.ts";
 import { exists } from "../utils/fs.ts";
@@ -12,15 +12,20 @@ export const geminiWriter: Writer = {
   id: "gemini",
   displayName: "Gemini CLI",
 
-  async plan(entries: ContextEntry[]): Promise<SyncPlan> {
+  async plan(entries: ContextEntry[], workspaceRoot?: string): Promise<SyncPlan> {
     const actions: SyncAction[] = [];
+    const baseDir = workspaceRoot ? join(workspaceRoot, ".gemini") : GEMINI_DIR;
+    const instructionPath = workspaceRoot ? join(workspaceRoot, "GEMINI.md") : join(GEMINI_DIR, "GEMINI.md");
 
     const memoryEntries: CanonicalMemory[] = [];
+    const instructionEntries: ContextEntry[] = [];
     const otherEntries: ContextEntry[] = [];
 
     for (const entry of entries) {
       if (entry.canonical.type === "memory") {
         memoryEntries.push(entry.canonical);
+      } else if (entry.canonical.type === "instruction") {
+        instructionEntries.push(entry);
       } else {
         otherEntries.push(entry);
       }
@@ -30,24 +35,19 @@ export const geminiWriter: Writer = {
       const c = entry.canonical;
 
       switch (c.type) {
-        case "instruction": {
-          const path = join(GEMINI_DIR, "GEMINI.md");
-          actions.push(await fileAction(path, c.body, entry));
-          break;
-        }
         case "command": {
-          const path = join(GEMINI_DIR, "commands", `${c.name}.toml`);
+          const path = join(baseDir, "commands", `${sanitizeNestedName(c.name)}.toml`);
           const content = `description = "${c.description.replace(/"/g, '\\"')}"\nprompt = """\n${c.prompt}\n"""`;
           actions.push(await fileAction(path, content, entry));
           break;
         }
         case "skill": {
-          const path = join(GEMINI_DIR, "skills", c.name, "SKILL.md");
+          const path = join(baseDir, "skills", sanitizeFlatName(c.name), "SKILL.md");
           actions.push(await fileAction(path, c.instructions, entry));
           break;
         }
         case "ignore": {
-          const path = join(GEMINI_DIR, ".geminiignore");
+          const path = join(baseDir, ".geminiignore");
           const content = c.patterns.join("\n");
           actions.push(await fileAction(path, content, entry));
           break;
@@ -60,6 +60,8 @@ export const geminiWriter: Writer = {
           break;
         case "mcp":
           actions.push(skip(entry, "MCP server sync not yet supported for Gemini"));
+          break;
+        case "instruction":
           break;
       }
     }
@@ -106,14 +108,24 @@ export const geminiWriter: Writer = {
         sections.push(memoryLines.join("\n"));
       }
 
-      if (sections.length > 0) {
-        const geminiPath = join(GEMINI_DIR, "GEMINI.md");
-        const existing = await readExisting(geminiPath);
-        const content = existing
-          ? `${existing}\n\n${sections.join("\n\n")}`
-          : sections.join("\n\n");
-        actions.push(await fileAction(geminiPath, content, placeholder));
+      if (sections.length > 0 || instructionEntries.length > 0) {
+        const baseInstructions =
+          instructionEntries.length > 0
+            ? renderInstructionBundle(instructionEntries)
+            : ((await readExisting(instructionPath)) ?? "");
+        const content = [baseInstructions.trim(), sections.join("\n\n").trim()]
+          .filter(Boolean)
+          .join("\n\n");
+        actions.push(await fileAction(instructionPath, content, placeholder));
       }
+    } else if (instructionEntries.length > 0) {
+      actions.push(
+        await fileAction(
+          instructionPath,
+          renderInstructionBundle(instructionEntries),
+          instructionEntries[0]!,
+        ),
+      );
     }
 
     return { source: "gemini", target: "gemini", actions };
@@ -122,7 +134,7 @@ export const geminiWriter: Writer = {
   async execute(plan: SyncPlan): Promise<void> {
     for (const action of plan.actions) {
       if (action.type === "skip" || !action.content) continue;
-      const dir = join(action.path, "..");
+      const dir = dirname(action.path);
       if (!(await exists(dir))) {
         await mkdir(dir, { recursive: true });
       }
@@ -153,4 +165,21 @@ async function fileAction(path: string, content: string, entry: ContextEntry): P
 
 function skip(entry: ContextEntry, reason: string): SyncAction {
   return { type: "skip", path: "", entry, reason };
+}
+
+function sanitizeFlatName(name: string): string {
+  return name.replace(/[:/\\]/g, "-");
+}
+
+function sanitizeNestedName(name: string): string {
+  return name.replace(/:/g, "-");
+}
+
+function renderInstructionBundle(entries: ContextEntry[]): string {
+  const sections: string[] = [];
+  for (const entry of entries) {
+    if (entry.canonical.type !== "instruction") continue;
+    sections.push(`<!-- Source: ${entry.name} -->\n${entry.canonical.body.trim()}`);
+  }
+  return sections.join("\n\n");
 }

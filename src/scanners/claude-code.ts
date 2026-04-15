@@ -1,5 +1,5 @@
 import { homedir } from "node:os";
-import { join } from "node:path";
+import { basename, dirname, join, relative } from "node:path";
 import type {
   CanonicalAgent,
   CanonicalCommand,
@@ -10,7 +10,14 @@ import type {
   HarnessContext,
 } from "../model/context.ts";
 import { parseFrontmatter } from "../utils/frontmatter.ts";
-import { exists, globFiles, globSkillDirs, readFileIfExists } from "../utils/fs.ts";
+import {
+  exists,
+  globFiles,
+  globSkillDirs,
+  readFileIfExists,
+  relativeDisplayPath,
+  walkFiles,
+} from "../utils/fs.ts";
 import type { Scanner } from "./scanner.ts";
 
 const CLAUDE_DIR = join(homedir(), ".claude");
@@ -19,11 +26,11 @@ export const claudeCodeScanner: Scanner = {
   id: "claude-code",
   displayName: "Claude Code",
 
-  async detect(): Promise<boolean> {
-    return exists(CLAUDE_DIR);
+  async detect(workspaceRoot?: string): Promise<boolean> {
+    return (await exists(CLAUDE_DIR)) || (workspaceRoot ? hasWorkspaceArtifacts(workspaceRoot) : false);
   },
 
-  async scan(): Promise<HarnessContext> {
+  async scan(workspaceRoot?: string): Promise<HarnessContext> {
     const entries: ContextEntry[] = [];
 
     // Settings: ~/.claude/settings.json and ~/.claude/settings.local.json
@@ -173,9 +180,245 @@ export const claudeCodeScanner: Scanner = {
       });
     }
 
+    if (workspaceRoot) {
+      await scanWorkspace(entries, workspaceRoot);
+    }
+
     return { harness: "claude-code", entries };
   },
 };
+
+async function hasWorkspaceArtifacts(workspaceRoot: string): Promise<boolean> {
+  const candidates = [
+    join(workspaceRoot, "CLAUDE.md"),
+    join(workspaceRoot, ".claude", "CLAUDE.md"),
+    join(workspaceRoot, ".claude", "settings.json"),
+    join(workspaceRoot, ".claude", "settings.local.json"),
+    join(workspaceRoot, ".claude", "rules"),
+    join(workspaceRoot, ".claude", "skills"),
+    join(workspaceRoot, ".claude", "commands"),
+    join(workspaceRoot, ".mcp.json"),
+  ];
+
+  for (const path of candidates) {
+    if (await exists(path)) return true;
+  }
+
+  const pluginManifests = await walkFiles(
+    workspaceRoot,
+    (path) => path.endsWith(".claude-plugin/plugin.json"),
+  );
+  return pluginManifests.length > 0;
+}
+
+async function scanWorkspace(entries: ContextEntry[], workspaceRoot: string): Promise<void> {
+  const instructionCandidates = [
+    join(workspaceRoot, "CLAUDE.md"),
+    join(workspaceRoot, ".claude", "CLAUDE.md"),
+  ];
+
+  for (const path of instructionCandidates) {
+    const content = await readFileIfExists(path);
+    if (content === null) continue;
+    entries.push({
+      category: "instructions",
+      name: relativeDisplayPath(workspaceRoot, path),
+      canonical: {
+        type: "instruction",
+        body: content,
+      } satisfies CanonicalInstruction,
+      sourcePath: path,
+      scope: "workspace",
+      raw: content,
+    });
+  }
+
+  for (const filename of ["settings.json", "settings.local.json"]) {
+    const settingsPath = join(workspaceRoot, ".claude", filename);
+    const content = await readFileIfExists(settingsPath);
+    if (content === null) continue;
+    const parsed = tryParseJson(content);
+    if (!parsed) continue;
+    for (const [key, value] of Object.entries(parsed)) {
+      entries.push({
+        category: "settings",
+        name: `${relativeDisplayPath(workspaceRoot, settingsPath)}:${key}`,
+        canonical: {
+          type: "setting",
+          key,
+          displayName: key,
+          value,
+        } satisfies CanonicalSetting,
+        sourcePath: settingsPath,
+        scope: "workspace",
+        raw: content,
+      });
+    }
+  }
+
+  const mcpPath = join(workspaceRoot, ".mcp.json");
+  const mcpContent = await readFileIfExists(mcpPath);
+  if (mcpContent !== null) {
+    const parsed = tryParseJson(mcpContent);
+    const servers = parsed?.mcpServers ?? {};
+    for (const [serverName, config] of Object.entries(servers)) {
+      const cfg = config as Record<string, unknown>;
+      entries.push({
+        category: "mcp",
+        name: `${relativeDisplayPath(workspaceRoot, mcpPath)}:${serverName}`,
+        canonical: {
+          type: "mcp",
+          serverName,
+          command: (cfg.command as string) ?? "",
+          args: (cfg.args as string[]) ?? [],
+          env: cfg.env as Record<string, string> | undefined,
+        } satisfies CanonicalMcp,
+        sourcePath: mcpPath,
+        scope: "workspace",
+        raw: JSON.stringify(config, null, 2),
+      });
+    }
+  }
+
+  for (const skillName of await globSkillDirs(join(workspaceRoot, ".claude", "skills"))) {
+    const skillPath = join(workspaceRoot, ".claude", "skills", skillName, "SKILL.md");
+    const content = await readFileIfExists(skillPath);
+    if (content === null) continue;
+    const { frontmatter, body } = parseFrontmatter(content);
+    const isAgent = frontmatter.context === "fork";
+    const description = frontmatter.description || "";
+    entries.push({
+      category: isAgent ? "agents" : "skills",
+      name: skillName,
+      canonical: isAgent
+        ? ({
+            type: "agent",
+            name: skillName,
+            description,
+            instructions: body.trim(),
+            model: frontmatter.model,
+          } satisfies CanonicalAgent)
+        : {
+            type: "skill",
+            name: skillName,
+            description,
+            instructions: body.trim(),
+            trigger: frontmatter.trigger,
+          },
+      sourcePath: skillPath,
+      scope: "workspace",
+      raw: content,
+    });
+  }
+
+  const ruleFiles = await walkFiles(
+    join(workspaceRoot, ".claude", "rules"),
+    (path) => path.endsWith(".md"),
+  );
+  for (const rulePath of ruleFiles) {
+    const content = await readFileIfExists(rulePath);
+    if (content === null) continue;
+    const { body } = parseFrontmatter(content);
+    entries.push({
+      category: "instructions",
+      name: relativeDisplayPath(workspaceRoot, rulePath),
+      canonical: {
+        type: "instruction",
+        body: body.trim() || content,
+      } satisfies CanonicalInstruction,
+      sourcePath: rulePath,
+      scope: relative(workspaceRoot, rulePath).includes("/") ? "subdirectory" : "workspace",
+      raw: content,
+    });
+  }
+
+  const commandFiles = await walkFiles(
+    join(workspaceRoot, ".claude", "commands"),
+    (path) => path.endsWith(".md"),
+  );
+  for (const filePath of commandFiles) {
+    const content = await readFileIfExists(filePath);
+    if (content === null) continue;
+    const { frontmatter, body } = parseFrontmatter(content);
+    const name = relativeDisplayPath(join(workspaceRoot, ".claude", "commands"), filePath).replace(
+      /\.md$/,
+      "",
+    );
+    entries.push({
+      category: "commands",
+      name,
+      canonical: {
+        type: "command",
+        name,
+        description: frontmatter.description || `Command: ${name}`,
+        prompt: body.trim() || content,
+      } satisfies CanonicalCommand,
+      sourcePath: filePath,
+      scope: "workspace",
+      raw: content,
+    });
+  }
+
+  const pluginManifests = await walkFiles(
+    workspaceRoot,
+    (path) => path.endsWith(".claude-plugin/plugin.json"),
+  );
+  for (const manifestPath of pluginManifests) {
+    const pluginRoot = dirname(dirname(manifestPath));
+    const manifestContent = await readFileIfExists(manifestPath);
+    const manifest = manifestContent ? tryParseJson(manifestContent) : null;
+    const pluginName =
+      (manifest?.name as string | undefined) || basename(pluginRoot).replace(/[^a-z0-9-]/gi, "-");
+
+    for (const skillName of await globSkillDirs(join(pluginRoot, "skills"))) {
+      const skillPath = join(pluginRoot, "skills", skillName, "SKILL.md");
+      const content = await readFileIfExists(skillPath);
+      if (content === null) continue;
+      const { frontmatter, body } = parseFrontmatter(content);
+      entries.push({
+        category: "skills",
+        name: `${pluginName}:${skillName}`,
+        canonical: {
+          type: "skill",
+          name: `${pluginName}:${skillName}`,
+          description: frontmatter.description || "",
+          instructions: body.trim(),
+          trigger: frontmatter.trigger,
+        },
+        sourcePath: skillPath,
+        scope: "workspace",
+        raw: content,
+      });
+    }
+
+    const pluginCommands = await walkFiles(
+      join(pluginRoot, "commands"),
+      (path) => path.endsWith(".md"),
+    );
+    for (const commandPath of pluginCommands) {
+      const content = await readFileIfExists(commandPath);
+      if (content === null) continue;
+      const { frontmatter, body } = parseFrontmatter(content);
+      const localName = relativeDisplayPath(join(pluginRoot, "commands"), commandPath).replace(
+        /\.md$/,
+        "",
+      );
+      entries.push({
+        category: "commands",
+        name: `${pluginName}:${localName}`,
+        canonical: {
+          type: "command",
+          name: `${pluginName}:${localName}`,
+          description: frontmatter.description || `Command: ${localName}`,
+          prompt: body.trim() || content,
+        } satisfies CanonicalCommand,
+        sourcePath: commandPath,
+        scope: "workspace",
+        raw: content,
+      });
+    }
+  }
+}
 
 function normalizeMemoryEntry(file: string, content: string, filePath: string): ContextEntry {
   const { frontmatter, body } = parseFrontmatter(content);
